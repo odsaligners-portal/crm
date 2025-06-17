@@ -1,0 +1,103 @@
+import jwt from 'jsonwebtoken';
+import User from '../models/User';
+
+export const protect = async (req) => {
+  try {
+    let token;
+
+    if (
+      req.headers.authorization &&
+      req.headers.authorization.startsWith('Bearer')
+    ) {
+      token = req.headers.authorization.split(' ')[1];
+    }
+
+    if (!token) {
+      return {
+        success: false,
+        error: 'Not authorized to access this route',
+      };
+    }
+
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await User.findById(decoded.id).select('-password');
+
+      if (!user) {
+        return {
+          success: false,
+          error: 'User not found',
+        };
+      }
+
+      return {
+        success: true,
+        user,
+      };
+    } catch (err) {
+      return {
+        success: false,
+        error: 'Not authorized to access this route',
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+export const admin = async (req) => {
+  try {
+    const authResult = await protect(req);
+    if (!authResult.success) {
+      return authResult;
+    }
+
+    if (authResult.user.role !== 'admin') {
+      return {
+        success: false,
+        error: 'Not authorized as an admin',
+      };
+    }
+
+    return {
+      success: true,
+      user: authResult.user,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+};
+
+/**
+ * @typedef {Object} AuthResult
+ * @property {boolean} success
+ * @property {any=} user
+ * @property {string=} error
+ */
+
+/**
+ * @param {import('next/server').NextRequest} request
+ * @returns {Promise<AuthResult>}
+ */
+export async function verifyAuth(request) {
+  try {
+    const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+
+    if (!token) {
+      return { success: false, error: 'No token provided' };
+    }
+
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return { success: true, user: decoded };
+  } catch (error) {
+    return { success: false, error: 'Invalid token' };
+  }
+}
+
+export default { protect, admin }; 
