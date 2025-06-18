@@ -16,12 +16,14 @@
     "@fullcalendar/list": "^6.1.15",
     "@fullcalendar/react": "^6.1.15",
     "@fullcalendar/timegrid": "^6.1.15",
+    "@heroicons/react": "^2.2.0",
     "@react-jvectormap/core": "^1.0.4",
     "@react-jvectormap/world": "^1.1.2",
     "@reduxjs/toolkit": "^2.8.2",
     "@tailwindcss/forms": "^0.5.9",
     "@tailwindcss/postcss": "^4.0.9",
     "@types/js-cookie": "^3.0.6",
+    "@types/xlsx": "^0.0.35",
     "apexcharts": "^4.3.0",
     "autoprefixer": "^10.4.20",
     "axios": "^1.10.0",
@@ -43,7 +45,8 @@
     "react-redux": "^9.2.0",
     "react-toastify": "^11.0.5",
     "swiper": "^11.2.0",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^2.6.0",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

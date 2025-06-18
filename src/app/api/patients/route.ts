@@ -1,7 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/app/api/config/db';
-import Patient from './Patient';
 import { verifyAuth } from '@/app/api/middleware/authMiddleware';
+import { NextRequest, NextResponse } from 'next/server';
+import Patient from './Patient';
 
 export async function GET(req: NextRequest) {
   await dbConnect();
@@ -10,33 +10,80 @@ export async function GET(req: NextRequest) {
   const limit = parseInt(searchParams.get('limit') || '25', 10);
   const search = searchParams.get('search') || '';
 
+  // Get filter parameters
+  const gender = searchParams.get('gender') || '';
+  const country = searchParams.get('country') || '';
+  const city = searchParams.get('city') || '';
+  const startDate = searchParams.get('startDate') || '';
+  const endDate = searchParams.get('endDate') || '';
+
   // Get userId from token
   const authResult = await verifyAuth(req);
-  if (!authResult.success || !authResult.user || !authResult.user._id) {
+  if (!authResult.success || !authResult.user || !authResult.user.id) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-  const userId = authResult.user._id;
+  const userId = authResult.user.id;
 
   const query: any = { userId };
+
+  // Search functionality
   if (search) {
     query.$or = [
-      { 'personalInfo.firstName': { $regex: search, $options: 'i' } },
-      { 'personalInfo.lastName': { $regex: search, $options: 'i' } },
+      { patientName: { $regex: search, $options: 'i' } },
       { 'personalInfo.email': { $regex: search, $options: 'i' } },
       { 'personalInfo.phone': { $regex: search, $options: 'i' } },
-      { 'personalInfo.address.city': { $regex: search, $options: 'i' } },
-      { 'personalInfo.address.country': { $regex: search, $options: 'i' } },
+      { city: { $regex: search, $options: 'i' } },
+      { country: { $regex: search, $options: 'i' } },
     ];
   }
 
-  const total = await Patient.countDocuments(query);
-  const patients = await Patient.find(query)
-    .sort({ createdAt: -1 })
-    .skip((page - 1) * limit)
-    .limit(limit)
-    .lean();
+  // Filter functionality
+  if (gender) {
+    query.gender = gender;
+  }
 
-  return NextResponse.json({ patients, total });
+  if (country) {
+    query.country = country;
+  }
+
+  if (city) {
+    query.city = city;
+  }
+
+  if (startDate && endDate) {
+    query.createdAt = {
+      $gte: new Date(startDate),
+      $lte: new Date(endDate),
+    };
+  }
+
+  try {
+    const skip = (page - 1) * limit;
+    const patients = await Patient.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    const total = await Patient.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
+
+    return NextResponse.json({
+      patients,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalPatients: total,
+        hasNextPage: page < totalPages,
+        hasPrevPage: page > 1,
+      },
+    });
+  } catch (error: any) {
+    console.error('Error fetching patients:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch patients' },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
@@ -45,28 +92,109 @@ export async function POST(req: NextRequest) {
 
     // Get userId from token
     const authResult = await verifyAuth(req);
-    if (!authResult.success || !authResult.user || !authResult.user._id) {
+    console.log('Auth Result in POST:', authResult);
+    
+    if (!authResult.success || !authResult.user || !authResult.user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const userId = authResult.user._id;
-
-    const body = await req.json();
+    const userId = authResult.user.id;
+    console.log('User ID in POST:', userId);
     
-   
-    // Create patient with userId
-    const patient = await Patient.create({
-      ...body,
-      userId,
-    });
+    let patientData: any = {
+      userId: userId,
+    };
 
+    // Check content type to determine how to parse the request
+    const contentType = req.headers.get('content-type') || '';
+    
+    if (contentType.includes('application/json')) {
+      // Handle JSON data
+      const jsonData = await req.json();
+      patientData = { ...patientData, ...jsonData };
+      console.log('Received JSON data:', patientData);
+    } else if (contentType.includes('multipart/form-data')) {
+      // Handle FormData
+      const formData = await req.formData();
+      console.log('FormData received');
+      
+      // Process form fields
+      for (const [key, value] of formData.entries()) {
+        if (key !== 'scanFiles') {
+          try {
+            // Try to parse as JSON for nested objects
+            patientData[key] = JSON.parse(value as string);
+          } catch {
+            // If not JSON, use as string
+            patientData[key] = value;
+          }
+        }
+      }
+
+      // Handle file uploads
+      const files = formData.getAll('scanFiles') as File[];
+      const scanFiles = files.map((file, index) => ({
+        fileName: file.name,
+        fileUrl: `/uploads/${Date.now()}-${index}-${file.name}`, // Placeholder URL
+        uploadedAt: new Date(),
+      }));
+
+      patientData.scanFiles = scanFiles;
+    }
+
+    // --- CASE ID GENERATION LOGIC ---
+    function getStateAbbreviation(state: string) {
+      if (!state) return '';
+      const words = state.trim().split(' ');
+      if (words.length > 1) {
+        return words.map(w => w[0].toUpperCase()).join('');
+      } else {
+        return state.substring(0, 3).toUpperCase();
+      }
+    }
+
+    async function generateUniqueCaseId(state: string) {
+      const prefix = '+91';
+      const stateAbbr = getStateAbbreviation(state);
+      let caseId = '';
+      let isUnique = false;
+      let attempts = 0;
+      const maxAttempts = 100; // Prevent infinite loops
+
+      while (!isUnique && attempts < maxAttempts) {
+        const randomNum = Math.floor(1000000 + Math.random() * 9000000); // 7-digit
+        caseId = `${prefix}${stateAbbr}${randomNum}`;
+        console.log('Attempting caseId:', caseId);
+        const exists = await Patient.findOne({ caseId });
+        if (!exists) isUnique = true;
+        attempts++;
+      }
+
+      if (!isUnique) {
+        throw new Error('Failed to generate unique case ID after multiple attempts');
+      }
+
+      return caseId;
+    }
+
+    // Only generate caseId if not already present (first creation)
+    if (!patientData.caseId) {
+      
+      patientData.caseId = await generateUniqueCaseId(patientData.state);
+      
+    }
+    // --- END CASE ID GENERATION ---
+
+   // Create patient
+    const patient = await Patient.create(patientData);
+  
     return NextResponse.json(patient, { status: 201 });
   } catch (error: any) {
-    console.error('Error creating patient:', error);
+    console.error('Error in POST:', error);
     
-    // Handle duplicate email error
-    if (error.code === 11000 && error.keyPattern?.['personalInfo.email']) {
+    // Handle duplicate key error
+    if (error.code === 11000) {
       return NextResponse.json(
-        { error: 'A patient with this email already exists' },
+        { error: 'A patient with this information already exists' },
         { status: 400 }
       );
     }

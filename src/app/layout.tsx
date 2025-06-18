@@ -24,8 +24,8 @@ export default function RootLayout({
             <SidebarProvider>
               {children}
               <ToastContainer
-                position="top-right"
-                autoClose={3000}
+                position="bottom-right"
+                autoClose={1000}
                 hideProgressBar={false}
                 newestOnTop
                 closeOnClick
