@@ -35,7 +35,7 @@ const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
     name: "Patients",
-    subItems: [{ name: "Patient Records", path: "/patients", pro: false },{ name: "Create Patient Record", path: "/patients/create-patient-record", pro: false }],
+    subItems: [{ name: "Patient Records", path: "/patients", pro: false },{ name: "Create Patient Record", path: "/patients/create-patient-record/step-1", pro: false }],
   },
   {
     icon: <CalenderIcon />,

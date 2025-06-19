@@ -16,6 +16,11 @@ export async function GET(req: NextRequest) {
   const city = searchParams.get('city') || '';
   const startDate = searchParams.get('startDate') || '';
   const endDate = searchParams.get('endDate') || '';
+  const state = searchParams.get('state') || '';
+  const caseCategory = searchParams.get('caseCategory') || '';
+  const caseType = searchParams.get('caseType') || '';
+  const selectedPrice = searchParams.get('selectedPrice') || '';
+  const treatmentFor = searchParams.get('treatmentFor') || '';
 
   // Get userId from token
   const authResult = await verifyAuth(req);
@@ -30,10 +35,8 @@ export async function GET(req: NextRequest) {
   if (search) {
     query.$or = [
       { patientName: { $regex: search, $options: 'i' } },
-      { 'personalInfo.email': { $regex: search, $options: 'i' } },
-      { 'personalInfo.phone': { $regex: search, $options: 'i' } },
       { city: { $regex: search, $options: 'i' } },
-      { country: { $regex: search, $options: 'i' } },
+      { caseId: { $regex: search, $options: 'i' } },
     ];
   }
 
@@ -48,6 +51,26 @@ export async function GET(req: NextRequest) {
 
   if (city) {
     query.city = city;
+  }
+
+  if (state) {
+    query.state = state;
+  }
+
+  if (caseCategory) {
+    query.caseCategory = caseCategory;
+  }
+
+  if (caseType) {
+    query.caseType = caseType;
+  }
+
+  if (selectedPrice) {
+    query.selectedPrice = selectedPrice;
+  }
+
+  if (treatmentFor) {
+    query.treatmentFor = treatmentFor;
   }
 
   if (startDate && endDate) {
@@ -98,7 +121,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const userId = authResult.user.id;
-    console.log('User ID in POST:', userId);
     
     let patientData: any = {
       userId: userId,

@@ -66,7 +66,7 @@ interface PatientFormData {
 }
 
 // Countries and states data
-const countriesData = {
+export const countriesData = {
   "United States": [
     "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
     "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",

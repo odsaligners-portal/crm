@@ -17,6 +17,7 @@ import {
   AdjustmentsHorizontalIcon,
   ArrowsRightLeftIcon
 } from "@heroicons/react/24/outline";
+import SelectField from "@/components/form/select/SelectField";
 
 // Price configurations based on case category
 const priceOptions = {
@@ -45,6 +46,90 @@ export default function Step2Page() {
   const formData = useAppSelector((state) => state.patientForm);
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isDataLoading, setIsDataLoading] = React.useState(false);
+
+  // Fetch patient data when component mounts and patientId exists
+  React.useEffect(() => {
+    if (!patientId) {
+      toast.error('Please start from Step 1.');
+      router.replace('/patients/create-patient-record/step-1');
+      return;
+    }
+  }, [patientId, router]);
+
+  React.useEffect(() => {
+    const fetchPatientData = async () => {
+      if (!patientId || !token) return;
+      
+      setIsDataLoading(true);
+      try {
+        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const patientData = await response.json();
+          
+          // Update form with fetched data
+          if (patientData.chiefComplaint) {
+            dispatch(setField({ field: 'chiefComplaint', value: patientData.chiefComplaint }));
+          }
+          if (patientData.caseType) {
+            dispatch(setField({ field: 'caseType', value: patientData.caseType }));
+            if (
+              patientData.caseType === 'Single Upper Arch' ||
+              patientData.caseType === 'Single Lower Arch'
+            ) {
+              dispatch(setField({ field: 'singleArchType', value: patientData.caseType }));
+            }
+          }
+          if (patientData.caseCategory) {
+            dispatch(setField({ field: 'caseCategory', value: patientData.caseCategory }));
+          }
+          if (patientData.selectedPrice) {
+            dispatch(setField({ field: 'selectedPrice', value: patientData.selectedPrice }));
+          }
+          if (patientData.caseCategoryDetails) {
+            dispatch(setField({ field: 'caseCategoryDetails', value: patientData.caseCategoryDetails }));
+          }
+          if (patientData.treatmentPlan) {
+            dispatch(setField({ field: 'treatmentPlan', value: patientData.treatmentPlan }));
+          }
+          if (patientData.extraction) {
+            dispatch(setNestedField({ section: 'extraction', field: 'required', value: patientData.extraction.required }));
+            dispatch(setNestedField({ section: 'extraction', field: 'comments', value: patientData.extraction.comments }));
+          }
+          if (patientData.interproximalReduction) {
+            dispatch(setNestedField({ section: 'interproximalReduction', field: 'detail1', value: patientData.interproximalReduction.detail1 }));
+            dispatch(setNestedField({ section: 'interproximalReduction', field: 'detail2', value: patientData.interproximalReduction.detail2 }));
+            dispatch(setNestedField({ section: 'interproximalReduction', field: 'detail3', value: patientData.interproximalReduction.detail3 }));
+            dispatch(setNestedField({ section: 'interproximalReduction', field: 'detail4', value: patientData.interproximalReduction.detail4 }));
+          }
+          if (patientData.measureOfIPR) {
+            dispatch(setNestedField({ section: 'measureOfIPR', field: 'detailA', value: patientData.measureOfIPR.detailA }));
+            dispatch(setNestedField({ section: 'measureOfIPR', field: 'detailB', value: patientData.measureOfIPR.detailB }));
+            dispatch(setNestedField({ section: 'measureOfIPR', field: 'detailC', value: patientData.measureOfIPR.detailC }));
+          }
+          if (patientData.additionalComments) {
+            dispatch(setField({ field: 'additionalComments', value: patientData.additionalComments }));
+          }
+        } else if (response.status === 404) {
+          toast.error('Patient not found or you do not have permission to view this record');
+        } else if (response.status === 401) {
+          toast.error('Unauthorized access. Please log in again.');
+        }
+      } catch (error: any) {
+        console.error('Error fetching patient data:', error);
+        toast.error('Failed to load patient data. Please try again.');
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    fetchPatientData();
+  }, [patientId, token, dispatch]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -84,8 +169,8 @@ export default function Step2Page() {
         return;
       }
 
-      // Save data to database
-      const response = await fetch(`/api/patients/${encodeURIComponent(patientId || '').trim()}`, {
+      // Save data to database using update-details API
+      const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId || '').trim()}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -99,15 +184,25 @@ export default function Step2Page() {
           selectedPrice: formData.selectedPrice,
           extraction: formData.extraction,
           interproximalReduction: formData.interproximalReduction,
-          measureOfIPR: formData.measureOfIPR
+          measureOfIPR: formData.measureOfIPR,
+          caseCategoryDetails: formData.caseCategoryDetails,
+          treatmentPlan: formData.treatmentPlan,
+          additionalComments: formData.additionalComments,
         })
       });
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || 'Failed to save data');
+        if (response.status === 404) {
+          throw new Error('Patient not found or you do not have permission to modify this record');
+        } else if (response.status === 401) {
+          throw new Error('Unauthorized access. Please log in again.');
+        } else {
+          throw new Error(error.message || 'Failed to save data');
+        }
       }
 
+      toast.success('Details updated successfully');
       // Proceed to next step
       router.push(`/patients/create-patient-record/step-3?id=${patientId}`);
     } catch (error: any) {
@@ -136,6 +231,19 @@ export default function Step2Page() {
         {/* Heading & Description */}
         <h1 className="text-3xl font-bold text-blue-700 dark:text-white mb-1 tracking-tight">Step 2: Chief Complaint & Case</h1>
         <p className="text-gray-500 dark:text-gray-300 mb-8 text-sm">Tell us about the patient's chief complaint and case details. This helps us understand the treatment needs better.</p>
+        
+        {isDataLoading && (
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-center gap-3">
+              <svg className="animate-spin h-5 w-5 text-blue-500" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span className="text-blue-700 dark:text-blue-300 font-medium">Loading patient data...</span>
+            </div>
+          </div>
+        )}
+        
         <form className="space-y-8" onSubmit={nextStep}>
           <div className="space-y-6">
             <div>
@@ -160,8 +268,11 @@ export default function Step2Page() {
                       type="radio"
                       name="caseType"
                       value="Single Arch"
-                      checked={formData.caseType === "Single Arch"}
-                      onChange={handleChange}
+                      checked={formData.caseType === "Single Arch" || formData.caseType === "Single Upper Arch" || formData.caseType === "Single Lower Arch"}
+                      onChange={(e) => {
+                        handleChange(e);
+                        dispatch(setField({ field: "caseType", value: "Single Arch" }));
+                      }}
                       className="mr-2 accent-blue-500"
                       required
                     />
@@ -173,28 +284,32 @@ export default function Step2Page() {
                       name="caseType"
                       value="Double Arch"
                       checked={formData.caseType === "Double Arch"}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        handleChange(e);
+                        dispatch(setField({ field: "singleArchType", value: "" }));
+                        dispatch(setField({ field: "caseType", value: "Double Arch" }));
+                      }}
                       className="mr-2 accent-blue-500"
                       required
                     />
                     Double Arch
                   </label>
                 </div>
-              </div>
-
-              <div>
                 {/* Show dropdown if Single Arch is selected */}
-                {formData.caseType === "Single Arch" && (
+                {(formData.caseType === "Single Arch" || formData.caseType === "Single Upper Arch" || formData.caseType === "Single Lower Arch") && (
                   <div className="mt-4">
                     <Label>Arch *</Label>
                     <Select
                       options={[
-                        { label: "Upper Arch", value: "Upper Arch" },
-                        { label: "Lower Arch", value: "Lower Arch" },
+                        { label: "Upper Arch", value: "Single Upper Arch" },
+                        { label: "Lower Arch", value: "Single Lower Arch" },
                       ]}
                       name="singleArchType"
                       value={formData.singleArchType || ""}
-                      onChange={handleChange}
+                      onChange={(e) => {
+                        handleChange(e);
+                        dispatch(setField({ field: "caseType", value: e.target.value }));
+                      }}
                       required
                     />
                   </div>
@@ -222,7 +337,7 @@ export default function Step2Page() {
                 <div className="mt-2">
                   <Label>Select Package *</Label>
                   <div className="relative">
-                    <Select
+                    <SelectField
                       options={[
                         ...(priceOptions[formData.caseCategory as keyof typeof priceOptions] || [])
                       ]}
@@ -313,11 +428,11 @@ export default function Step2Page() {
                       <input
                         type="checkbox"
                         name="interproximalReduction.detail1"
-                        checked={formData.interproximalReduction.detail1 === "true"}
+                        checked={formData.interproximalReduction.detail1 === "Anterior Region (3 To 3)"}
                         onChange={(e) => handleChange({
                           target: {
                             name: e.target.name,
-                            value: e.target.checked ? "true" : "false"
+                            value: e.target.checked ? "Anterior Region (3 To 3)" : ""
                           }
                         } as any)}
                         className="mr-2 accent-blue-500 w-4 h-4"
@@ -328,11 +443,11 @@ export default function Step2Page() {
                       <input
                         type="checkbox"
                         name="interproximalReduction.detail2"
-                        checked={formData.interproximalReduction.detail2 === "true"}
+                        checked={formData.interproximalReduction.detail2 === "Posterior Region (Distal To Canine)"}
                         onChange={(e) => handleChange({
                           target: {
                             name: e.target.name,
-                            value: e.target.checked ? "true" : "false"
+                            value: e.target.checked ? "Posterior Region (Distal To Canine)" : ""
                           }
                         } as any)}
                         className="mr-2 accent-blue-500 w-4 h-4"
@@ -347,11 +462,11 @@ export default function Step2Page() {
                       <input
                         type="checkbox"
                         name="interproximalReduction.detail3"
-                        checked={formData.interproximalReduction.detail3 === "true"}
+                        checked={formData.interproximalReduction.detail3 === "plan as required"}
                         onChange={(e) => handleChange({
                           target: {
                             name: e.target.name,
-                            value: e.target.checked ? "true" : "false"
+                            value: e.target.checked ? "plan as required" : ""
                           }
                         } as any)}
                         className="mr-2 accent-blue-500 w-4 h-4"
@@ -362,11 +477,11 @@ export default function Step2Page() {
                       <input
                         type="checkbox"
                         name="interproximalReduction.detail4"
-                        checked={formData.interproximalReduction.detail4 === "true"}
+                        checked={formData.interproximalReduction.detail4 === "No IPR"}
                         onChange={(e) => handleChange({
                           target: {
                             name: e.target.name,
-                            value: e.target.checked ? "true" : "false"
+                            value: e.target.checked ? "No IPR" : ""
                           }
                         } as any)}
                         className="mr-2 accent-blue-500 w-4 h-4"
@@ -391,11 +506,11 @@ export default function Step2Page() {
                       <input
                         type="checkbox"
                         name="measureOfIPR.detailA"
-                        checked={formData.measureOfIPR.detailA === "0.3"}
+                        checked={formData.measureOfIPR.detailA === "Upto 0.25mm/surface"}
                         onChange={(e) => handleChange({
                           target: {
                             name: e.target.name,
-                            value: e.target.checked ? "0.3" : ""
+                            value: e.target.checked ? "Upto 0.25mm/surface" : ""
                           }
                         } as any)}
                         className="mr-2 accent-blue-500 w-4 h-4"
@@ -405,12 +520,12 @@ export default function Step2Page() {
                     <label className="flex items-center cursor-pointer">
                       <input
                         type="checkbox"
-                        name="measureOfIPR.detailA"
-                        checked={formData.measureOfIPR.detailA === "0.4"}
+                        name="measureOfIPR.detailC"
+                        checked={formData.measureOfIPR.detailC === "Plan as required"}
                         onChange={(e) => handleChange({
                           target: {
                             name: e.target.name,
-                            value: e.target.checked ? "0.4" : ""
+                            value: e.target.checked ? "Plan as required" : ""
                           }
                         } as any)}
                         className="mr-2 accent-blue-500 w-4 h-4"
@@ -425,11 +540,11 @@ export default function Step2Page() {
                       <input
                         type="checkbox"
                         name="measureOfIPR.detailB"
-                        checked={formData.measureOfIPR.detailB === "0.3"}
+                        checked={formData.measureOfIPR.detailB === "0.25mm to 0.5mm/surface"}
                         onChange={(e) => handleChange({
                           target: {
                             name: e.target.name,
-                            value: e.target.checked ? "0.3" : ""
+                            value: e.target.checked ? "0.25mm to 0.5mm/surface" : ""
                           }
                         } as any)}
                         className="mr-2 accent-blue-500 w-4 h-4"
@@ -442,6 +557,21 @@ export default function Step2Page() {
                 
               </div>
             </div>
+
+
+            <div className="p-4 border border-blue-100 dark:border-gray-700 rounded-lg bg-blue-50/50 dark:bg-gray-800/50">
+              <div>
+                <Label>IPR Comments</Label>
+                <TextArea
+                  name="additionalComments"
+                  value={formData.additionalComments}
+                  onChange={handleChange}
+                  rows={3}
+                  className="focus:ring-2 focus:ring-blue-200"
+                />
+              </div>
+            </div>
+
           </div>
           <div className="flex justify-between mt-8">
             <Button
@@ -452,6 +582,7 @@ export default function Step2Page() {
               Previous
             </Button>
             <Button
+              type="submit"
               variant="primary"
               className="flex items-center gap-2"
               disabled={isLoading}

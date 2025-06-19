@@ -92,6 +92,11 @@ const patientSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    selectedPrice: {
+      type: String,
+      trim: true,
+      default: '',
+    },
     caseCategoryDetails: {
       type: String,
       trim: true,
@@ -155,14 +160,22 @@ const patientSchema = new mongoose.Schema(
       trim: true,
     },
 
-    // Scan Files (max 3 assumed)
-    scanFiles: [
-      {
-        fileName: { type: String },
-        fileUrl: { type: String },
-        uploadedAt: { type: Date, default: Date.now },
-      },
-    ],
+    // Scan Files (structured by type)
+    scanFiles: {
+      img1: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      img2: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      img3: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      img4: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      img5: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      img6: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      img7: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      img8: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      img9: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      img10: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      img11: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      model1: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+      model2: [{ fileUrl: { type: String }, fileKey: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+    },
 
     caseId: {
       type: String,

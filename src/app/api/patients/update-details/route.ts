@@ -4,9 +4,12 @@ import dbConnect from '@/app/api/config/db';
 import Patient from '@/app/api/patients/Patient';
 import mongoose from 'mongoose';
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest) {
   try {
-    if (!mongoose.Types.ObjectId.isValid(params.id)) {
+    const { searchParams } = new URL(req.url);
+   
+    const id = searchParams.get('id');
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
     }
     // Verify authentication
@@ -22,7 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     // Find patient and check if it belongs to the logged-in user
     const patient = await Patient.findOne({
-      _id: params.id,
+      _id: id,
       userId: authResult.user.id // Use id from decoded token
     }).lean();
 
@@ -43,8 +46,13 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
+    }
     const authResult = await verifyAuth(req);
     if (!authResult.success) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -56,6 +64,23 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
     const fieldsToUpdate = Object.fromEntries(
       Object.entries({
+        // Step-1 fields
+        patientName: body.patientName,
+        age: body.age,
+        gender: body.gender,
+        pastMedicalHistory: body.pastMedicalHistory,
+        pastDentalHistory: body.pastDentalHistory,
+        treatmentFor: body.treatmentFor,
+        country: body.country,
+        state: body.state,
+        city: body.city,
+        primaryAddress: body.primaryAddress,
+        shippingAddress: body.shippingAddress,
+        shippingAddressType: body.shippingAddressType,
+        billingAddress: body.billingAddress,
+        privacyAccepted: body.privacyAccepted,
+        declarationAccepted: body.declarationAccepted,
+        // Step-2/3 fields
         chiefComplaint: body.chiefComplaint,
         caseType: body.caseType,
         singleArchType: body.singleArchType,
@@ -64,12 +89,21 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         extraction: body.extraction,
         interproximalReduction: body.interproximalReduction,
         measureOfIPR: body.measureOfIPR,
+        caseCategoryDetails: body.caseCategoryDetails,
+        treatmentPlan: body.treatmentPlan,
+        midline: body.midline,
+        midlineComments: body.midlineComments,
+        archExpansion: body.archExpansion,
+        archExpansionComments: body.archExpansionComments,
+        additionalComments: body.additionalComments,
+        // Step-4 field
+        scanFiles: body.scanFiles,
       }).filter(([_, v]) => v !== undefined)
     );
 
     const updatedPatient = await Patient.findOneAndUpdate(
       {
-        _id: params.id,
+        _id: id,
         userId: authResult.user.id,
       },
       { $set: fieldsToUpdate },
@@ -93,8 +127,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get('id');
+    if (!id || !mongoose.Types.ObjectId.isValid(id)) {
+      return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
+    }
     // Verify authentication
     const authResult = await verifyAuth(req);
     if (!authResult.success) {
@@ -108,7 +147,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     // Delete patient only if it belongs to the logged-in user
     const patient = await Patient.findOneAndDelete({
-      _id: params.id,
+      _id: id,
       userId: authResult.user.id // Use id from decoded token
     });
 

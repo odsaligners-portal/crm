@@ -1,6 +1,6 @@
 "use client";
 import React from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import Button from "@/components/ui/button/Button";
@@ -85,10 +85,91 @@ const countries = Object.keys(countriesData);
 
 export default function Step1() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const queryPatientId = searchParams.get("id");
   const { token } = useSelector((state: any) => state.auth);
   const dispatch = useAppDispatch();
   const formData = useAppSelector((state) => state.patientForm);
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isDataLoading, setIsDataLoading] = React.useState(false);
+
+  // Fetch patient data when component mounts and patientId exists
+  React.useEffect(() => {
+    const fetchPatientData = async () => {
+      if (!queryPatientId || !token) return;
+      
+      setIsDataLoading(true);
+      try {
+        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(queryPatientId).trim()}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const patientData = await response.json();
+          
+          // Update form with fetched data
+          if (patientData.patientName) {
+            dispatch(setField({ field: 'patientName', value: patientData.patientName }));
+          }
+          if (patientData.age) {
+            dispatch(setField({ field: 'age', value: patientData.age }));
+          }
+          if (patientData.gender) {
+            dispatch(setField({ field: 'gender', value: patientData.gender }));
+          }
+          if (patientData.pastMedicalHistory) {
+            dispatch(setField({ field: 'pastMedicalHistory', value: patientData.pastMedicalHistory }));
+          }
+          if (patientData.pastDentalHistory) {
+            dispatch(setField({ field: 'pastDentalHistory', value: patientData.pastDentalHistory }));
+          }
+          if (patientData.treatmentFor) {
+            dispatch(setField({ field: 'treatmentFor', value: patientData.treatmentFor }));
+          }
+          if (patientData.country) {
+            dispatch(setField({ field: 'country', value: patientData.country }));
+          }
+          if (patientData.state) {
+            dispatch(setField({ field: 'state', value: patientData.state }));
+          }
+          if (patientData.city) {
+            dispatch(setField({ field: 'city', value: patientData.city }));
+          }
+          if (patientData.primaryAddress) {
+            dispatch(setField({ field: 'primaryAddress', value: patientData.primaryAddress }));
+          }
+          if (patientData.shippingAddress) {
+            dispatch(setField({ field: 'shippingAddress', value: patientData.shippingAddress }));
+          }
+          if (patientData.shippingAddressType) {
+            dispatch(setField({ field: 'shippingAddressType', value: patientData.shippingAddressType }));
+          }
+          if (patientData.billingAddress) {
+            dispatch(setField({ field: 'billingAddress', value: patientData.billingAddress }));
+          }
+          if (patientData.privacyAccepted !== undefined) {
+            dispatch(setField({ field: 'privacyAccepted', value: patientData.privacyAccepted }));
+          }
+          if (patientData.declarationAccepted !== undefined) {
+            dispatch(setField({ field: 'declarationAccepted', value: patientData.declarationAccepted }));
+          }
+        } else if (response.status === 404) {
+          toast.error('Patient not found or you do not have permission to view this record');
+        } else if (response.status === 401) {
+          toast.error('Unauthorized access. Please log in again.');
+        }
+      } catch (error: any) {
+        console.error('Error fetching patient data:', error);
+        toast.error('Failed to load patient data. Please try again.');
+      } finally {
+        setIsDataLoading(false);
+      }
+    };
+
+    fetchPatientData();
+  }, [queryPatientId, token, dispatch]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -118,23 +199,62 @@ export default function Step1() {
     }
     setIsLoading(true);
     try {
-      const response = await fetch("/api/patients", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(formData),
-      });
+      let response;
+      if (queryPatientId) {
+       
+        response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(queryPatientId).trim()}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            patientName: formData.patientName,
+            age: formData.age,
+            gender: formData.gender,
+            pastMedicalHistory: formData.pastMedicalHistory,
+            pastDentalHistory: formData.pastDentalHistory,
+            treatmentFor: formData.treatmentFor,
+            country: formData.country,
+            state: formData.state,
+            city: formData.city,
+            primaryAddress: formData.primaryAddress,
+            shippingAddress: formData.shippingAddress,
+            shippingAddressType: formData.shippingAddressType,
+            billingAddress: formData.billingAddress,
+            privacyAccepted: formData.privacyAccepted,
+            declarationAccepted: formData.declarationAccepted
+          }),
+        });
+      } else {
+        // Create new patient
+        response = await fetch("/api/patients", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(formData),
+        });
+      }
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to save patient record");
       }
+      
       const data = await response.json();
-      if (!data._id) throw new Error("No patient ID returned from server");
-      dispatch(setForm(data));
-      toast.success("Basic details saved successfully");
-      router.push(`/patients/create-patient-record/step-2?id=${data._id}`);
+      const currentPatientId = queryPatientId || data._id;
+      
+      if (!currentPatientId) throw new Error("No patient ID returned from server");
+      
+      if (!queryPatientId) {
+        // Only set form data for new patients
+        dispatch(setForm(data));
+      }
+      
+      toast.success(queryPatientId ? "Basic details updated successfully" : "Basic details saved successfully");
+      router.push(`/patients/create-patient-record/step-2?id=${currentPatientId}`);
     } catch (error: any) {
       toast.error(error.message || "Failed to save patient record");
     } finally {
@@ -158,6 +278,19 @@ export default function Step1() {
         {/* Heading & Description */}
         <h1 className="text-3xl font-bold text-blue-700 dark:text-white mb-1 tracking-tight">Step 1: Basic Details</h1>
         <p className="text-gray-500 dark:text-gray-300 mb-8 text-sm">Let's start with the patient's basic information. Please fill out all required fields to continue.</p>
+        
+        {isDataLoading && (
+          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-center gap-3">
+              <svg className="animate-spin h-5 w-5 text-blue-500" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span className="text-blue-700 dark:text-blue-300 font-medium">Loading patient data...</span>
+            </div>
+          </div>
+        )}
+        
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-6">
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -413,6 +546,7 @@ export default function Step1() {
           </div>
           <div className="flex justify-end pt-6">
             <Button
+              type="submit"
               disabled={isLoading}
               className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center gap-2 text-base font-semibold"
             >
