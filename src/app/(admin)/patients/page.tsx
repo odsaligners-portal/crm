@@ -307,7 +307,23 @@ export default function ViewPatientRecords() {
             type="text"
             placeholder="Search by name, city, or case ID..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              // Prevent + and - from being entered
+              const value = e.target.value.replace(/[+-]/g, '');
+              setSearchTerm(value);
+            }}
+            onKeyDown={e => {
+              if (e.key === '+' || e.key === '-') {
+                e.preventDefault();
+              }
+            }}
+            onPaste={e => {
+              const pasteText = e.clipboardData.getData('text');
+              if (pasteText.includes('+') || pasteText.includes('-')) {
+                e.preventDefault();
+                setSearchTerm(pasteText.replace(/[+-]/g, ''));
+              }
+            }}
             className="w-full max-w-xs shadow-sm rounded-lg border border-blue-100 focus:ring-2 focus:ring-blue-300"
           />
           <Button
