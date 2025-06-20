@@ -7,7 +7,7 @@ import VerticallyCenteredModal from "@/components/example/ModalExample/Verticall
 import { Metadata } from "next";
 import React from "react";
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Next.js Modals | TailAdmin - Next.js Dashboard Template",
   description:
     "This is Next.js Modals page for TailAdmin - Next.js Tailwind CSS Admin Dashboard Template",
