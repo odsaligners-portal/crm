@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 
-export async function GET(req: NextRequest) {
+export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const fileUrl = searchParams.get('url');
   const filename = searchParams.get('filename') || 'downloaded-file';
