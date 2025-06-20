@@ -11,7 +11,7 @@ import Image from "next/image";
 import Badge from "@/components/ui/badge/Badge";
 import * as XLSX from 'xlsx';
 import Select from "@/components/form/select/SelectField";
-import { countriesData } from "../patients/create-patient-record/page";
+import { countriesData } from "../patients/create-patient-record/step-1/page";
 import AvatarText from "@/components/ui/avatar/AvatarText";
 import { EyeIcon, PencilIcon, FileIcon } from "@/icons";
 import { UserIcon, BoxIcon } from "@/icons";

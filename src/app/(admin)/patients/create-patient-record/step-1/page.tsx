@@ -1,19 +1,20 @@
 "use client";
-import React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
-import Button from "@/components/ui/button/Button";
 import Input from "@/components/form/input/InputField";
-import Label from "@/components/form/Label";
-import Select from "@/components/form/select/SelectField";
 import TextArea from "@/components/form/input/TextArea";
-import { useAppSelector, useAppDispatch } from "@/store/store";
-import { setField, setNestedField, setForm } from "@/store/features/patientFormSlice";
-import { UserIcon, CalendarIcon, MapPinIcon, HomeIcon } from "@heroicons/react/24/outline";
+import Label from "@/components/form/Label";
+import Button from "@/components/ui/button/Button";
+import { setField, setForm, setNestedField } from "@/store/features/patientFormSlice";
+import { useAppDispatch, useAppSelector } from "@/store/store";
+import { CalendarIcon, GlobeAltIcon, MapIcon, MapPinIcon, UserIcon } from "@heroicons/react/24/outline";
+import { useRouter, useSearchParams } from "next/navigation";
+import React from "react";
+import { useSelector } from "react-redux";
+import countryList from "react-select-country-list";
+import { toast } from "react-toastify";
 
-// Countries and states data
-const countriesData = {
+type OptionType = { label: string; value: string };
+
+export const countriesData: Record<string, string[]> = {
   "United States": [
     "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
     "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
@@ -92,6 +93,7 @@ export default function Step1() {
   const formData = useAppSelector((state) => state.patientForm);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isDataLoading, setIsDataLoading] = React.useState(false);
+  const [patientDatails, setPatientDatails] = React.useState<any>(null);
 
   // Fetch patient data when component mounts and patientId exists
   React.useEffect(() => {
@@ -108,7 +110,7 @@ export default function Step1() {
 
         if (response.ok) {
           const patientData = await response.json();
-          
+          setPatientDatails(patientData);
           // Update form with fetched data
           if (patientData.patientName) {
             dispatch(setField({ field: 'patientName', value: patientData.patientName }));
@@ -266,6 +268,13 @@ export default function Step1() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 py-8 animate-fade-in">
       <div className="w-full max-w-3xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 relative overflow-hidden border border-blue-100 dark:border-gray-800 animate-slide-up">
         {/* Progress Bar */}
+        {
+          patientDatails && (
+            <div className="flex justify-end mt-8 mb-10">
+              <div className="text-sm border border-blue-200 rounded-lg px-4 py-2 font-extrabold bg-gradient-to-r from-blue-700 via-blue-400 to-blue-700 bg-clip-text text-transparent tracking-tight drop-shadow-xl">Case Id: {patientDatails?.caseId || queryPatientId}</div>
+            </div>
+          )
+        }
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-blue-600">Step 1 of 4</span>
@@ -324,17 +333,18 @@ export default function Step1() {
               </div>
               <div>
                 <Label>Gender *</Label>
-                <Select
-                  options={[
-                    { label: "Male", value: "Male" },
-                    { label: "Female", value: "Female" },
-                    { label: "Other", value: "Other" },
-                  ]}
+                <select
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
                   required
-                />
+                  className="w-full border rounded px-3 py-2"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                </select>
               </div>
             </div>
             <div className="space-y-4">
@@ -400,35 +410,55 @@ export default function Step1() {
                 </label>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-lg">
               <div>
-                <Label>Country *</Label>
-                <Select
-                  options={[
-                    { label: "Select Country", value: "" },
-                    ...countries.map(country => ({ label: country, value: country }))
-                  ]}
-                  name="country"
-                  value={formData.country}
-                  onChange={handleChange}
-                  required
-                />
+                <Label>
+                  <span className="inline-flex items-center gap-2">
+                    <GlobeAltIcon className="w-5 h-5 text-blue-500" /> Country *
+                  </span>
+                </Label>
+                <div className="relative">
+                  <select
+                    name="country"
+                    value={formData.country || ""}
+                    onChange={handleChange}
+                    required
+                    className="w-full rounded-lg border border-blue-200 px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-gray-800 appearance-none shadow-sm"
+                  >
+                    <option value="">Select Country</option>
+                    {countries.map(country => (
+                      <option key={country} value={country}>{country}</option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-400">
+                    <GlobeAltIcon className="w-5 h-5" />
+                  </span>
+                </div>
               </div>
               <div>
-                <Label>State/Province *</Label>
-                <Select
-                  options={[
-                    { label: "Select State/Province", value: "" },
-                    ...(formData.country && countriesData[formData.country as keyof typeof countriesData]
-                      ? countriesData[formData.country as keyof typeof countriesData].map(state => ({ label: state, value: state }))
-                      : [])
-                  ]}
-                  name="state"
-                  value={formData.state}
-                  onChange={handleChange}
-                  required
-                  disabled={!formData.country}
-                />
+                <Label>
+                  <span className="inline-flex items-center gap-2">
+                    <MapIcon className="w-5 h-5 text-blue-500" /> State/Province *
+                  </span>
+                </Label>
+                <div className="relative">
+                  <select
+                    name="state"
+                    value={formData.state || ""}
+                    onChange={handleChange}
+                    required
+                    disabled={!formData.country}
+                    className="w-full rounded-lg border border-blue-200 px-4 py-2 pr-8 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-gray-800 appearance-none shadow-sm disabled:bg-gray-100"
+                  >
+                    <option value="">Select State/Province</option>
+                    {(formData.country && countriesData[formData.country]) && countriesData[formData.country].map((state: string) => (
+                      <option key={state} value={state}>{state}</option>
+                    ))}
+                  </select>
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-blue-400">
+                    <MapIcon className="w-5 h-5" />
+                  </span>
+                </div>
               </div>
               <div>
                 <Label>City *</Label>

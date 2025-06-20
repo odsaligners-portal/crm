@@ -3,10 +3,11 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import Select from "@/components/form/select/SelectField";
-import { BriefcaseIcon, DocumentTextIcon, ShieldCheckIcon, SparklesIcon, UserCircleIcon } from "@heroicons/react/24/solid";
+import { BriefcaseIcon, DocumentTextIcon, GlobeAltIcon, MapIcon, ShieldCheckIcon, SparklesIcon, UserCircleIcon } from "@heroicons/react/24/solid";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { motion } from "framer-motion";
 
 const luxuryBg = `fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center bg-white`;
 const glassCard = "relative bg-white/95 backdrop-blur-xl border border-blue-200 rounded-3xl shadow-2xl p-8 mb-12 overflow-hidden";
@@ -73,7 +74,6 @@ export default function ViewPatientDetails() {
 
   // Debug log for scanFiles and file URLs
   if (typeof window !== 'undefined') {
-    console.log('scanFiles:', scanFiles);
     Object.entries(scanFiles).forEach(([key, arr]) => {
       if (Array.isArray(arr) && arr.length > 0) {
         console.log(`Slot ${key}:`, arr[0].fileUrl);
@@ -81,28 +81,34 @@ export default function ViewPatientDetails() {
     });
   }
 
+  // Helper to get file name from URL
+  const getFileNameFromUrl = (url: string) => {
+    try {
+      const path = new URL(url).pathname.split('/').pop()!;
+      return decodeURIComponent(path).substring(path.indexOf('-') + 1);
+    } catch { return "file"; }
+  };
+
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center py-16 px-2">
-      {/* Animated luxury background */}
-      {/* <div className={luxuryBg} aria-hidden="true">
-        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[80vw] h-[80vw] bg-gradient-to-br from-blue-100/60 via-blue-300/40 to-blue-200/20 rounded-full blur-3xl animate-spin-slow" />
+    <div className="relative min-h-screen flex flex-col items-center justify-center py-16 px-2 overflow-x-hidden">
+      {/* Animated glassmorphism background */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[90vw] h-[90vw] bg-gradient-to-br from-blue-200/40 via-blue-100/30 to-white/10 rounded-full blur-3xl animate-spin-slow" />
         <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-gradient-to-br from-blue-200/40 via-blue-100/20 to-white/10 rounded-full blur-2xl animate-float" />
         <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-to-tr from-blue-100/30 via-blue-300/20 to-white/10 rounded-full blur-2xl animate-float2" />
-      </div> */}
-      {/* Floating back button */}
-      {/* <button onClick={() => router.back()} className="fixed top-36 left-8 z-20 bg-white border border-blue-300 rounded-full shadow-lg p-3 hover:scale-110 transition-transform flex items-center gap-2 text-blue-700 font-bold text-lg backdrop-blur-xl">
-        <ArrowLeftIcon className="w-6 h-6" /> Back
-      </button> */}
+      </div>
       <div className="max-w-4xl w-full z-10">
-        <div className="text-center mb-12 animate-fadeInUp">
-          <SparklesIcon className="w-12 h-12 mx-auto text-blue-700 drop-shadow-lg animate-bounce" />
-          <h1 className="text-5xl md:text-6xl font-extrabold text-blue-700 tracking-tight mb-2">{data.patientName}</h1>
-          <div className="text-lg md:text-xl text-blue-900 font-medium mb-2">Case Id : {data.caseId}</div>
-        </div>
+        <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, type: 'spring' }}>
+          <div className="text-center mb-12 animate-fadeInUp">
+            <SparklesIcon className="w-12 h-12 mx-auto text-blue-700 drop-shadow-lg animate-bounce" />
+            <h1 className="text-5xl md:text-6xl font-extrabold bg-gradient-to-r from-blue-700 via-blue-400 to-blue-700 bg-clip-text text-transparent tracking-tight mb-2 drop-shadow-xl">{data.patientName}</h1>
+            <div className="text-lg md:text-xl text-blue-900 font-medium mb-2">Case Id : {data.caseId}</div>
+          </div>
+        </motion.div>
         <form className="max-w-4xl w-full z-10 space-y-10">
           {/* Section 1: Basic Details */}
-          <div className={glassCard + " " + fadeIn}>
-            <div className={sectionHeader}><UserCircleIcon className="w-8 h-8 text-blue-400" /> Basic Details</div>
+          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.7, type: 'spring' }} className="mb-8 p-8 rounded-3xl shadow-2xl bg-white/70 dark:bg-gray-900/70 border border-blue-200/60 dark:border-gray-800/80 backdrop-blur-xl hover:shadow-blue-200/40 transition-all">
+            <div className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 via-blue-400 to-blue-700 bg-clip-text text-transparent mb-6 flex items-center gap-3"><SparklesIcon className="w-7 h-7 text-blue-400 animate-pulse" /> Basic Details</div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-lg">
               <div><Label>Patient Name</Label><Input value={data.patientName} disabled /></div>
               <div><Label>Age</Label><Input value={data.age} disabled /></div>
@@ -124,8 +130,32 @@ export default function ViewPatientDetails() {
               </div>
             </div>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div><Label>Country</Label><Input value={data.country} disabled /></div>
-              <div><Label>State</Label><Input value={data.state} disabled /></div>
+              <div className="relative group">
+                <Label>
+                  <span className="inline-flex items-center gap-2">
+                    <GlobeAltIcon className="w-5 h-5 text-blue-500 group-hover:animate-bounce" /> Country
+                  </span>
+                </Label>
+                <div className="relative bg-gradient-to-br from-blue-50/80 via-white/60 to-blue-100/60 rounded-2xl shadow-xl backdrop-blur-md border border-blue-200 group-hover:border-blue-500 group-hover:shadow-blue-200/60 transition-all">
+                  <div className="w-full rounded-xl border-none px-4 py-3 pr-10 bg-transparent text-gray-900 flex items-center font-semibold text-base min-h-[44px]">
+                    <GlobeAltIcon className="w-6 h-6 text-blue-400 mr-2 group-hover:scale-125 transition-transform" />
+                    <span>{data.country || "-"}</span>
+                  </div>
+                </div>
+              </div>
+              <div className="relative group">
+                <Label>
+                  <span className="inline-flex items-center gap-2">
+                    <MapIcon className="w-5 h-5 text-blue-500 group-hover:animate-bounce" /> State/Province
+                  </span>
+                </Label>
+                <div className="relative bg-gradient-to-br from-blue-50/80 via-white/60 to-blue-100/60 rounded-2xl shadow-xl backdrop-blur-md border border-blue-200 group-hover:border-blue-500 group-hover:shadow-blue-200/60 transition-all">
+                  <div className="w-full rounded-xl border-none px-4 py-3 pr-10 bg-transparent text-gray-900 flex items-center font-semibold text-base min-h-[44px]">
+                    <MapIcon className="w-6 h-6 text-blue-400 mr-2 group-hover:scale-125 transition-transform" />
+                    <span>{data.state || "-"}</span>
+                  </div>
+                </div>
+              </div>
               <div><Label>City</Label><Input value={data.city} disabled /></div>
             </div>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -136,11 +166,11 @@ export default function ViewPatientDetails() {
               <div><Label>Billing Address</Label><Input value={data.billingAddress} disabled /></div>
               <div><Label>Shipping Address Type</Label><Input value={data.shippingAddressType} disabled /></div>
             </div>
-          </div>
+          </motion.div>
           <div className={divider} />
           {/* Section 2: Chief Complaint & Case */}
-          <div className={glassCard + " " + fadeIn}>
-            <div className={sectionHeader}><BriefcaseIcon className="w-8 h-8 text-blue-400" /> Chief Complaint & Case</div>
+          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.7, type: 'spring' }} className="mb-8 p-8 rounded-3xl shadow-2xl bg-white/70 dark:bg-gray-900/70 border border-blue-200/60 dark:border-gray-800/80 backdrop-blur-xl hover:shadow-blue-200/40 transition-all">
+            <div className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 via-blue-400 to-blue-700 bg-clip-text text-transparent mb-6 flex items-center gap-3"><SparklesIcon className="w-7 h-7 text-blue-400 animate-pulse" /> Chief Complaint & Case</div>
             <div className="mb-6"><Label>Chief Complaint</Label><TextArea value={data.chiefComplaint} disabled /></div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
@@ -187,11 +217,11 @@ export default function ViewPatientDetails() {
               </div>
             </div>
             <div className="mt-6"><Label>Extraction Comments</Label><TextArea value={data.extraction?.comments} disabled /></div>
-          </div>
+          </motion.div>
           <div className={divider} />
           {/* Section 3: IPR, Midline & Arch Expansion */}
-          <div className={glassCard + " " + fadeIn}>
-            <div className={sectionHeader}><DocumentTextIcon className="w-8 h-8 text-blue-400" /> IPR, Midline & Arch Expansion</div>
+          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.7, type: 'spring' }} className="mb-8 p-8 rounded-3xl shadow-2xl bg-white/70 dark:bg-gray-900/70 border border-blue-200/60 dark:border-gray-800/80 backdrop-blur-xl hover:shadow-blue-200/40 transition-all">
+            <div className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 via-blue-400 to-blue-700 bg-clip-text text-transparent mb-6 flex items-center gap-3"><SparklesIcon className="w-7 h-7 text-blue-400 animate-pulse" /> IPR, Midline & Arch Expansion</div>
             {/* IPR Section (modern pill checkboxes) */}
             <div className="mb-8 p-6 rounded-2xl shadow bg-white/80 border border-blue-100">
               <div className="flex items-center gap-3 mb-4">
@@ -289,7 +319,7 @@ export default function ViewPatientDetails() {
             <div className="mb-6">
               <Label>Midline</Label>
               <div className="flex flex-wrap gap-3 mt-2">
-                {['Adjust as Needed', 'Correct through IPR', 'Move to Left', 'Move to Right'].map(opt => (
+                {['Adjust as Needed', 'Correct through IPR', 'Move to Left', 'Move to Right', 'None'].map(opt => (
                   <label key={opt} className={`flex items-center gap-2 ${data.midline === opt ? 'text-blue-700 font-bold' : 'text-gray-500'}`}>
                     <input type="radio" checked={data.midline === opt} disabled className={`accent-blue-500 ${data.midline === opt ? 'ring-2 ring-blue-400' : ''}`} />
                     <span className={data.midline === opt ? 'text-blue-700' : ''}>{opt}</span>
@@ -301,7 +331,7 @@ export default function ViewPatientDetails() {
             <div className="mb-6">
               <Label>Arch Expansion</Label>
               <div className="flex flex-wrap gap-3 mt-2">
-                {['Move to Right', 'Expand in Anterior', 'Expand in Posterior', 'No Expansion Required'].map(opt => (
+                {['Move to Right', 'Expand in Anterior', 'Expand in Posterior', 'No Expansion Required', 'None'].map(opt => (
                   <label key={opt} className={`flex items-center gap-2 ${data.archExpansion === opt ? 'text-blue-700 font-bold' : 'text-gray-500'}`}>
                     <input type="radio" checked={data.archExpansion === opt} disabled className={`accent-blue-500 ${data.archExpansion === opt ? 'ring-2 ring-blue-400' : ''}`} />
                     <span className={data.archExpansion === opt ? 'text-blue-700' : ''}>{opt}</span>
@@ -310,52 +340,74 @@ export default function ViewPatientDetails() {
               </div>
             </div>
             <div className="mb-6"><Label>Arch Expansion Comments</Label><TextArea value={data.archExpansionComments} disabled /></div>
-          </div>
+          </motion.div>
           <div className={divider} />
           {/* Section 4: Files */}
-          <div className={glassCard + " " + fadeIn}>
-            <div className={sectionHeader}><ShieldCheckIcon className="w-8 h-8 text-blue-400" /> Files</div>
+          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.7, type: 'spring' }} className="mb-8 p-8 rounded-3xl shadow-2xl bg-white/70 dark:bg-gray-900/70 border border-blue-200/60 dark:border-gray-800/80 backdrop-blur-xl hover:shadow-blue-200/40 transition-all">
+            <div className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 via-blue-400 to-blue-700 bg-clip-text text-transparent mb-6 flex items-center gap-3"><SparklesIcon className="w-7 h-7 text-blue-400 animate-pulse" /> Files</div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {Array.from({ length: 13 }).map((_, idx) => {
-                const key = idx < 11 ? `img${idx+1}` : idx === 11 ? 'model1' : 'model2';
-                const arr = scanFiles[key] || [];
-                if (!arr.length) return null;
-                const file = arr[0];
-                const isImage = file.fileUrl;
-                const isModel = file.fileUrl && file.fileUrl.match(/\.(ply|tls)$/i);
+              {[...Array(11)].map((_, idx) => {
+                const file = scanFiles[`img${idx + 1}`]?.[0];
+                if (!file) return (
+                  <div key={idx} className="text-center"><Label>{imageLabels[idx]}</Label><div className="h-32 flex items-center justify-center text-gray-400">No file</div></div>
+                );
+                const fileUrl = file.fileUrl;
+                let fileName = '';
+                let fileExt = '';
+                if (typeof fileUrl === 'string') {
+                  fileName = getFileNameFromUrl(fileUrl);
+                  fileExt = fileName.split('.').pop()?.toLowerCase() || '';
+                }
                 return (
-                  <div key={key} className="relative border-2 border-blue-200 rounded-2xl bg-white shadow-xl p-4 overflow-hidden group">
-                    <div className="mb-2 font-semibold text-blue-700 text-center">{imageLabels[idx] || `File ${idx+1}`}</div>
-                    {isImage ? (
-                      <img src={file.fileUrl} alt={file.fileKey} className="w-full h-40 object-contain rounded-xl mb-2 shadow-lg border border-blue-100 bg-white" />
-                    ) : isModel ? (
-                      <div className="flex flex-col items-center justify-center h-40">
-                        <svg className="w-12 h-12 text-blue-400 mb-2" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path d="M12 4v16m8-8H4" /></svg>
-                        <span className="text-blue-700 font-semibold">PLY/TLS file</span>
-                        <a href={file.fileUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline mt-1">Download Model</a>
+                  <div key={idx} className="text-center">
+                    <Label>{imageLabels[idx]}</Label>
+                    {['jpg','jpeg','png'].includes(fileExt) ? (
+                      <div className="flex flex-col items-center">
+                        <a href={fileUrl || ''} download={fileName} className="w-full">
+                          <img src={fileUrl || ''} alt={fileName} className="w-full h-32 object-contain rounded-xl border shadow cursor-pointer" />
+                        </a>
+                        <a href={fileUrl || ''} download={fileName} className="mt-2 text-blue-600 underline text-xs" title="Download image">Download</a>
                       </div>
                     ) : (
-                      <a href={file.fileUrl} target="_blank" rel="noopener noreferrer" className="block group-hover:scale-105 transition-transform duration-300 text-blue-600 underline text-center">
-                        Download {imageLabels[idx] || `File ${idx+1}`}
-                      </a>
+                      <div className="flex flex-col items-center justify-center h-32 w-full p-2 border rounded-xl shadow bg-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-blue-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l9 4.5v9L12 21l-9-4.5v-9L12 3z" /></svg>
+                        <p className="break-all text-xs font-medium text-gray-700 mb-1">{fileName}</p>
+                        <a href={fileUrl || ''} download={fileName} className="text-blue-600 underline text-xs" title="Download 3D model">Download</a>
+                      </div>
                     )}
-                    <div className="flex items-center justify-center gap-2 text-xs text-blue-500">
-                      {file.uploadedAt && new Date(file.uploadedAt).toLocaleString()}
-                      <a
-                        href={`/api/download?url=${encodeURIComponent(file.fileUrl)}&filename=${encodeURIComponent((file.fileKey ? file.fileKey.split("/").pop() : `file-${key}`) + (isImage ? '.jpg' : ''))}`}
-                        className="ml-2 p-1 rounded-full hover:bg-blue-100 transition"
-                        title="Download file"
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5 text-blue-600">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4" />
-                        </svg>
-                      </a>
-                    </div>
                   </div>
                 );
               })}
             </div>
-          </div>
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold text-gray-700 mb-4 border-b pb-2">3D Models (PLY/STL)</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[...Array(2)].map((_, idx) => {
+                  const file = scanFiles[`model${idx + 1}`]?.[0];
+                  if (!file) return (
+                    <div key={idx} className="text-center"><Label>{`Select PLY/STL File ${idx + 1}`}</Label><div className="h-32 flex items-center justify-center text-gray-400">No file</div></div>
+                  );
+                  const fileUrl = file.fileUrl;
+                  let fileName = '';
+                  let fileExt = '';
+                  if (typeof fileUrl === 'string') {
+                    fileName = getFileNameFromUrl(fileUrl);
+                    fileExt = fileName.split('.').pop()?.toLowerCase() || '';
+                  }
+                  return (
+                    <div key={idx} className="text-center">
+                      <Label>{`Select PLY/STL File ${idx + 1}`}</Label>
+                      <div className="flex flex-col items-center justify-center h-32 w-full p-2 border rounded-xl shadow bg-white">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-blue-600 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3l9 4.5v9L12 21l-9-4.5v-9L12 3z" /></svg>
+                        <p className="break-all text-xs font-medium text-gray-700 mb-1">{fileName}</p>
+                        <a href={fileUrl || ''} download={fileName} className="text-blue-600 underline text-xs" title="Download 3D model">Download</a>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </motion.div>
         </form>
         <div className={divider} />
         <div className={glassCard + " " + fadeIn}>

@@ -9,7 +9,7 @@ import Label from "@/components/form/Label";
 import TextArea from "@/components/form/input/TextArea";
 import { useAppSelector, useAppDispatch } from "@/store/store";
 import { setField, setNestedField } from "@/store/features/patientFormSlice";
-import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
+import { ArrowsRightLeftIcon, SparklesIcon } from "@heroicons/react/24/outline";
 
 export default function Step3Page() {
   const router = useRouter();
@@ -20,6 +20,7 @@ export default function Step3Page() {
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isDataLoading, setIsDataLoading] = React.useState(false);
+  const [patientDatails, setPatientDatails] = React.useState<any>(null);
 
   // Fetch patient data when component mounts and patientId exists
   React.useEffect(() => {
@@ -44,7 +45,7 @@ export default function Step3Page() {
 
         if (response.ok) {
           const patientData = await response.json();
-          
+          setPatientDatails(patientData);
           // Update form with fetched data
           if (patientData.midline) {
             dispatch(setField({ field: 'midline', value: patientData.midline }));
@@ -140,6 +141,9 @@ export default function Step3Page() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 py-8 animate-fade-in">
       <div className="w-full max-w-3xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 relative overflow-hidden border border-blue-100 dark:border-gray-800 animate-slide-up">
         {/* Progress Bar */}
+        <div className="flex justify-end mt-8 mb-10">
+          <div className="text-sm border border-blue-200 rounded-lg px-4 py-2 font-extrabold bg-gradient-to-r from-blue-700 via-blue-400 to-blue-700 bg-clip-text text-transparent tracking-tight drop-shadow-xl">Case Id: {patientDatails?.caseId || patientId}</div>
+        </div>
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-blue-600">Step 3 of 4</span>
@@ -220,6 +224,17 @@ export default function Step3Page() {
                       />
                       Move to Right
                     </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="midline"
+                        value="None"
+                        checked={formData.midline === "None"}
+                        onChange={handleChange}
+                        className="mr-2 accent-blue-500 w-4 h-4"
+                      />
+                      None
+                    </label>
                   </div>
                 </div>
                 
@@ -283,6 +298,17 @@ export default function Step3Page() {
                         className="mr-2 accent-blue-500 w-4 h-4"
                       />
                       No Expansion Required
+                    </label>
+                    <label className="flex items-center cursor-pointer">
+                      <input
+                        type="radio"
+                        name="archExpansion"
+                        value="None"
+                        checked={formData.archExpansion === "None"}
+                        onChange={handleChange}
+                        className="mr-2 accent-blue-500 w-4 h-4"
+                      />
+                      None
                     </label>
                   </div>
                 </div>

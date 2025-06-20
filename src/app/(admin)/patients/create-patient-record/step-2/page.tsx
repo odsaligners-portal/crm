@@ -15,7 +15,8 @@ import {
   ChatBubbleLeftRightIcon, 
   CurrencyDollarIcon,
   AdjustmentsHorizontalIcon,
-  ArrowsRightLeftIcon
+  ArrowsRightLeftIcon,
+  SparklesIcon
 } from "@heroicons/react/24/outline";
 import SelectField from "@/components/form/select/SelectField";
 
@@ -47,6 +48,7 @@ export default function Step2Page() {
   const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isDataLoading, setIsDataLoading] = React.useState(false);
+  const [patientDatails, setPatientDatails] = React.useState<any>(null);
 
   // Fetch patient data when component mounts and patientId exists
   React.useEffect(() => {
@@ -71,7 +73,7 @@ export default function Step2Page() {
 
         if (response.ok) {
           const patientData = await response.json();
-          
+          setPatientDatails(patientData);
           // Update form with fetched data
           if (patientData.chiefComplaint) {
             dispatch(setField({ field: 'chiefComplaint', value: patientData.chiefComplaint }));
@@ -219,6 +221,9 @@ export default function Step2Page() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 py-8 animate-fade-in">
       <div className="w-full max-w-3xl bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 relative overflow-hidden border border-blue-100 dark:border-gray-800 animate-slide-up">
         {/* Progress Bar */}
+        <div className="flex justify-end mt-8 mb-10">
+          <div className="text-sm border border-blue-200 rounded-lg px-4 py-2 font-extrabold bg-gradient-to-r from-blue-700 via-blue-400 to-blue-700 bg-clip-text text-transparent tracking-tight drop-shadow-xl">Case Id: {patientDatails?.caseId || patientId}</div>
+        </div>
         <div className="mb-8">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-blue-600">Step 2 of 4</span>
@@ -601,6 +606,7 @@ export default function Step2Page() {
             </Button>
           </div>
         </form>
+        
       </div>
     </div>
   );
