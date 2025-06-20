@@ -1,7 +1,5 @@
 "use client";
-import React from "react";
 
-import { ApexOptions } from "apexcharts";
 
 import dynamic from "next/dynamic";
 // Dynamically import the ReactApexChart component
@@ -10,7 +8,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 export default function BarChartOne() {
-  const options: ApexOptions = {
+  const options = {
     colors: ["#465fff"],
     chart: {
       fontFamily: "Outfit, sans-serif",
@@ -85,7 +83,7 @@ export default function BarChartOne() {
         show: false,
       },
       y: {
-        formatter: (val: number) => `${val}`,
+        formatter: (val) => `${val}`,
       },
     },
   };
