@@ -2,14 +2,14 @@
 import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
-import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
-import Link from "next/link";
-import React, { useState } from "react";
-import { useRouter } from 'next/navigation';
-import { useAppDispatch } from '@/store/store';
+import { EyeCloseIcon, EyeIcon } from "@/icons";
 import { setCredentials } from '@/store/features/auth/authSlice';
-import { toast } from 'react-toastify';
+import { useAppDispatch } from '@/store/store';
 import { fetchWithError } from '@/utils/apiErrorHandler';
+import Link from "next/link";
+import { useRouter } from 'next/navigation';
+import { useState } from "react";
+import { toast } from 'react-toastify';
 
 export default function SignInForm() {
   const router = useRouter();
@@ -46,11 +46,24 @@ export default function SignInForm() {
       // Update Redux store with user data
       dispatch(setCredentials({
         user: data.user,
-        token: data.token
+        token: data.token,
+        role: data.user.role
       }));
 
       toast.success('Successfully logged in!');
-      router.push('/'); // Redirect to dashboard after successful login
+      
+      // Role-based redirection
+      const userRole = data.user.role;
+      if (userRole === 'admin') {
+        router.push('/admin');
+      } else if (userRole === 'doctor') {
+        router.push('/doctor');
+      } else if (userRole === 'super-admin') {
+        router.push('/super-admin');
+      } else {
+        toast.error('Invalid User Role');
+        router.push('/signin'); // Default redirect
+      }
     } catch (error) {
       // Error is already handled by fetchWithError
       console.error('Login error:', error);

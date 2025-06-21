@@ -6,20 +6,24 @@ const loadState = () => {
     return {
       user: null,
       token: null,
+      role: null,
     };
   }
 
   try {
     const serializedUser = localStorage.getItem('user');
     const serializedToken = localStorage.getItem('token');
+    const serializedRole = localStorage.getItem('role');
     return {
       user: serializedUser ? JSON.parse(serializedUser) : null,
       token: serializedToken || null,
+      role: serializedRole || null,
     };
   } catch (err) {
     return {
       user: null,
       token: null,
+      role: null,
     };
   }
 };
@@ -33,11 +37,13 @@ const authSlice = createSlice({
     setCredentials: (state, action) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
+      state.role = action.payload.user.role;
       
       // Save to localStorage
       if (typeof window !== 'undefined') {
         localStorage.setItem('user', JSON.stringify(action.payload.user));
         localStorage.setItem('token', action.payload.token);
+        localStorage.setItem('role', action.payload.user.role);
       }
 
       // Set cookies
@@ -48,11 +54,13 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.token = null;
+      state.role = null;
       
       // Clear localStorage
       if (typeof window !== 'undefined') {
         localStorage.removeItem('user');
         localStorage.removeItem('token');
+        localStorage.removeItem('role');
       }
 
       // Clear cookies

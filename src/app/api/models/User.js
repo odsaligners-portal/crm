@@ -28,19 +28,8 @@ const userSchema = new mongoose.Schema({
 
   role: {
     type: String,
-    enum: ['user', 'admin'],
-    default: 'user'
-  },
-  bio: {
-    type: String,
-    default: ''
-  },
-
-  address: {
-    country: { type: String, default: '' },
-    city: { type: String, default: '' },
-    postalCode: { type: String, default: '' },
-    taxId: { type: String, default: '' }
+    enum: ['doctor', 'admin', 'super-admin'],
+    default: 'doctor'
   },
   createdAt: {
     type: Date,

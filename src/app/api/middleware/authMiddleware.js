@@ -38,6 +38,7 @@ export const protect = async (req) => {
       return {
         success: false,
         error: 'Not authorized to access this route',
+        err : err,
       };
     }
   } catch (error) {
@@ -74,17 +75,7 @@ export const admin = async (req) => {
   }
 };
 
-/**
- * @typedef {Object} AuthResult
- * @property {boolean} success
- * @property {any=} user
- * @property {string=} error
- */
 
-/**
- * @param {import('next/server').NextRequest} request
- * @returns {Promise<AuthResult>}
- */
 export async function verifyAuth(request) {
   try {
     const token = request.headers.get('Authorization')?.replace('Bearer ', '');
@@ -96,7 +87,7 @@ export async function verifyAuth(request) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     return { success: true, user: decoded };
   } catch (error) {
-    return { success: false, error: 'Invalid token' };
+    return { success: false, error: 'Invalid token', err: error };
   }
 }
 

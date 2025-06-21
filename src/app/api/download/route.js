@@ -1,4 +1,3 @@
-import { NextRequest } from 'next/server';
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
@@ -25,6 +24,10 @@ export async function GET(req) {
       },
     });
   } catch (err) {
-    return new Response('Error downloading file', { status: 500 });
+    return new Response({
+      status: 500,
+      statusText: 'Internal Server Error',
+      err: err.message,
+    });
   }
 } 

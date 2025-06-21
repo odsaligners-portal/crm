@@ -1,6 +1,6 @@
 import dbConnect from '@/app/api/config/db';
 import { verifyAuth } from '@/app/api/middleware/authMiddleware';
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import Patient from './Patient';
 
 export async function GET(req) {
@@ -21,6 +21,7 @@ export async function GET(req) {
   const caseType = searchParams.get('caseType') || '';
   const selectedPrice = searchParams.get('selectedPrice') || '';
   const treatmentFor = searchParams.get('treatmentFor') || '';
+  const sort = searchParams.get('sort') || '';
 
   // Get userId from token
   const authResult = await verifyAuth(req);
@@ -80,10 +81,16 @@ export async function GET(req) {
     };
   }
 
+  let sortOption = {};
+
+  if (sort === 'latest') {
+    sortOption = { createdAt: -1 };
+  }
+
   try {
     const skip = (page - 1) * limit;
     const patients = await Patient.find(query)
-      .sort({ createdAt: -1 })
+      .sort(sortOption)
       .skip(skip)
       .limit(limit);
 
@@ -115,7 +122,7 @@ export async function POST(req) {
 
     // Get userId from token
     const authResult = await verifyAuth(req);
-    console.log('Auth Result in POST:', authResult);
+    
     
     if (!authResult.success || !authResult.user || !authResult.user.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

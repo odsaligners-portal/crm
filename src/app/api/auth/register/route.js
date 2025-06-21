@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server';
-import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { NextResponse } from 'next/server';
 import connectDB from '../../config/db';
 import User from '../../models/User';
-import { handleError, AppError } from '../../utils/errorHandler';
+import { AppError, handleError } from '../../utils/errorHandler';
 
 export async function POST(req) {
   try {
