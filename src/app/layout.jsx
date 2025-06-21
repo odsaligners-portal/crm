@@ -17,7 +17,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>  
-        <link rel="shortcut icon" type="image/x-icon" href="images/logo/fav.png" />
+        <link rel="shortcut icon" type="image/x-icon" href="/fav.png" />
       </head>
       <body className={`${outfit.className} dark:bg-gray-900`}>
         <Providers>
