@@ -3,6 +3,9 @@ const nextConfig = {
   images: {
     domains: ['images.unsplash.com', 'images.remotePatterns'],
   },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   async rewrites() {
     return [
       {

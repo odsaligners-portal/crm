@@ -1,4 +1,3 @@
-import { NextRequest, NextResponse } from 'next/server';
 import { verifyAuth } from '@/app/api/middleware/authMiddleware';
 import dbConnect from '@/app/api/config/db';
 import Patient from '@/app/api/patients/Patient';

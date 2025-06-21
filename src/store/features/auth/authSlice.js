@@ -21,6 +21,7 @@ const loadState = () => {
     };
   } catch (err) {
     return {
+      message: err.message,
       user: null,
       token: null,
       role: null,
