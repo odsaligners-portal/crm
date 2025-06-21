@@ -17,23 +17,6 @@ const countries = Object.keys(countriesData);
 const caseCategories = ["Flexi", "Premium", "Elite"];
 const caseTypes = ["Single Upper Arch", "Single Lower Arch", "Double Arch"];
 const treatmentForOptions = ["Invisalign", "Clear Aligners", "Braces"];
-const priceOptions = {
-  Flexi: [
-    { label: "Basic Plan - $999", value: "999" },
-    { label: "Standard Plan - $1299", value: "1299" },
-    { label: "Premium Plan - $1599", value: "1599" }
-  ],
-  Premium: [
-    { label: "Silver Plan - $1999", value: "1999" },
-    { label: "Gold Plan - $2499", value: "2499" },
-    { label: "Platinum Plan - $2999", value: "2999" }
-  ],
-  Elite: [
-    { label: "Executive Plan - $3499", value: "3499" },
-    { label: "VIP Plan - $3999", value: "3999" },
-    { label: "Luxury Plan - $4499", value: "4499" }
-  ]
-};
 
 const genders = ["Male", "Female", "Other"];
 

@@ -10,6 +10,7 @@ import {
   PageIcon,
   PieChartIcon,
   PlugInIcon,
+  PlusIcon,
   TableIcon,
   UserCircleIcon,
 } from "@/icons/index";
@@ -22,22 +23,22 @@ const navItems = [
   {
     icon: <GridIcon />,
     name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    path: "/admin",
   },
   {
-    icon: <GridIcon />,
-    name: "Patients",
-    subItems: [{ name: "Patient Records", path: "/patients", pro: false },{ name: "Create Patient Record", path: "/patients/create-patient-record/step-1", pro: false }],
+    icon: <ListIcon />,
+    name: "Patient Records",
+    path: "/admin/patients",
   },
   {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
+    icon: <PlusIcon />,
+    name: "Create Patient Record",
+    path: "/admin/patients/create-patient-record/step-1",
   },
   {
     icon: <UserCircleIcon />,
     name: "User Profile",
-    path: "/profile",
+    path: "/admin/profile",
   },
 
   {
@@ -307,14 +308,14 @@ const AppSidebar = () => {
             <>
               <Image
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/logo.png"
                 alt="Logo"
                 width={150}
                 height={40}
               />
               <Image
                 className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
+                src="/logo.png"
                 alt="Logo"
                 width={150}
                 height={40}
@@ -322,7 +323,7 @@ const AppSidebar = () => {
             </>
           ) : (
             <Image
-              src="/images/logo/logo-icon.svg"
+              src="/logo.png"
               alt="Logo"
               width={32}
               height={32}

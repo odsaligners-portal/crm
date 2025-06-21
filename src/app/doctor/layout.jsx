@@ -22,7 +22,7 @@ export default function DoctorLayout({
     if (!user || !role) {
       router.push('/signin');
       return;
-    }
+    } 
 
     if (role !== 'doctor') {
       if(role === 'admin'){

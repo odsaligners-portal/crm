@@ -31,21 +31,14 @@ export async function GET(req) {
         name: user.name,
         email: user.email,
         role: user.role,
-        bio: user.bio || '',
-        phone: user.phone || '',
-        location: user.location || '',
-        socialLinks: user.socialLinks || {
-          facebook: '',
-          twitter: '',
-          linkedin: '',
-          instagram: ''
-        },
-        address: user.address || {
-          country: '',
-          city: '',
-          postalCode: '',
-          taxId: ''
-        }
+        mobile: user.mobile,
+        gender: user.gender,
+        country: user.country,
+        state: user.state,
+        city: user.city,
+        experience: user.experience,
+        doctorType: user.doctorType,
+        address: user.address,
       }
     });
 
@@ -71,17 +64,19 @@ export async function PUT(req) {
     
     // Get request body
     const body = await req.json();
-    console.log('Received update data:', body);
 
-    // Update user data
-    const updateData = {
-      name: body.name,
-      email: body.email,
-      bio: body.bio,
-      phone: body.phone,
-    };
+    // Dynamically build the update object with provided fields
+    const updateData = {};
+    const fields = [
+      'name', 'email', 'mobile', 'gender', 'country', 'state', 
+      'city', 'experience', 'doctorType', 'address'
+    ];
 
-    console.log('Update data being sent to DB:', updateData);
+    fields.forEach(field => {
+      if (body[field] !== undefined) {
+        updateData[field] = body[field];
+      }
+    });
 
     const user = await User.findByIdAndUpdate(
       decoded.id,
@@ -93,28 +88,20 @@ export async function PUT(req) {
       throw new AppError('User not found', 404);
     }
 
-    console.log('Updated user data:', user);
-
     return NextResponse.json({
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
-        bio: user.bio || '',
-        phone: user.phone || '',
-        socialLinks: user.socialLinks || {
-          facebook: '',
-          twitter: '',
-          linkedin: '',
-          instagram: ''
-        },
-        address: user.address || {
-          country: '',
-          city: '',
-          postalCode: '',
-          taxId: ''
-        }
+        mobile: user.mobile,
+        gender: user.gender,
+        country: user.country,
+        state: user.state,
+        city: user.city,
+        experience: user.experience,
+        doctorType: user.doctorType,
+        address: user.address,
       }
     });
 

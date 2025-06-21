@@ -8,9 +8,15 @@ export async function POST(req) {
   try {
     await connectDB();
     
-    const { name, email, password } = await req.json();
+    const { 
+      name, email, password, mobile, gender, country, 
+      state, city, experience, doctorType, address 
+    } = await req.json();
 
-    if (!name || !email || !password) {
+    if (
+      !name || !email || !password || !mobile || !gender || !country || 
+      !state || !city || !experience || !doctorType || !address
+    ) {
       throw new AppError('Please provide all required fields', 400);
     }
 
@@ -25,23 +31,41 @@ export async function POST(req) {
       name,
       email,
       password,
+      mobile,
+      gender,
+      country,
+      state,
+      city,
+      experience,
+      doctorType,
+      address,
     });
 
     // Generate JWT
     const token = jwt.sign(
-      { id: user._id, email: user.email },
+      { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '30d' }
     );
 
     // Return response without password
+    const userResponse = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      mobile: user.mobile,
+      gender: user.gender,
+      country: user.country,
+      state: user.state,
+      city: user.city,
+      experience: user.experience,
+      doctorType: user.doctorType,
+      address: user.address,
+    };
+
     return NextResponse.json({
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role
-      },
+      user: userResponse,
       token
     }, { status: 201 });
 

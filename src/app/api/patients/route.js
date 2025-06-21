@@ -1,7 +1,7 @@
 import dbConnect from '@/app/api/config/db';
 import { verifyAuth } from '@/app/api/middleware/authMiddleware';
 import { NextResponse } from 'next/server';
-import Patient from './Patient';
+import Patient from '../models/Patient';
 
 export async function GET(req) {
   await dbConnect();
