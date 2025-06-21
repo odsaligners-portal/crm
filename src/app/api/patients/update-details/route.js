@@ -2,6 +2,7 @@ import { verifyAuth } from '@/app/api/middleware/authMiddleware';
 import dbConnect from '@/app/api/config/db';
 import Patient from '@/app/api/patients/Patient';
 import mongoose from 'mongoose';
+import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   try {
