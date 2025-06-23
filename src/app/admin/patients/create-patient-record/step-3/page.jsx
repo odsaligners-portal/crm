@@ -1,64 +1,61 @@
 "use client";
-import React from "react";
+import TextArea from "@/components/form/input/TextArea";
+import Label from "@/components/form/Label";
+import Button from "@/components/ui/button/Button";
+import { archExpansionOptions, midlineOptions } from "@/constants/data";
+import { ArrowsRightLeftIcon } from "@heroicons/react/24/outline";
 import { useRouter, useSearchParams } from "next/navigation";
+import React from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import Button from "@/components/ui/button/Button";
-import Input from "@/components/form/input/InputField";
-import Label from "@/components/form/Label";
-import TextArea from "@/components/form/input/TextArea";
-import { useAppSelector, useAppDispatch } from "@/store/store";
-import { setField, setNestedField } from "@/store/features/patientFormSlice";
-import { ArrowsRightLeftIcon, SparklesIcon } from "@heroicons/react/24/outline";
 
 export default function Step3Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
   const { token } = useSelector((state) => state.auth);
-  const formData = useAppSelector((state) => state.patientForm);
-  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = React.useState(false);
   const [isDataLoading, setIsDataLoading] = React.useState(false);
   const [patientDatails, setPatientDatails] = React.useState(null);
+
+  // Local state for form data
+  const [formData, setFormData] = React.useState({
+    midline: "",
+    midlineComments: "",
+    archExpansion: "",
+    archExpansionComments: "",
+  });
 
   // Fetch patient data when component mounts and patientId exists
   React.useEffect(() => {
     if (!patientId) {
       toast.error('Please start from Step 1.');
-      router.replace('/patients/create-patient-record/step-1');
+      router.replace('/admin/patients/create-patient-record/step-1');
       return;
     }
   }, [patientId, router]);
 
   React.useEffect(() => {
     const fetchPatientData = async () => {
-      if (!patientId || !token) return;
-      
+      if (!patientId) return;
       setIsDataLoading(true);
       try {
-        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
+        const response = await fetch(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-
         if (response.ok) {
           const patientData = await response.json();
           setPatientDatails(patientData);
-          // Update form with fetched data
-          if (patientData.midline) {
-            dispatch(setField({ field: 'midline', value: patientData.midline }));
-          }
-          if (patientData.midlineComments) {
-            dispatch(setField({ field: 'midlineComments', value: patientData.midlineComments }));
-          }
-          if (patientData.archExpansion) {
-            dispatch(setField({ field: 'archExpansion', value: patientData.archExpansion }));
-          }
-          if (patientData.archExpansionComments) {
-            dispatch(setField({ field: 'archExpansionComments', value: patientData.archExpansionComments }));
-          }
+          // Pre-fill local form state with fetched data
+          setFormData((prev) => ({
+            ...prev,
+            midline: patientData.midline || "",
+            midlineComments: patientData.midlineComments || "",
+            archExpansion: patientData.archExpansion || "",
+            archExpansionComments: patientData.archExpansionComments || "",
+          }));
         } else if (response.status === 404) {
           toast.error('Patient not found or you do not have permission to view this record');
         } else if (response.status === 401) {
@@ -71,33 +68,30 @@ export default function Step3Page() {
         setIsDataLoading(false);
       }
     };
-
     fetchPatientData();
-  }, [patientId, token, dispatch]);
+  }, [patientId, token]);
 
+  // Local handleChange for all fields
   const handleChange = (e) => {
-    const { name, value, type } = e.target;
-    if (name.includes(".")) {
-      const [section, field] = name.split(".");
-      dispatch(setNestedField({ section, field, value: type === "number" ? Number(value) : value }));
-    } else {
-      dispatch(setField({ field: name, value: type === "number" ? Number(value) : value }));
-    }
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
   };
 
   const nextStep = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
     try {
       // Validation: require at least midline or archExpansion
       if (!formData.midline && !formData.archExpansion) {
         toast.error("Please select at least one option for Midline or Arch Expansion.");
+        setIsLoading(false);
         return;
       }
-
       // Save data to database using update-details API
-      const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId || '').trim()}`, {
+      const response = await fetch(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId || '').trim()}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +104,6 @@ export default function Step3Page() {
           archExpansionComments: formData.archExpansionComments
         })
       });
-
       if (!response.ok) {
         const error = await response.json();
         if (response.status === 404) {
@@ -121,10 +114,9 @@ export default function Step3Page() {
           throw new Error(error.message || 'Failed to save data');
         }
       }
-
       toast.success('Details updated successfully');
       // Proceed to next step
-      router.push(`/patients/create-patient-record/step-4?id=${patientId}`);
+      router.push(`/admin/patients/create-patient-record/step-4?id=${patientId}`);
     } catch (error) {
       toast.error(error.message || 'Failed to save data. Please try again.');
     } finally {
@@ -132,7 +124,7 @@ export default function Step3Page() {
     }
   };
   const prevStep = () => {
-    router.push(`/patients/create-patient-record/step-2?id=${patientId}`);
+    router.push(`/admin/patients/create-patient-record/step-2?id=${patientId}`);
   };
 
   return (
@@ -178,61 +170,19 @@ export default function Step3Page() {
                 <div>
                   <Label>Midline</Label>
                   <div className="space-y-2 mt-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="midline"
-                        value="Adjust as Needed"
-                        checked={formData.midline === "Adjust as Needed"}
-                        onChange={handleChange}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Adjust as Needed
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="midline"
-                        value="Correct through IPR"
-                        checked={formData.midline === "Correct through IPR"}
-                        onChange={handleChange}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Correct through IPR
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="midline"
-                        value="Move to Left"
-                        checked={formData.midline === "Move to Left"}
-                        onChange={handleChange}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Move to Left
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="midline"
-                        value="Move to Right"
-                        checked={formData.midline === "Move to Right"}
-                        onChange={handleChange}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Move to Right
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="midline"
-                        value="None"
-                        checked={formData.midline === "None"}
-                        onChange={handleChange}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      None
-                    </label>
+                    {midlineOptions.map((option) => (
+                      <label key={option} className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="midline"
+                          value={option}
+                          checked={formData.midline === option}
+                          onChange={handleChange}
+                          className="mr-2 accent-blue-500 w-4 h-4"
+                        />
+                        {option}
+                      </label>
+                    ))}
                   </div>
                 </div>
                 
@@ -253,61 +203,19 @@ export default function Step3Page() {
                 <div>
                   <Label>Arch Expansion</Label>
                   <div className="space-y-2 mt-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="archExpansion"
-                        value="Move to Right"
-                        checked={formData.archExpansion === "Move to Right"}
-                        onChange={handleChange}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Move to Right
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="archExpansion"
-                        value="Expand in Anterior"
-                        checked={formData.archExpansion === "Expand in Anterior"}
-                        onChange={handleChange}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Expand in Anterior
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="archExpansion"
-                        value="Expand in Posterior"
-                        checked={formData.archExpansion === "Expand in Posterior"}
-                        onChange={handleChange}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Expand in Posterior
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="archExpansion"
-                        value="No Expansion Required"
-                        checked={formData.archExpansion === "No Expansion Required"}
-                        onChange={handleChange}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      No Expansion Required
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="radio"
-                        name="archExpansion"
-                        value="None"
-                        checked={formData.archExpansion === "None"}
-                        onChange={handleChange}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      None
-                    </label>
+                    {archExpansionOptions.map((option) => (
+                      <label key={option} className="flex items-center cursor-pointer">
+                        <input
+                          type="radio"
+                          name="archExpansion"
+                          value={option}
+                          checked={formData.archExpansion === option}
+                          onChange={handleChange}
+                          className="mr-2 accent-blue-500 w-4 h-4"
+                        />
+                        {option}
+                      </label>
+                    ))}
                   </div>
                 </div>
               </div>

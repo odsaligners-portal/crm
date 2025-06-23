@@ -183,6 +183,12 @@ const patientSchema = new mongoose.Schema(
       unique: true,
       index: true,
     },
+
+    profilePicture: {
+      url: { type: String, default: '' },
+      fileKey: { type: String, default: '' },
+      uploadedAt: { type: Date, default: Date.now },
+    },
   },
   {
     timestamps: true,

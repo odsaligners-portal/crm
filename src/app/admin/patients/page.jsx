@@ -1,24 +1,20 @@
 "use client";
+import UploadModal from "@/components/admin/patients/UploadModal";
+import ViewCommentsModal from "@/components/admin/patients/ViewCommentsModal";
 import Input from "@/components/form/input/InputField";
 import Select from "@/components/form/select/SelectField";
-import AvatarText from "@/components/ui/avatar/AvatarText";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { EyeIcon, PencilIcon, PlusIcon } from "@/icons";
+import { caseTypes, genders, treatmentForOptions } from "@/constants/data";
+import { EyeIcon, PencilIcon, PlusIcon, TrashBinIcon } from "@/icons";
+import { countriesData } from "@/utils/countries";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import * as XLSX from 'xlsx';
-import { countriesData } from "../patients/create-patient-record/step-1/page";
-
 const countries = Object.keys(countriesData);
-const caseCategories = ["Flexi", "Premium", "Elite"];
-const caseTypes = ["Single Upper Arch", "Single Lower Arch", "Double Arch"];
-const treatmentForOptions = ["Invisalign", "Clear Aligners", "Braces"];
-
-const genders = ["Male", "Female", "Other"];
 
 export default function ViewPatientRecords() {
   const router = useRouter();
@@ -30,6 +26,30 @@ export default function ViewPatientRecords() {
   const [totalPatients, setTotalPatients] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [isViewCommentsModalOpen, setIsViewCommentsModalOpen] = useState(false);
+  const [patientForComments, setPatientForComments] = useState(null);
+
+  const handleOpenUploadModal = (patient) => {
+    setSelectedPatient(patient);
+    setIsUploadModalOpen(true);
+  };
+
+  const handleCloseUploadModal = () => {
+    setSelectedPatient(null);
+    setIsUploadModalOpen(false);
+  };
+
+  const handleOpenViewCommentsModal = (patient) => {
+    setPatientForComments(patient);
+    setIsViewCommentsModalOpen(true);
+  };
+
+  const handleCloseViewCommentsModal = () => {
+    setPatientForComments(null);
+    setIsViewCommentsModalOpen(false);
+  };
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -44,6 +64,9 @@ export default function ViewPatientRecords() {
     startDate: "",
     endDate: "",
   });
+
+  const [caseCategories, setCaseCategories] = useState([]);
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
 
   const fetchPatients = async () => {
     try {
@@ -80,6 +103,25 @@ export default function ViewPatientRecords() {
     fetchPatients();
   }, [currentPage, searchTerm, filters]);
 
+  useEffect(() => {
+    const fetchCaseCategories = async () => {
+      setIsCategoriesLoading(true);
+      try {
+        const response = await fetch('/api/case-categories?active=true', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        });
+        if (!response.ok) throw new Error('Failed to fetch case categories');
+        const result = await response.json();
+        setCaseCategories(result.data || []);
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setIsCategoriesLoading(false);
+      }
+    };
+    fetchCaseCategories();
+  }, [token]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     setCurrentPage(1);
@@ -89,8 +131,13 @@ export default function ViewPatientRecords() {
     setCurrentPage(page);
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString();
+  const formatDateToIST = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      timeZone: 'Asia/Kolkata'
+    });
   };
 
   const handleFilterChange = (key, value) => {
@@ -191,305 +238,374 @@ export default function ViewPatientRecords() {
     endDate: 'End Date',
   };
 
+  const handleDeletePatient = async (patientId, patientName) => {
+    if (!confirm(`Are you sure you want to delete patient "${patientName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/patients/update-details?id=${patientId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete patient');
+      }
+
+      toast.success('Patient deleted successfully');
+      fetchPatients(); // Refresh the list
+    } catch (error) {
+      toast.error(error.message || 'Failed to delete patient');
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="p-5 lg:p-6">
         <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading patients...</div>
+          <div className="w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full animate-spin border-t-brand-500"></div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-5 lg:p-10 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
-      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-3xl font-extrabold text-blue-800 dark:text-white/90 tracking-tight drop-shadow-lg">
-            Patient Records
-          </h1>
-          <p className="mt-2 text-base text-gray-500 dark:text-gray-400 font-medium">
-            Manage and view all patient records
-          </p>
+    <>
+      <UploadModal
+        isOpen={isUploadModalOpen}
+        onClose={handleCloseUploadModal}
+        patient={selectedPatient}
+      />
+      <ViewCommentsModal
+        isOpen={isViewCommentsModalOpen}
+        onClose={handleCloseViewCommentsModal}
+        patient={patientForComments}
+      />
+      <div className="p-4 lg:p-6 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-2xl font-extrabold text-blue-800 dark:text-white/90 tracking-tight drop-shadow-lg">
+              Patient Records
+            </h1>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 font-medium">
+              Manage and view all patient records
+            </p>
+          </div>
+          <div className="flex gap-3">
+            <Button onClick={exportToExcel} className="px-4 py-2 shadow-md bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform">
+              Export to Excel
+            </Button>
+            <Button
+              onClick={() => router.push("/admin/patients/create-patient-record/step-1")}
+              className="px-4 py-2 shadow-md bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform"
+            >
+              <PlusIcon className="mr-2 h-4 w-4" />
+              Add Patient
+            </Button>
+          </div>
         </div>
-        <div className="flex gap-3">
-          <Button onClick={exportToExcel} className="px-4 py-2 shadow-md bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform">
-            Export to Excel
-          </Button>
-          <Button
-            onClick={() => router.push("/doctor/patients/create-patient-record/step-1")}
-            className="px-4 py-2 shadow-md bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform"
-          >
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Add Patient
-          </Button>
-        </div>
-      </div>
 
-      {/* Search and Filters */}
-      <div className="mb-8 space-y-4">
-        <div className="flex gap-2 items-end">
-          <Input
-            type="text"
-            placeholder="Search by name, city, or case ID..."
-            value={searchTerm}
-            onChange={(e) => {
-              // Prevent + and - from being entered
-              const value = e.target.value.replace(/[+-]/g, '');
-              setSearchTerm(value);
-            }}
-            onKeyDown={e => {
-              if (e.key === '+' || e.key === '-') {
-                e.preventDefault();
-              }
-            }}
-            onPaste={e => {
-              const pasteText = e.clipboardData.getData('text');
-              if (pasteText.includes('+') || pasteText.includes('-')) {
-                e.preventDefault();
-                setSearchTerm(pasteText.replace(/[+-]/g, ''));
-              }
-            }}
-            className="w-full max-w-xs shadow-sm rounded-lg border border-blue-100 focus:ring-2 focus:ring-blue-300"
-          />
-          <Button
-            type="button"
-            variant="primary"
-            className="h-10 px-4 w-1/4 shadow-md bg-gradient-to-r from-blue-100 to-blue-300 text-blue-800 font-semibold rounded-lg hover:scale-105 transition-transform"
-            onClick={() => setShowFilters((prev) => !prev)}
-          >
-            {showFilters ? "Hide Filters" : "Filters"}
-          </Button>
-          <Button
-            type="button"
-            className="h-10 px-4 shadow-md bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform"
-            onClick={() => {
-              setCurrentPage(1);
-              fetchPatients();
-            }}
-          >
-            Search
-          </Button>
-        </div>
-        <div className={`transition-all duration-300 ${showFilters ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0 overflow-hidden'} bg-white/80 dark:bg-gray-900/80 rounded-lg shadow-lg p-6 border-l-4 border-blue-200 dark:border-blue-800 backdrop-blur-md`}>  
-          <form className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end" onSubmit={handleSearch}>
-            <Select
-              value={filters.gender}
-              onChange={(e) => handleFilterChange("gender", e.target.value)}
-              options={[...genders.map(g => ({ label: g, value: g }))]}
-              label="Gender"
-              className="w-full"
-            />
-            <Select
-              value={filters.treatmentFor}
-              onChange={(e) => handleFilterChange("treatmentFor", e.target.value)}
-              options={[...treatmentForOptions.map(t => ({ label: t, value: t }))]}
-              label="Treatment For"
-              className="w-full"
-            />
-            <Select
-              value={filters.country}
+        {/* Search and Filters */}
+        <div className="mb-8 space-y-4">
+          <div className="flex gap-2 items-end">
+            <Input
+              type="text"
+              placeholder="Search by name, city, or case ID..."
+              value={searchTerm}
               onChange={(e) => {
-                handleFilterChange("country", e.target.value);
-                handleFilterChange("state", "");
+                // Prevent + and - from being entered
+                const value = e.target.value.replace(/[+-]/g, '');
+                setSearchTerm(value);
               }}
-              options={[...countries.map(c => ({ label: c, value: c }))]}
-              label="Country"
-              className="w-full"
-            />
-            <Select
-              value={filters.state}
-              onChange={(e) => handleFilterChange("state", e.target.value)}
-              options={[
-                ...((filters.country && (countriesData)[filters.country]) ? (countriesData)[filters.country].map((s) => ({ label: s, value: s })) : [])
-              ]}
-              label="State"
-              className="w-full"
-              disabled={!filters.country}
-            />
-            <Select
-              value={filters.caseCategory}
-              onChange={(e) => {
-                handleFilterChange("caseCategory", e.target.value);
-                handleFilterChange("selectedPrice", "");
+              onKeyDown={e => {
+                if (e.key === '+' || e.key === '-') {
+                  e.preventDefault();
+                }
               }}
-              options={[...caseCategories.map(c => ({ label: c, value: c }))]}
-              label="Case Category"
-              className="w-full"
+              onPaste={e => {
+                const pasteText = e.clipboardData.getData('text');
+                if (pasteText.includes('+') || pasteText.includes('-')) {
+                  e.preventDefault();
+                  setSearchTerm(pasteText.replace(/[+-]/g, ''));
+                }
+              }}
+              className="w-full max-w-xs shadow-sm rounded-lg border border-blue-100 focus:ring-2 focus:ring-blue-300"
             />
-            <Select
-              value={filters.caseType}
-              onChange={(e) => handleFilterChange("caseType", e.target.value)}
-              options={[...caseTypes.map(c => ({ label: c, value: c }))]}
-              label="Case Type"
-              className="w-full"
-            />
+            <Button
+              type="button"
+              variant="primary"
+              className="h-10 px-4 w-1/4 shadow-md bg-gradient-to-r from-blue-100 to-blue-300 text-blue-800 font-semibold rounded-lg hover:scale-105 transition-transform"
+              onClick={() => setShowFilters((prev) => !prev)}
+            >
+              {showFilters ? "Hide Filters" : "Filters"}
+            </Button>
+            <Button
+              type="button"
+              className="h-10 px-4 shadow-md bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform"
+              onClick={() => {
+                setCurrentPage(1);
+                fetchPatients();
+              }}
+            >
+              Search
+            </Button>
+          </div>
+          <div className={`transition-all duration-300 ${showFilters ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0 overflow-hidden'} bg-white/80 dark:bg-gray-900/80 rounded-lg shadow-lg p-6 border-l-4 border-blue-200 dark:border-blue-800 backdrop-blur-md`}>
+            <form className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end" onSubmit={handleSearch}>
+              <Select
+                value={filters.gender}
+                onChange={(e) => handleFilterChange("gender", e.target.value)}
+                options={[...genders.map(g => ({ label: g, value: g }))]}
+                label="Gender"
+                className="w-full"
+              />
+              <Select
+                value={filters.treatmentFor}
+                onChange={(e) => handleFilterChange("treatmentFor", e.target.value)}
+                options={[...treatmentForOptions.map(t => ({ label: t, value: t }))]}
+                label="Treatment For"
+                className="w-full"
+              />
+              <Select
+                value={filters.country}
+                onChange={(e) => {
+                  handleFilterChange("country", e.target.value);
+                  handleFilterChange("state", "");
+                }}
+                options={[...countries.map(c => ({ label: c, value: c }))]}
+                label="Country"
+                className="w-full"
+              />
+              <Select
+                value={filters.state}
+                onChange={(e) => handleFilterChange("state", e.target.value)}
+                options={[
+                  ...((filters.country && (countriesData)[filters.country]) ? (countriesData)[filters.country].map((s) => ({ label: s, value: s })) : [])
+                ]}
+                label="State"
+                className="w-full"
+                disabled={!filters.country}
+              />
+              <Select
+                value={filters.caseCategory}
+                onChange={(e) => {
+                  handleFilterChange("caseCategory", e.target.value);
+                  handleFilterChange("selectedPrice", "");
+                }}
+                options={caseCategories.map(c => ({ label: c.category, value: c.category }))}
+                label="Case Category"
+                className="w-full"
+              />
+              <Select
+                value={filters.caseType}
+                onChange={(e) => handleFilterChange("caseType", e.target.value)}
+                options={[...caseTypes.map(c => ({ label: c, value: c }))]}
+                label="Case Type"
+                className="w-full"
+              />
 
-            <div className="flex flex-col gap-1 w-full col-span-2">
-              <label className="text-xs font-medium text-gray-600">Created Date</label>
-              <div className="flex gap-2">
-                <Input
-                  type="date"
-                  value={filters.startDate}
-                  onChange={(e) => handleFilterChange("startDate", e.target.value)}
-                  className="w-full"
-                />
-                <span className="mx-1 text-gray-400">-</span>
-                <Input
-                  type="date"
-                  value={filters.endDate}
-                  onChange={(e) => handleFilterChange("endDate", e.target.value)}
-                  className="w-full"
-                />
+              <div className="flex flex-col gap-1 w-full col-span-2">
+                <label className="text-xs font-medium text-gray-600">Created Date</label>
+                <div className="flex gap-2">
+                  <Input
+                    type="date"
+                    value={filters.startDate}
+                    onChange={(e) => handleFilterChange("startDate", e.target.value)}
+                    className="w-full"
+                  />
+                  <span className="mx-1 text-gray-400">-</span>
+                  <Input
+                    type="date"
+                    value={filters.endDate}
+                    onChange={(e) => handleFilterChange("endDate", e.target.value)}
+                    className="w-full"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="flex gap-2 w-full col-span-full justify-end mt-2">
-              <Button type="submit" className="h-10 px-4 shadow bg-blue-500 text-white font-semibold rounded-lg hover:scale-105 transition-transform">Apply Filters</Button>
-              <Button type="button" onClick={clearFilters} variant="outline" size="sm" className="h-10 px-4 shadow bg-white text-blue-700 font-semibold rounded-lg hover:scale-105 transition-transform">Reset</Button>
-            </div>
-          </form>
-          {getFilterCount() > 0 && (
-            <Badge color="info" className="text-xs mt-2">
-              {getFilterCount()} filters active
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      {/* Active Filters */}
-      {getFilterCount() > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {Object.entries(filters).map(([key, value]) => (
-            value ? (
-              <Badge
-                key={key}
-                color="info"
-                className="text-xs flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 rounded-full shadow-sm"
-              >
-                <span className="font-semibold text-blue-700 dark:text-blue-200">{filterLabels[key] || key}:</span>
-                <span className="text-blue-900 dark:text-blue-100">{value}</span>
-                <button
-                  type="button"
-                  className="ml-1 text-blue-400 hover:text-blue-700 dark:hover:text-blue-200 focus:outline-none"
-                  onClick={() => handleFilterChange(key, "")}
-                  aria-label={`Clear ${filterLabels[key] || key} filter`}
-                >
-                  ×
-                </button>
+              <div className="flex gap-2 w-full col-span-full justify-end mt-2">
+                <Button type="submit" className="h-10 px-4 shadow bg-blue-500 text-white font-semibold rounded-lg hover:scale-105 transition-transform">Apply Filters</Button>
+                <Button type="button" onClick={clearFilters} variant="outline" size="sm" className="h-10 px-4 shadow bg-white text-blue-700 font-semibold rounded-lg hover:scale-105 transition-transform">Reset</Button>
+              </div>
+            </form>
+            {getFilterCount() > 0 && (
+              <Badge color="info" className="text-xs mt-2">
+                {getFilterCount()} filters active
               </Badge>
-            ) : null
-          ))}
+            )}
+          </div>
         </div>
-      )}
 
-      <div className="h-2 w-full bg-gradient-to-r from-blue-200 via-white to-blue-100 dark:from-blue-900 dark:via-gray-900 dark:to-blue-800 rounded-full mb-8 opacity-60" />
-
-      {/* Patients Table */}
-      <div className="relative rounded-2xl border border-transparent bg-white/90 dark:bg-gray-900/80 shadow-2xl mx-auto max-w-6xl w-full backdrop-blur-md overflow-x-auto sm:overflow-x-visible before:absolute before:inset-0 before:rounded-2xl before:border-4 before:border-gradient-to-r before:from-blue-200 before:via-purple-100 before:to-blue-100 before:animate-border-glow before:pointer-events-none">
-        {/* Subtle SVG pattern background */}
-        <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none"><defs><pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#3b82f6" /></pattern></defs><rect width="100%" height="100%" fill="url(#dots)" /></svg>
-        <Table className="min-w-full text-[15px] font-sans mx-auto relative z-10">
-          {patients.length > 0 && (
-            <>
-              <TableHeader>
-                <TableRow className="sticky top-0 z-20 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90 shadow-2xl rounded-t-2xl border-b-2 border-blue-200 dark:border-blue-900 backdrop-blur-md">
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200">Case ID</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200">Patient Name</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200">Location</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200">Actions</TableCell>
-                </TableRow>
-                <tr><td colSpan={99}><div className="h-[2px] w-full bg-gradient-to-r from-blue-200 via-white to-blue-100 dark:from-blue-900 dark:via-gray-900 dark:to-blue-800 opacity-60 my-0.5" /></td></tr>
-              </TableHeader>
-              <TableBody>
-                {patients.map((patient, idx) => (
-                  <TableRow
-                    key={patient._id}
-                    className={`transition-all duration-500 group hover:scale-[1.02] hover:shadow-2xl hover:z-10 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? 'bg-blue-50/60 dark:bg-gray-900/40' : 'bg-white/80 dark:bg-gray-900/60'} border-l-4 ${patient.caseCategory === 'Elite' ? 'border-blue-500' : patient.caseCategory === 'Premium' ? 'border-green-500' : 'border-gray-300'} animate-fadeInUp h-16 items-center`}
-                    style={{ fontFamily: 'Inter, sans-serif', animationDelay: `${idx * 40}ms` }}
+        {/* Active Filters */}
+        {getFilterCount() > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {Object.entries(filters).map(([key, value]) => (
+              value ? (
+                <Badge
+                  key={key}
+                  color="info"
+                  className="text-xs flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 rounded-full shadow-sm"
+                >
+                  <span className="font-semibold text-blue-700 dark:text-blue-200">{filterLabels[key] || key}:</span>
+                  <span className="text-blue-900 dark:text-blue-100">{value}</span>
+                  <button
+                    type="button"
+                    className="ml-1 text-blue-400 hover:text-blue-700 dark:hover:text-blue-200 focus:outline-none"
+                    onClick={() => handleFilterChange(key, "")}
+                    aria-label={`Clear ${filterLabels[key] || key} filter`}
                   >
-                    <TableCell className="font-semibold text-blue-600 dark:text-blue-300 text-center">{patient.caseId}</TableCell>
-                    <TableCell className="h-16 flex justify-center items-center gap-3 font-medium text-center">
-                      <AvatarText name={patient.patientName} />
-                      <span className="flex items-center">{patient.patientName}</span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="text-sm">
-                        <div>{patient.city}</div>
-                        <div className="text-gray-500">{patient.country}</div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex gap-2 justify-center">
-                        <Button
-                          onClick={() => router.push(`/doctor/patients/view-patient-details?id=${patient._id}`)}
-                          size="sm"
-                          variant="outline"
-                          className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-110 hover:shadow-lg transition-transform shadow"
-                        >
-                          <EyeIcon className="w-4 h-4" /> View
-                        </Button>
-                        <Button
-                          onClick={() => router.push(`/doctor/patients/edit-patient-details?id=${patient._id}`)}
-                          size="sm"
-                          variant="outline"
-                          className="border-green-400 text-green-600 hover:bg-green-100/60 dark:hover:bg-green-900/40 flex items-center gap-1 hover:scale-110 hover:shadow-lg transition-transform shadow"
-                        >
-                          <PencilIcon className="w-4 h-4" /> Edit
-                        </Button>
-                      </div>
-                    </TableCell>
+                    ×
+                  </button>
+                </Badge>
+              ) : null
+            ))}
+          </div>
+        )}
+
+        <div className="h-2 w-full bg-gradient-to-r from-blue-200 via-white to-blue-100 dark:from-blue-900 dark:via-gray-900 dark:to-blue-800 rounded-full mb-8 opacity-60" />
+
+        {/* Patients Table */}
+        <div className="relative rounded-xl border border-transparent bg-white/90 dark:bg-gray-900/80 shadow-xl mx-auto max-w-6xl w-full backdrop-blur-md overflow-x-auto sm:overflow-x-visible before:absolute before:inset-0 before:rounded-xl before:border-2 before:border-gradient-to-r before:from-blue-200 before:via-purple-100 before:to-blue-100 before:animate-border-glow before:pointer-events-none">
+          {/* Subtle SVG pattern background */}
+          <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none"><defs><pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#3b82f6" /></pattern></defs><rect width="100%" height="100%" fill="url(#dots)" /></svg>
+          <Table className="min-w-full text-[10px] font-sans mx-auto relative z-10">
+            {patients.length > 0 && (
+              <>
+                <TableHeader>
+                  <TableRow className="sticky top-0 z-20 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90 shadow-lg rounded-t-xl border-b-2 border-blue-200 dark:border-blue-900 backdrop-blur-sm">
+                    <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">S.N.</TableCell>
+                    <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Case ID</TableCell>
+                    <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Patient Name</TableCell>
+                    <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Doctor Name</TableCell>
+                    <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Case Date</TableCell>
+                    <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Location</TableCell>
+                    <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Comments</TableCell>
+                    <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Actions</TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </>
-          )}
-        </Table>
+                </TableHeader>
+                <TableBody>
+                  {patients.map((patient, idx) => (
+                    <TableRow
+                      key={patient._id}
+                      className={`transition-all duration-300 group hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? 'bg-blue-50/50 dark:bg-gray-900/30' : 'bg-white/70 dark:bg-gray-900/50'} animate-fadeInUp h-10 items-center`}
+                      style={{ fontFamily: 'Inter, sans-serif', animationDelay: `${idx * 30}ms` }}
+                    >
+                      <TableCell className="font-semibold text-gray-700 dark:text-gray-300 text-center py-1 px-2">{((currentPage - 1) * 10) + idx + 1}</TableCell>
+                      <TableCell className="font-semibold text-blue-600 dark:text-blue-300 text-center py-1 px-2">{patient.caseId}</TableCell>
+                      <TableCell className="h-10 flex justify-center items-center gap-2 font-medium text-center py-1 px-2">
+                        {patient.patientName}
+                      </TableCell>
+                      <TableCell className="font-medium text-center py-1 px-2">{patient.userId ? patient.userId.name : 'N/A'}</TableCell>
+                      <TableCell className="font-medium text-center py-1 px-2">{formatDateToIST(patient.createdAt)}</TableCell>
+                      <TableCell className="text-center py-1 px-2">
+                        <div className="text-[10px] leading-tight">
+                          <div>{patient.city}</div>
+                          <div className="text-gray-500 text-[9px]">{patient.country}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center py-1 px-2">
+                        <div className="flex gap-1 justify-center">
+                          <Button
+                            onClick={() => handleOpenUploadModal(patient)}
+                            size="xs"
+                            variant="outline"
+                            className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          >
+                            Upload
+                          </Button>
+                          <Button
+                            onClick={() => handleOpenViewCommentsModal(patient)}
+                            size="xs"
+                            variant="outline"
+                            className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          >
+                            See
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center py-1 px-2">
+                        <div className="flex gap-1 justify-center">
+                          <Button
+                            onClick={() => router.push(`/admin/patients/view-patient-details?id=${patient._id}`)}
+                            size="xs"
+                            variant="outline"
+                            className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          >
+                            <EyeIcon className="w-3 h-3" /> View
+                          </Button>
+                          <Button
+                            onClick={() => router.push(`/admin/patients/edit-patient-details?id=${patient._id}`)}
+                            size="xs"
+                            variant="outline"
+                            className="border-green-400 text-green-600 hover:bg-green-100/60 dark:hover:bg-green-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          >
+                            <PencilIcon className="w-3 h-3" /> Edit
+                          </Button>
+                          <Button
+                            onClick={() => handleDeletePatient(patient._id, patient.patientName)}
+                            size="xs"
+                            variant="outline"
+                            className="border-red-400 text-red-600 hover:bg-red-100/60 dark:hover:bg-red-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          >
+                            <TrashBinIcon className="w-3 h-3" /> Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </>
+            )}
+          </Table>
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-6 flex items-center justify-between">
+            <div className="text-sm text-gray-500">
+              Showing {((currentPage - 1) * 10) + 1} to{" "}
+              {Math.min(currentPage * 10, totalPatients)} of {totalPatients} patients
+            </div>
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                variant="outline"
+                size="sm"
+              >
+                Previous
+              </Button>
+              <span className="flex items-center px-3 text-sm">
+                Page {currentPage} of {totalPages}
+              </span>
+              <Button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                variant="outline"
+                size="sm"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {patients.length === 0 && !isLoading && (
+          <div className="flex flex-col items-center justify-center py-16">
+            <svg width="120" height="120" fill="none" className="mb-6 opacity-60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" stroke="#3b82f6" strokeWidth="4" fill="#e0e7ff" /><path d="M40 80c0-11 9-20 20-20s20 9 20 20" stroke="#6366f1" strokeWidth="4" strokeLinecap="round" /><circle cx="60" cy="54" r="10" fill="#6366f1" /></svg>
+            <div className="text-2xl font-bold text-blue-700 dark:text-blue-200 mb-2">No patients found</div>
+            <div className="text-gray-500 mb-6">Try adjusting your filters or add a new patient record.</div>
+            <Button
+              onClick={() => router.push("/doctor/patients/create-patient-record/step-1")}
+              className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:scale-105 transition-transform"
+            >
+              Add your first patient
+            </Button>
+          </div>
+        )}
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-6 flex items-center justify-between">
-          <div className="text-sm text-gray-500">
-            Showing {((currentPage - 1) * 10) + 1} to{" "}
-            {Math.min(currentPage * 10, totalPatients)} of {totalPatients} patients
-          </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-              disabled={currentPage === 1}
-              variant="outline"
-              size="sm"
-            >
-              Previous
-            </Button>
-            <span className="flex items-center px-3 text-sm">
-              Page {currentPage} of {totalPages}
-            </span>
-            <Button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-              disabled={currentPage === totalPages}
-              variant="outline"
-              size="sm"
-            >
-              Next
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {patients.length === 0 && !isLoading && (
-        <div className="flex flex-col items-center justify-center py-16">
-          <svg width="120" height="120" fill="none" className="mb-6 opacity-60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" stroke="#3b82f6" strokeWidth="4" fill="#e0e7ff" /><path d="M40 80c0-11 9-20 20-20s20 9 20 20" stroke="#6366f1" strokeWidth="4" strokeLinecap="round" /><circle cx="60" cy="54" r="10" fill="#6366f1" /></svg>
-          <div className="text-2xl font-bold text-blue-700 dark:text-blue-200 mb-2">No patients found</div>
-          <div className="text-gray-500 mb-6">Try adjusting your filters or add a new patient record.</div>
-          <Button
-            onClick={() => router.push("/doctor/patients/create-patient-record/step-1")}
-            className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:scale-105 transition-transform"
-          >
-            Add your first patient
-          </Button>
-        </div>
-      )}
-    </div>
+    </>
   );
 }

@@ -3,11 +3,11 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import Select from "@/components/form/select/SelectField";
-import { BriefcaseIcon, DocumentTextIcon, GlobeAltIcon, MapIcon, ShieldCheckIcon, SparklesIcon, UserCircleIcon } from "@heroicons/react/24/solid";
+import { GlobeAltIcon, MapIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { motion } from "framer-motion";
 
 const luxuryBg = `fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center bg-white`;
 const glassCard = "relative bg-white/95 backdrop-blur-xl border border-blue-200 rounded-3xl shadow-2xl p-8 mb-12 overflow-hidden";
@@ -49,7 +49,7 @@ export default function ViewPatientDetails() {
     const fetchPatient = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
+        const response = await fetch(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -113,6 +113,14 @@ export default function ViewPatientDetails() {
               <div><Label>Patient Name</Label><Input value={data.patientName} disabled /></div>
               <div><Label>Age</Label><Input value={data.age} disabled /></div>
               <div><Label>Gender</Label><Select value={data.gender} options={[{label:'Male',value:'Male'},{label:'Female',value:'Female'},{label:'Other',value:'Other'}]} disabled /></div>
+              {data.userId && (
+                <div className="md:col-span-3 col-span-1">
+                  <Label>Doctor</Label>
+                  <div className="w-full px-4 py-3 bg-blue-50 rounded-xl font-semibold text-blue-900">
+                    {data.userId.name} {data.userId.email && <span className="text-gray-500 text-sm ml-2">({data.userId.email})</span>}
+                  </div>
+                </div>
+              )}
             </div>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div><Label>Past Medical History</Label><TextArea value={data.pastMedicalHistory} disabled /></div>
@@ -194,7 +202,9 @@ export default function ViewPatientDetails() {
               </div>
               <div>
                 <Label>Case Category</Label>
-                <Select value={data.caseCategory} options={[{label:'Flexi',value:'Flexi'},{label:'Premium',value:'Premium'},{label:'Elite',value:'Elite'}]} disabled />
+                {data.selectedPrice && (
+                  <Input value={data.caseCategory} disabled />
+                )}
                 {data.selectedPrice && (
                   <div className="mt-4">
                     <Label>Package</Label>
@@ -428,7 +438,7 @@ export default function ViewPatientDetails() {
         </button>
         <button
           type="button"
-          onClick={() => router.push(`/patients/edit-patient-details?id=${data._id}`)}
+          onClick={() => router.push(`/admin/patients/edit-patient-details?id=${data._id}`)}
           className="px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
         >
           Edit

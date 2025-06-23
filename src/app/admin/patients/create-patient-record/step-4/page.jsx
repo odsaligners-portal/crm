@@ -1,8 +1,7 @@
 "use client";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { setForm } from "@/store/features/patientFormSlice";
-import { useAppDispatch } from "@/store/store";
+import { imageLabels, modelLabels } from "@/constants/data";
 import { storage } from "@/utils/firebase";
 import { deleteObject, getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -17,34 +16,34 @@ export default function Step4Page() {
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
   const { token } = useSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = React.useState(false);
   const [fileKeys, setFileKeys] = React.useState(Array(13).fill(undefined));
   const [imageUrls, setImageUrls] = React.useState(Array(13).fill(undefined));
   const [progresses, setProgresses] = React.useState(Array(13).fill(0));
-  const [formData, setFormData] = React.useState(null);
+  const [formData, setFormData] = React.useState({
+    // Add all fields used in this step, e.g.:
+    // field1: '',
+    // field2: '',
+  });
 
-  const imageLabels = ['Upper arch', 'Lower arch', 'Anterior View', 'Left View', 'Right View', 'Profile View', 'Frontal View', 'Smiling', 'Panoramic Radiograph', 'Lateral Radiograph', 'Others'];
-  const modelLabels = ['Select PLY/STL File 1', 'Select PLY/STL File 2'];
- 
   useEffect(() => {
     if (!patientId) {
       toast.error('Please start from Step 1.');
-      router.replace('/patients/create-patient-record/step-1');
+      router.replace('/admin/patients/create-patient-record/step-1');
     }
   }, [patientId, router]);
   
   React.useEffect(() => {
     const fetchData = async ()=>{
       if (patientId) {
-        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
+        const response = await fetch(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
         if (response.ok) {
           const patientData = await response.json();
-          setFormData(patientData);
+          setFormData(prev => ({ ...prev, ...patientData }));
         }
       }
     }
@@ -101,7 +100,7 @@ export default function Step4Page() {
     }
   };
 
-  const prevStep = () => router.push(`/patients/create-patient-record/step-3?id=${patientId}`);
+  const prevStep = () => router.push(`/admin/patients/create-patient-record/step-3?id=${patientId}`);
   
   const handleFinalSubmit = async () => {
     if (!patientId) return toast.error("No patient ID found");
@@ -114,15 +113,14 @@ export default function Step4Page() {
           scanFiles[fieldName] = [{ fileUrl: url, fileKey: fileKeys[idx], uploadedAt: new Date().toISOString() }];
         }
       });
-      const response = await fetch(`/api/patients/update-details?id=${patientId}`, {
+      const response = await fetch(`/api/admin/patients/update-details?id=${patientId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ scanFiles }),
       });
       if (!response.ok) throw new Error((await response.json()).error || "Failed to save file details");
-      dispatch(setForm(await response.json()));
       toast.success("Patient record updated successfully");
-      router.push("/patients");
+      router.push("/admin/patients");
     } catch (error) {
       toast.error(error.message || "Failed to save file details");
     } finally {
@@ -172,6 +170,11 @@ export default function Step4Page() {
         )}
       </div>
     );
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type } = e.target;
+    setFormData(prev => ({ ...prev, [name]: type === "number" ? Number(value) : value }));
   };
 
   return (

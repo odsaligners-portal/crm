@@ -12,6 +12,9 @@ import { toast } from 'react-toastify';
 import { fetchWithError } from '@/utils/apiErrorHandler';
 import Select from 'react-select';
 import { Country, State } from 'country-state-city';
+import { useDropzone } from 'react-dropzone';
+import { storage } from '@/utils/firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 export default function SignUpForm() {
   const router = useRouter();
@@ -28,11 +31,16 @@ export default function SignUpForm() {
     state: null,
     city: '',
     experience: '',
-    doctorType: '',
+    doctorType: '', 
     address: '',
     password: '',
     confirmPassword: '',
   });
+  const [photoUrl, setPhotoUrl] = useState('');
+  const [photoFileKey, setPhotoFileKey] = useState('');
+  const [photoUploadedAt, setPhotoUploadedAt] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const countryOptions = useMemo(() => Country.getAllCountries().map(country => ({
     value: country.isoCode,
@@ -66,6 +74,32 @@ export default function SignUpForm() {
     }));
   };
 
+  const onDrop = async (acceptedFiles) => {
+    if (!acceptedFiles.length) return;
+    const file = acceptedFiles[0];
+    setUploading(true);
+    const fileKey = `users/${file.name}-${Date.now()}`;
+    const storageRef = ref(storage, fileKey);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+      },
+      (error) => {
+        setUploading(false);
+        alert('Upload failed: ' + error.message);
+      },
+      async () => {
+        const url = await getDownloadURL(uploadTask.snapshot.ref);
+        setPhotoUrl(url);
+        setPhotoFileKey(fileKey);
+        setPhotoUploadedAt(new Date().toISOString());
+        setUploading(false);
+      }
+    );
+  };
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] }, multiple: false });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -86,6 +120,13 @@ export default function SignUpForm() {
         ...formData,
         country: formData.country?.label,
         state: formData.state?.label,
+      }
+      if (photoUrl && photoFileKey && photoUploadedAt) {
+        payload.profilePicture = {
+          url: photoUrl,
+          fileKey: photoFileKey,
+          uploadedAt: photoUploadedAt,
+        };
       }
       delete payload.confirmPassword;
 
@@ -129,6 +170,19 @@ export default function SignUpForm() {
           <div>
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 gap-5 md:grid-cols-3 sm:grid-cols-2">
+                {/* <!-- Profile Picture --> */}
+                <div className="col-span-1 md:col-span-3 sm:col-span-3">
+                  <Label>Profile Picture</Label>
+                  <div {...getRootProps()} className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-4 cursor-pointer transition ${isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white dark:bg-gray-800'}`}>
+                    <input {...getInputProps()} />
+                    {photoUrl ? (
+                      <img src={photoUrl} alt="Profile Preview" className="w-24 h-24 rounded-full object-cover mb-2" />
+                    ) : (
+                      <span className="text-gray-500 dark:text-gray-400">Drop an image here, or click to select</span>
+                    )}
+                    {uploading && <div className="text-xs text-blue-600 mt-2">Uploading... {Math.round(uploadProgress)}%</div>}
+                  </div>
+                </div>
                 {/* <!-- Name --> */}
                 <div>
                   <Label>

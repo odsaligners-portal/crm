@@ -10,7 +10,7 @@ export async function POST(req) {
     
     const { 
       name, email, password, mobile, gender, country, 
-      state, city, experience, doctorType, address 
+      state, city, experience, doctorType, address, profilePicture
     } = await req.json();
 
     if (
@@ -39,6 +39,7 @@ export async function POST(req) {
       experience,
       doctorType,
       address,
+      ...(profilePicture ? { profilePicture } : {}),
     });
 
     // Generate JWT
@@ -62,6 +63,7 @@ export async function POST(req) {
       experience: user.experience,
       doctorType: user.doctorType,
       address: user.address,
+      profilePicture: user.profilePicture,
     };
 
     return NextResponse.json({

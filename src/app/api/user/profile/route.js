@@ -8,6 +8,14 @@ export async function GET(req) {
   try {
     await connectDB();
 
+    // If query param role=doctor, return all doctors
+    const { searchParams } = new URL(req.url);
+    const role = searchParams.get('role');
+    if (role === 'doctor') {
+      const doctors = await User.find({ role: 'doctor' });
+      return NextResponse.json({ doctors });
+    }
+
     // Get token from authorization header
     const authHeader = req.headers.get('authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -39,6 +47,7 @@ export async function GET(req) {
         experience: user.experience,
         doctorType: user.doctorType,
         address: user.address,
+        profilePicture: user.profilePicture || { url: '', fileKey: '', uploadedAt: null },
       }
     });
 
@@ -102,6 +111,7 @@ export async function PUT(req) {
         experience: user.experience,
         doctorType: user.doctorType,
         address: user.address,
+        profilePicture: user.profilePicture || { url: '', fileKey: '', uploadedAt: null },
       }
     });
 

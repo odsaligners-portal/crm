@@ -10,6 +10,7 @@ const Button = ({
   className = "",
   disabled = false,
   type = "button",
+  ...rest
 }) => {
   // Size Classes
   const sizeClasses = {
@@ -35,6 +36,7 @@ const Button = ({
       onClick={onClick}
       disabled={disabled}
       type={type}
+      {...rest}
     >
       {startIcon && <span className="flex items-center">{startIcon}</span>}
       {children}

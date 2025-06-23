@@ -5,24 +5,22 @@ import AvatarText from "@/components/ui/avatar/AvatarText";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { caseTypes, genders, treatmentForOptions } from "@/constants/data";
 import { EyeIcon, PencilIcon, PlusIcon } from "@/icons";
+import { countriesData } from "@/utils/countries";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import * as XLSX from 'xlsx';
-import { countriesData } from "../patients/create-patient-record/step-1/page";
+import UploadModal from "@/components/admin/patients/UploadModal";
+import ViewCommentsModal from "@/components/admin/patients/ViewCommentsModal";
 
 const countries = Object.keys(countriesData);
-const caseCategories = ["Flexi", "Premium", "Elite"];
-const caseTypes = ["Single Upper Arch", "Single Lower Arch", "Double Arch"];
-const treatmentForOptions = ["Invisalign", "Clear Aligners", "Braces"];
-
-const genders = ["Male", "Female", "Other"];
 
 export default function ViewPatientRecords() {
   const router = useRouter();
-  const { token } = useSelector((state) => state.auth);
+  const { token, role } = useSelector((state) => state.auth);
   const [patients, setPatients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -30,6 +28,10 @@ export default function ViewPatientRecords() {
   const [totalPatients, setTotalPatients] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [isViewCommentsModalOpen, setIsViewCommentsModalOpen] = useState(false);
+  const [patientForComments, setPatientForComments] = useState(null);
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -44,6 +46,9 @@ export default function ViewPatientRecords() {
     startDate: "",
     endDate: "",
   });
+
+  const [caseCategories, setCaseCategories] = useState([]);
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
 
   const fetchPatients = async () => {
     try {
@@ -79,6 +84,25 @@ export default function ViewPatientRecords() {
   useEffect(() => {
     fetchPatients();
   }, [currentPage, searchTerm, filters]);
+
+  useEffect(() => {
+    const fetchCaseCategories = async () => {
+      setIsCategoriesLoading(true);
+      try {
+        const response = await fetch('/api/case-categories?active=true', {
+          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+        });
+        if (!response.ok) throw new Error('Failed to fetch case categories');
+        const result = await response.json();
+        setCaseCategories(result.data || []);
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setIsCategoriesLoading(false);
+      }
+    };
+    fetchCaseCategories();
+  }, [token]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -189,6 +213,26 @@ export default function ViewPatientRecords() {
     treatmentFor: 'Treatment For',
     startDate: 'Start Date',
     endDate: 'End Date',
+  };
+
+  const handleOpenUploadModal = (patient) => {
+    setSelectedPatient(patient);
+    setIsUploadModalOpen(true);
+  };
+
+  const handleCloseUploadModal = () => {
+    setSelectedPatient(null);
+    setIsUploadModalOpen(false);
+  };
+
+  const handleOpenViewCommentsModal = (patient) => {
+    setPatientForComments(patient);
+    setIsViewCommentsModalOpen(true);
+  };
+
+  const handleCloseViewCommentsModal = () => {
+    setPatientForComments(null);
+    setIsViewCommentsModalOpen(false);
   };
 
   if (isLoading) {
@@ -313,7 +357,7 @@ export default function ViewPatientRecords() {
                 handleFilterChange("caseCategory", e.target.value);
                 handleFilterChange("selectedPrice", "");
               }}
-              options={[...caseCategories.map(c => ({ label: c, value: c }))]}
+              options={caseCategories.map(c => ({ label: c.category, value: c.category }))}
               label="Case Category"
               className="w-full"
             />
@@ -385,56 +429,76 @@ export default function ViewPatientRecords() {
       <div className="h-2 w-full bg-gradient-to-r from-blue-200 via-white to-blue-100 dark:from-blue-900 dark:via-gray-900 dark:to-blue-800 rounded-full mb-8 opacity-60" />
 
       {/* Patients Table */}
-      <div className="relative rounded-2xl border border-transparent bg-white/90 dark:bg-gray-900/80 shadow-2xl mx-auto max-w-6xl w-full backdrop-blur-md overflow-x-auto sm:overflow-x-visible before:absolute before:inset-0 before:rounded-2xl before:border-4 before:border-gradient-to-r before:from-blue-200 before:via-purple-100 before:to-blue-100 before:animate-border-glow before:pointer-events-none">
+      <div className="relative rounded-xl border border-transparent bg-white/90 dark:bg-gray-900/80 shadow-xl mx-auto max-w-6xl w-full backdrop-blur-md overflow-x-auto sm:overflow-x-visible before:absolute before:inset-0 before:rounded-xl before:border-2 before:border-gradient-to-r before:from-blue-200 before:via-purple-100 before:to-blue-100 before:animate-border-glow before:pointer-events-none">
         {/* Subtle SVG pattern background */}
         <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none"><defs><pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#3b82f6" /></pattern></defs><rect width="100%" height="100%" fill="url(#dots)" /></svg>
-        <Table className="min-w-full text-[15px] font-sans mx-auto relative z-10">
+        <Table className="min-w-full text-[10px] font-sans mx-auto relative z-10">
           {patients.length > 0 && (
             <>
               <TableHeader>
-                <TableRow className="sticky top-0 z-20 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90 shadow-2xl rounded-t-2xl border-b-2 border-blue-200 dark:border-blue-900 backdrop-blur-md">
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200">Case ID</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200">Patient Name</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200">Location</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200">Actions</TableCell>
+                <TableRow className="sticky top-0 z-20 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90 shadow-lg rounded-t-xl border-b-2 border-blue-200 dark:border-blue-900 backdrop-blur-sm">
+                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Case ID</TableCell>
+                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Patient Name</TableCell>
+                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Location</TableCell>
+                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Comments</TableCell>
+                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Actions</TableCell>
                 </TableRow>
-                <tr><td colSpan={99}><div className="h-[2px] w-full bg-gradient-to-r from-blue-200 via-white to-blue-100 dark:from-blue-900 dark:via-gray-900 dark:to-blue-800 opacity-60 my-0.5" /></td></tr>
               </TableHeader>
               <TableBody>
                 {patients.map((patient, idx) => (
                   <TableRow
                     key={patient._id}
-                    className={`transition-all duration-500 group hover:scale-[1.02] hover:shadow-2xl hover:z-10 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? 'bg-blue-50/60 dark:bg-gray-900/40' : 'bg-white/80 dark:bg-gray-900/60'} border-l-4 ${patient.caseCategory === 'Elite' ? 'border-blue-500' : patient.caseCategory === 'Premium' ? 'border-green-500' : 'border-gray-300'} animate-fadeInUp h-16 items-center`}
-                    style={{ fontFamily: 'Inter, sans-serif', animationDelay: `${idx * 40}ms` }}
+                    className={`transition-all duration-300 group hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? 'bg-blue-50/50 dark:bg-gray-900/30' : 'bg-white/70 dark:bg-gray-900/50'} animate-fadeInUp h-10 items-center`}
+                    style={{ fontFamily: 'Inter, sans-serif', animationDelay: `${idx * 30}ms` }}
                   >
-                    <TableCell className="font-semibold text-blue-600 dark:text-blue-300 text-center">{patient.caseId}</TableCell>
-                    <TableCell className="h-16 flex justify-center items-center gap-3 font-medium text-center">
+                    <TableCell className="font-semibold text-blue-600 dark:text-blue-300 text-center py-1 px-2">{patient.caseId}</TableCell>
+                    <TableCell className="h-10 flex justify-center items-center gap-2 font-medium text-center py-1 px-2">
                       <AvatarText name={patient.patientName} />
                       <span className="flex items-center">{patient.patientName}</span>
                     </TableCell>
-                    <TableCell className="text-center">
-                      <div className="text-sm">
+                    <TableCell className="text-center py-1 px-2">
+                      <div className="text-[10px] leading-tight">
                         <div>{patient.city}</div>
-                        <div className="text-gray-500">{patient.country}</div>
+                        <div className="text-gray-500 text-[9px]">{patient.country}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex gap-2 justify-center">
+                    <TableCell className="text-center py-1 px-2">
+                      <div className="flex gap-1 justify-center">
+                        <Button
+                          onClick={() => handleOpenUploadModal(patient)}
+                          size="xs"
+                          variant="outline"
+                          className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                        >
+                          Upload
+                        </Button>
+                        <Button
+                          onClick={() => handleOpenViewCommentsModal(patient)}
+                          size="xs"
+                          variant="outline"
+                          className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                        >
+                          See
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center py-1 px-2">
+                      <div className="flex gap-1 justify-center">
                         <Button
                           onClick={() => router.push(`/doctor/patients/view-patient-details?id=${patient._id}`)}
-                          size="sm"
+                          size="xs"
                           variant="outline"
-                          className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-110 hover:shadow-lg transition-transform shadow"
+                          className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
                         >
-                          <EyeIcon className="w-4 h-4" /> View
+                          <EyeIcon className="w-3 h-3" /> View
                         </Button>
                         <Button
                           onClick={() => router.push(`/doctor/patients/edit-patient-details?id=${patient._id}`)}
-                          size="sm"
+                          size="xs"
                           variant="outline"
-                          className="border-green-400 text-green-600 hover:bg-green-100/60 dark:hover:bg-green-900/40 flex items-center gap-1 hover:scale-110 hover:shadow-lg transition-transform shadow"
+                          className="border-green-400 text-green-600 hover:bg-green-100/60 dark:hover:bg-green-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
                         >
-                          <PencilIcon className="w-4 h-4" /> Edit
+                          <PencilIcon className="w-3 h-3" /> Edit
                         </Button>
                       </div>
                     </TableCell>
@@ -489,6 +553,27 @@ export default function ViewPatientRecords() {
             Add your first patient
           </Button>
         </div>
+      )}
+
+      {/* Modals */}
+      {isUploadModalOpen && selectedPatient && (
+        <UploadModal
+          isOpen={isUploadModalOpen}
+          onClose={handleCloseUploadModal}
+          patient={selectedPatient}
+          onSuccess={() => {
+            handleCloseUploadModal();
+            fetchPatients();
+          }}
+        />
+      )}
+
+      {isViewCommentsModalOpen && patientForComments && (
+        <ViewCommentsModal
+          isOpen={isViewCommentsModalOpen}
+          onClose={handleCloseViewCommentsModal}
+          patient={patientForComments}
+        />
       )}
     </div>
   );

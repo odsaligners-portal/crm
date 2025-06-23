@@ -3,105 +3,49 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
-import { setField, setForm, setNestedField } from "@/store/features/patientFormSlice";
-import { useAppDispatch, useAppSelector } from "@/store/store";
+import { countriesData } from '@/utils/countries';
 import { CalendarIcon, GlobeAltIcon, MapIcon, MapPinIcon, UserIcon } from "@heroicons/react/24/outline";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
-
-
-export const countriesData = {
-  "United States": [
-    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
-    "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-    "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
-    "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-    "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
-    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
-    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
-    "Wisconsin", "Wyoming"
-  ],
-  "Canada": [
-    "Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador",
-    "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island",
-    "Quebec", "Saskatchewan", "Yukon"
-  ],
-  "United Kingdom": [
-    "England", "Scotland", "Wales", "Northern Ireland"
-  ],
-  "Australia": [
-    "Australian Capital Territory", "New South Wales", "Northern Territory", "Queensland",
-    "South Australia", "Tasmania", "Victoria", "Western Australia"
-  ],
-  "Germany": [
-    "Baden-Württemberg", "Bavaria", "Berlin", "Brandenburg", "Bremen", "Hamburg", "Hesse",
-    "Lower Saxony", "Mecklenburg-Vorpommern", "North Rhine-Westphalia", "Rhineland-Palatinate",
-    "Saarland", "Saxony", "Saxony-Anhalt", "Schleswig-Holstein", "Thuringia"
-  ],
-  "France": [
-    "Auvergne-Rhône-Alpes", "Bourgogne-Franche-Comté", "Bretagne", "Centre-Val de Loire",
-    "Corse", "Grand Est", "Hauts-de-France", "Île-de-France", "Normandie", "Nouvelle-Aquitaine",
-    "Occitanie", "Pays de la Loire", "Provence-Alpes-Côte d'Azur"
-  ],
-  "India": [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
-    "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
-    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
-    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
-    "West Bengal"
-  ],
-  "China": [
-    "Anhui", "Beijing", "Chongqing", "Fujian", "Gansu", "Guangdong", "Guangxi", "Guizhou",
-    "Hainan", "Hebei", "Heilongjiang", "Henan", "Hubei", "Hunan", "Inner Mongolia", "Jiangsu",
-    "Jiangxi", "Jilin", "Liaoning", "Ningxia", "Qinghai", "Shaanxi", "Shandong", "Shanghai",
-    "Shanxi", "Sichuan", "Tianjin", "Tibet", "Xinjiang", "Yunnan", "Zhejiang"
-  ],
-  "Japan": [
-    "Aichi", "Akita", "Aomori", "Chiba", "Ehime", "Fukui", "Fukuoka", "Fukushima", "Gifu",
-    "Gunma", "Hiroshima", "Hokkaido", "Hyogo", "Ibaraki", "Ishikawa", "Iwate", "Kagawa",
-    "Kagoshima", "Kanagawa", "Kochi", "Kumamoto", "Kyoto", "Mie", "Miyagi", "Miyazaki",
-    "Nagano", "Nagasaki", "Nara", "Niigata", "Oita", "Okayama", "Okinawa", "Osaka", "Saga",
-    "Saitama", "Shiga", "Shimane", "Shizuoka", "Tochigi", "Tokushima", "Tokyo", "Tottori",
-    "Toyama", "Wakayama", "Yamagata", "Yamaguchi", "Yamanashi"
-  ],
-  "Brazil": [
-    "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará", "Distrito Federal", "Espírito Santo",
-    "Goiás", "Maranhão", "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Pará", "Paraíba",
-    "Paraná", "Pernambuco", "Piauí", "Rio de Janeiro", "Rio Grande do Norte", "Rio Grande do Sul",
-    "Rondônia", "Roraima", "Santa Catarina", "São Paulo", "Sergipe", "Tocantins"
-  ],
-  "Mexico": [
-    "Aguascalientes", "Baja California", "Baja California Sur", "Campeche", "Chiapas", "Chihuahua",
-    "Coahuila", "Colima", "Ciudad de México", "Durango", "Estado de México", "Guanajuato", "Guerrero",
-    "Hidalgo", "Jalisco", "Michoacán", "Morelos", "Nayarit", "Nuevo León", "Oaxaca", "Puebla",
-    "Querétaro", "Quintana Roo", "San Luis Potosí", "Sinaloa", "Sonora", "Tabasco", "Tamaulipas",
-    "Tlaxcala", "Veracruz", "Yucatán", "Zacatecas"
-  ]
-};
 const countries = Object.keys(countriesData);
 
 export default function Step1() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const queryPatientId = searchParams.get("id");
+  const patientId = searchParams.get("id");
   const { token } = useSelector((state) => state.auth);
-  const dispatch = useAppDispatch();
-  const formData = useAppSelector((state) => state.patientForm);
   const [isLoading, setIsLoading] = React.useState(false);
   const [isDataLoading, setIsDataLoading] = React.useState(false);
   const [patientDatails, setPatientDatails] = React.useState(null);
+  const [formData, setFormData] = React.useState({
+    patientName: '',
+    age: '',
+    gender: '',
+    pastMedicalHistory: '',
+    pastDentalHistory: '',
+    treatmentFor: '',
+    country: '',
+    state: '',
+    city: '',
+    primaryAddress: '',
+    shippingAddressType: 'Primary Address',
+    shippingAddress: '',
+    billingAddress: '',
+    privacyAccepted: false,
+    declarationAccepted: false,
+  });
 
   // Fetch patient data when component mounts and patientId exists
   React.useEffect(() => {
     const fetchPatientData = async () => {
-      if (!queryPatientId || !token) return;
+      if (!patientId) return;
       
       setIsDataLoading(true);
       try {
-        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(queryPatientId).trim()}`, {
+        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -112,49 +56,49 @@ export default function Step1() {
           setPatientDatails(patientData);
           // Update form with fetched data
           if (patientData.patientName) {
-            dispatch(setField({ field: 'patientName', value: patientData.patientName }));
+            setFormData(prev => ({ ...prev, patientName: patientData.patientName }));
           }
           if (patientData.age) {
-            dispatch(setField({ field: 'age', value: patientData.age }));
+            setFormData(prev => ({ ...prev, age: patientData.age }));
           }
           if (patientData.gender) {
-            dispatch(setField({ field: 'gender', value: patientData.gender }));
+            setFormData(prev => ({ ...prev, gender: patientData.gender }));
           }
           if (patientData.pastMedicalHistory) {
-            dispatch(setField({ field: 'pastMedicalHistory', value: patientData.pastMedicalHistory }));
+            setFormData(prev => ({ ...prev, pastMedicalHistory: patientData.pastMedicalHistory }));
           }
           if (patientData.pastDentalHistory) {
-            dispatch(setField({ field: 'pastDentalHistory', value: patientData.pastDentalHistory }));
+            setFormData(prev => ({ ...prev, pastDentalHistory: patientData.pastDentalHistory }));
           }
           if (patientData.treatmentFor) {
-            dispatch(setField({ field: 'treatmentFor', value: patientData.treatmentFor }));
+            setFormData(prev => ({ ...prev, treatmentFor: patientData.treatmentFor }));
           }
           if (patientData.country) {
-            dispatch(setField({ field: 'country', value: patientData.country }));
+            setFormData(prev => ({ ...prev, country: patientData.country }));
           }
           if (patientData.state) {
-            dispatch(setField({ field: 'state', value: patientData.state }));
+            setFormData(prev => ({ ...prev, state: patientData.state }));
           }
           if (patientData.city) {
-            dispatch(setField({ field: 'city', value: patientData.city }));
+            setFormData(prev => ({ ...prev, city: patientData.city }));
           }
           if (patientData.primaryAddress) {
-            dispatch(setField({ field: 'primaryAddress', value: patientData.primaryAddress }));
+            setFormData(prev => ({ ...prev, primaryAddress: patientData.primaryAddress }));
           }
           if (patientData.shippingAddress) {
-            dispatch(setField({ field: 'shippingAddress', value: patientData.shippingAddress }));
+            setFormData(prev => ({ ...prev, shippingAddress: patientData.shippingAddress }));
           }
           if (patientData.shippingAddressType) {
-            dispatch(setField({ field: 'shippingAddressType', value: patientData.shippingAddressType }));
+            setFormData(prev => ({ ...prev, shippingAddressType: patientData.shippingAddressType }));
           }
           if (patientData.billingAddress) {
-            dispatch(setField({ field: 'billingAddress', value: patientData.billingAddress }));
+            setFormData(prev => ({ ...prev, billingAddress: patientData.billingAddress }));
           }
           if (patientData.privacyAccepted !== undefined) {
-            dispatch(setField({ field: 'privacyAccepted', value: patientData.privacyAccepted }));
+            setFormData(prev => ({ ...prev, privacyAccepted: patientData.privacyAccepted }));
           }
           if (patientData.declarationAccepted !== undefined) {
-            dispatch(setField({ field: 'declarationAccepted', value: patientData.declarationAccepted }));
+            setFormData(prev => ({ ...prev, declarationAccepted: patientData.declarationAccepted }));
           }
         } else if (response.status === 404) {
           toast.error('Patient not found or you do not have permission to view this record');
@@ -170,24 +114,19 @@ export default function Step1() {
     };
 
     fetchPatientData();
-  }, [queryPatientId, token, dispatch]);
+  }, [patientId, token]);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    if (name.includes(".")) {
-      const [section, field] = name.split(".");
-      dispatch(setNestedField({ section, field, value: type === "number" ? Number(value) : value }));
-    } else {
-      dispatch(setField({ field: name, value: type === "number" ? Number(value) : value }));
-    }
+    setFormData(prev => ({ ...prev, [name]: type === "number" ? Number(value) : value }));
     if (name === "country") {
-      dispatch(setField({ field: "state", value: "" }));
+      setFormData(prev => ({ ...prev, state: "" }));
     }
   };
 
   const handleCheckboxChange = (e) => {
     const { name, checked } = e.target;
-    dispatch(setField({ field: name, value: checked }));
+    setFormData(prev => ({ ...prev, [name]: checked }));
   };
 
   const handleSubmit = async (e) => {
@@ -199,9 +138,9 @@ export default function Step1() {
     setIsLoading(true);
     try {
       let response;
-      if (queryPatientId) {
+      if (patientId) {
        
-        response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(queryPatientId).trim()}`, {
+        response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -243,16 +182,11 @@ export default function Step1() {
       }
       
       const data = await response.json();
-      const currentPatientId = queryPatientId || data._id;
+      const currentPatientId = patientId || data._id;
       
       if (!currentPatientId) throw new Error("No patient ID returned from server");
       
-      if (!queryPatientId) {
-        // Only set form data for new patients
-        dispatch(setForm(data));
-      }
-      
-      toast.success(queryPatientId ? "Basic details updated successfully" : "Basic details saved successfully");
+      toast.success(patientId ? "Basic details updated successfully" : "Basic details saved successfully");
       router.push(`/doctor/patients/create-patient-record/step-2?id=${currentPatientId}`);
     } catch (error) {
       toast.error(error.message || "Failed to save patient record");
@@ -268,7 +202,7 @@ export default function Step1() {
         {
           patientDatails && (
             <div className="flex justify-end mt-8 mb-10">
-              <div className="text-sm border border-blue-200 rounded-lg px-4 py-2 font-extrabold bg-gradient-to-r from-blue-700 via-blue-400 to-blue-700 bg-clip-text text-transparent tracking-tight drop-shadow-xl">Case Id: {patientDatails?.caseId || queryPatientId}</div>
+              <div className="text-sm border border-blue-200 rounded-lg px-4 py-2 font-extrabold bg-gradient-to-r from-blue-700 via-blue-400 to-blue-700 bg-clip-text text-transparent tracking-tight drop-shadow-xl">Case Id: {patientDatails?.caseId || patientId}</div>
             </div>
           )
         }

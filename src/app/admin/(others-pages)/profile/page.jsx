@@ -20,6 +20,7 @@ export default function Profile() {
     experience: '',
     doctorType: '',
     address: '',
+    profilePicture: { url: '', fileKey: '', uploadedAt: null },
   });
   const [isLoading, setIsLoading] = useState(true);
   const { token } = useSelector((state) => state.auth);
@@ -45,6 +46,7 @@ export default function Profile() {
             experience: response.user.experience || '-',
             doctorType: response.user.doctorType || '-',
             address: response.user.address || '-',
+            profilePicture: response.user.profilePicture || { url: '', fileKey: '', uploadedAt: null },
           });
         }
       } catch (error) {
@@ -72,6 +74,19 @@ export default function Profile() {
         <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-7">
           Profile
         </h3>
+        <div className="flex flex-col items-center mb-8">
+          {userData.profilePicture?.url ? (
+            <img
+              src={userData.profilePicture.url}
+              alt="Profile"
+              className="w-32 h-32 rounded-full border-4 border-blue-400 shadow-lg object-cover mb-2"
+            />
+          ) : (
+            <div className="w-32 h-32 rounded-full border-4 border-blue-200 shadow-lg flex items-center justify-center bg-gradient-to-br from-blue-400 to-blue-200 text-white text-4xl font-bold mb-2">
+              {userData.name ? userData.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2) : '?'}
+            </div>
+          )}
+        </div>
         <div className="space-y-6">
           <UserInfoCard userData={userData}/>
         </div>

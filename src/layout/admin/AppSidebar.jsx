@@ -13,6 +13,11 @@ import {
   PlusIcon,
   TableIcon,
   UserCircleIcon,
+  DocsIcon,
+  AppWindowIcon,
+  BarChartIcon,
+  CalendarIcon,
+  LayoutDashboard,
 } from "@/icons/index";
 import Image from "next/image";
 import Link from "next/link";
@@ -26,21 +31,40 @@ const navItems = [
     path: "/admin",
   },
   {
-    icon: <ListIcon />,
-    name: "Patient Records",
-    path: "/admin/patients",
+    name: "Patients",
+    icon: <GridIcon />,
+    subItems: [{ name: "Patient Records", path: "/admin/patients", pro: false },{ name: "Create Patient Record", path: "/admin/patients/create-patient-record/step-1", pro: false },],
   },
   {
-    icon: <PlusIcon />,
-    name: "Create Patient Record",
-    path: "/admin/patients/create-patient-record/step-1",
+    icon: <ListIcon />,
+    name: "Case Categories",
+    path: "/admin/case-categories",
+  },
+  {
+    name: "Events",
+    icon: <GridIcon />,
+    subItems: [{ name: "Events", path: "/admin/events", pro: false },{ name: "Add Event", path: "/admin/add-event", pro: false },],
+  },
+  {
+    icon: <ListIcon />,
+    name: "View Comments",
+    path: "/admin/view-comments",
+  },
+  {
+    icon: <ListIcon />,
+    name: "Doctors",
+    path: "/admin/doctors",
   },
   {
     icon: <UserCircleIcon />,
     name: "User Profile",
     path: "/admin/profile",
   },
-
+  {
+    icon: <DocsIcon />,
+    name: "Terms & Conditions",
+    path: "/admin/terms-and-conditions",
+  },
   {
     name: "Forms",
     icon: <ListIcon />,

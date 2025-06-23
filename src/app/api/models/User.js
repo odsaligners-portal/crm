@@ -65,7 +65,12 @@ const userSchema = new mongoose.Schema({
   updatedAt: {
     type: Date,
     default: Date.now
-  }
+  },
+  profilePicture: {
+    url: { type: String, default: '' },
+    fileKey: { type: String, default: '' },
+    uploadedAt: { type: Date, default: Date.now },
+  },
 }, {
   timestamps: true
 });

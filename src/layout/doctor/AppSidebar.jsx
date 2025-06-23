@@ -1,16 +1,24 @@
 "use client";
 import { useSidebar } from "@/context/SidebarContext";
+import {
+  BoxCubeIcon,
+  CalenderIcon,
+  ChevronDownIcon,
+  DocsIcon,
+  GridIcon,
+  HorizontaLDots,
+  ListIcon,
+  PageIcon,
+  PieChartIcon,
+  PlugInIcon,
+  PlusIcon,
+  TableIcon,
+  UserCircleIcon,
+} from "@/icons/index";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback } from "react";
-import {
-  GridIcon,
-  ListIcon,
-  PlusIcon,
-  UserCircleIcon,
-  HorizontaLDots,
-} from "@/icons/index";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const navItems = [
   {
@@ -29,10 +37,56 @@ const navItems = [
     path: "/doctor/patients/create-patient-record/step-1",
   },
   {
+    icon: <ListIcon />,
+    name: "View Comments",
+    path: "/doctor/view-comments",
+  },
+  {
+    icon: <ListIcon />,
+    name: "Events",
+    path: "/doctor/events",
+  },
+  {
     icon: <UserCircleIcon />,
     name: "User Profile",
     path: "/doctor/profile",
-  }, 
+  },
+  {
+    icon: <DocsIcon />,
+    name: "Terms & Conditions",
+    path: "/doctor/terms-and-conditions",
+  },
+];
+
+const othersItems = [
+  {
+    icon: <PieChartIcon />,
+    name: "Charts",
+    subItems: [
+      { name: "Line Chart", path: "/line-chart", pro: false },
+      { name: "Bar Chart", path: "/bar-chart", pro: false },
+    ],
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: "UI Elements",
+    subItems: [
+      { name: "Alerts", path: "/alerts", pro: false },
+      { name: "Avatar", path: "/avatars", pro: false },
+      { name: "Badge", path: "/badge", pro: false },
+      { name: "Buttons", path: "/buttons", pro: false },
+      { name: "Images", path: "/images", pro: false },
+      { name: "Videos", path: "/videos", pro: false },
+    ],
+  },
+  {
+    icon: <PlugInIcon />,
+    name: "Authentication",
+    subItems: [
+      { name: "Sign In", path: "/signin", pro: false },
+      { name: "Sign Up", path: "/signup", pro: false },
+    ],
+  },
 ];
 
 const AppSidebar = () => {

@@ -1,122 +1,103 @@
 "use client";
-import React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
-import Button from "@/components/ui/button/Button";
-import Label from "@/components/form/Label";
-import Select from "@/components/form/select/SelectField";
 import TextArea from "@/components/form/input/TextArea";
-import Input from "@/components/form/input/InputField";
-import { useAppSelector, useAppDispatch } from "@/store/store";
-import { setField, setNestedField } from "@/store/features/patientFormSlice";
-import { 
-  ClipboardDocumentListIcon, 
-  ChatBubbleLeftRightIcon, 
-  CurrencyDollarIcon,
+import Label from "@/components/form/Label";
+import Button from "@/components/ui/button/Button";
+import { interproximalReductionOptions, measureOfIPROptions, singleArchTypeOptions } from '@/constants/data';
+import {
   AdjustmentsHorizontalIcon,
   ArrowsRightLeftIcon,
-  SparklesIcon
+  ChatBubbleLeftRightIcon,
+  ClipboardDocumentListIcon,
+  CurrencyDollarIcon
 } from "@heroicons/react/24/outline";
-import SelectField from "@/components/form/select/SelectField";
-
-// Price configurations based on case category
-const priceOptions = {
-  "Flexi": [
-    { label: "Basic Plan - $999", value: "999" },
-    { label: "Standard Plan - $1299", value: "1299" },
-    { label: "Premium Plan - $1599", value: "1599" }
-  ],
-  "Premium": [
-    { label: "Silver Plan - $1999", value: "1999" },
-    { label: "Gold Plan - $2499", value: "2499" },
-    { label: "Platinum Plan - $2999", value: "2999" }
-  ],
-  "Elite": [
-    { label: "Executive Plan - $3499", value: "3499" },
-    { label: "VIP Plan - $3999", value: "3999" },
-    { label: "Luxury Plan - $4499", value: "4499" }
-  ]
-};
+import { useRouter, useSearchParams } from "next/navigation";
+import React, { useState } from "react";
+import { useSelector } from "react-redux";
+import ReactSelect from "react-select";
+import { toast } from "react-toastify";
 
 export default function Step2Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
   const { token } = useSelector((state) => state.auth);
-  const formData = useAppSelector((state) => state.patientForm);
-  const dispatch = useAppDispatch();
+  const [formData, setFormData] = React.useState({
+    chiefComplaint: '',
+    caseType: '',
+    singleArchType: '',
+    caseCategory: '',
+    selectedPrice: '',
+    extraction: { required: false, comments: '' },
+    interproximalReduction: { detail1: '', detail2: '', detail3: '', detail4: '' },
+    measureOfIPR: { detailA: '', detailB: '', detailC: '' },
+    caseCategoryDetails: '',
+    treatmentPlan: '',
+    additionalComments: '',
+  });
   const [isLoading, setIsLoading] = React.useState(false);
   const [isDataLoading, setIsDataLoading] = React.useState(false);
   const [patientDatails, setPatientDatails] = React.useState(null);
+  const [saving, setSaving] = useState(false);
+  const [caseCategories, setCaseCategories] = useState([]);
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
 
   // Fetch patient data when component mounts and patientId exists
   React.useEffect(() => {
     if (!patientId) {
       toast.error('Please start from Step 1.');
-      router.replace('/patients/create-patient-record/step-1');
+      router.replace('/admin/patients/create-patient-record/step-1');
       return;
     }
   }, [patientId, router]);
 
   React.useEffect(() => {
+    const fetchCaseCategories = async () => {
+      if (!token) return;
+      setIsCategoriesLoading(true);
+      try {
+        const response = await fetch('/api/case-categories?active=true', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Failed to fetch case categories');
+        const result = await response.json();
+        setCaseCategories(result.data);
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setIsCategoriesLoading(false);
+      }
+    };
+    fetchCaseCategories();
+  }, [token]);
+
+  React.useEffect(() => {
     const fetchPatientData = async () => {
       if (!patientId || !token) return;
-      
       setIsDataLoading(true);
       try {
-        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
+        const response = await fetch(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-
         if (response.ok) {
           const patientData = await response.json();
           setPatientDatails(patientData);
-          // Update form with fetched data
-          if (patientData.chiefComplaint) {
-            dispatch(setField({ field: 'chiefComplaint', value: patientData.chiefComplaint }));
-          }
-          if (patientData.caseType) {
-            dispatch(setField({ field: 'caseType', value: patientData.caseType }));
-            if (
-              patientData.caseType === 'Single Upper Arch' ||
-              patientData.caseType === 'Single Lower Arch'
-            ) {
-              dispatch(setField({ field: 'singleArchType', value: patientData.caseType }));
-            }
-          }
-          if (patientData.caseCategory) {
-            dispatch(setField({ field: 'caseCategory', value: patientData.caseCategory }));
-          }
-          if (patientData.selectedPrice) {
-            dispatch(setField({ field: 'selectedPrice', value: patientData.selectedPrice }));
-          }
-          if (patientData.caseCategoryDetails) {
-            dispatch(setField({ field: 'caseCategoryDetails', value: patientData.caseCategoryDetails }));
-          }
-          if (patientData.treatmentPlan) {
-            dispatch(setField({ field: 'treatmentPlan', value: patientData.treatmentPlan }));
-          }
-          if (patientData.extraction) {
-            dispatch(setNestedField({ section: 'extraction', field: 'required', value: patientData.extraction.required }));
-            dispatch(setNestedField({ section: 'extraction', field: 'comments', value: patientData.extraction.comments }));
-          }
-          if (patientData.interproximalReduction) {
-            dispatch(setNestedField({ section: 'interproximalReduction', field: 'detail1', value: patientData.interproximalReduction.detail1 }));
-            dispatch(setNestedField({ section: 'interproximalReduction', field: 'detail2', value: patientData.interproximalReduction.detail2 }));
-            dispatch(setNestedField({ section: 'interproximalReduction', field: 'detail3', value: patientData.interproximalReduction.detail3 }));
-            dispatch(setNestedField({ section: 'interproximalReduction', field: 'detail4', value: patientData.interproximalReduction.detail4 }));
-          }
-          if (patientData.measureOfIPR) {
-            dispatch(setNestedField({ section: 'measureOfIPR', field: 'detailA', value: patientData.measureOfIPR.detailA }));
-            dispatch(setNestedField({ section: 'measureOfIPR', field: 'detailB', value: patientData.measureOfIPR.detailB }));
-            dispatch(setNestedField({ section: 'measureOfIPR', field: 'detailC', value: patientData.measureOfIPR.detailC }));
-          }
-          if (patientData.additionalComments) {
-            dispatch(setField({ field: 'additionalComments', value: patientData.additionalComments }));
-          }
+          // Pre-fill local form state with fetched data
+          setFormData(prev => ({
+            ...prev,
+            chiefComplaint: patientData.chiefComplaint || '',
+            caseType: patientData.caseType || '',
+            singleArchType: (patientData.caseType === 'Single Upper Arch' || patientData.caseType === 'Single Lower Arch') ? patientData.caseType : '',
+            caseCategory: patientData.caseCategory || '',
+            selectedPrice: patientData.selectedPrice || '',
+            caseCategoryDetails: patientData.caseCategoryDetails || '',
+            treatmentPlan: patientData.treatmentPlan || '',
+            extraction: patientData.extraction || { required: false, comments: '' },
+            interproximalReduction: patientData.interproximalReduction || { detail1: '', detail2: '', detail3: '', detail4: '' },
+            measureOfIPR: patientData.measureOfIPR || { detailA: '', detailB: '', detailC: '' },
+            additionalComments: patientData.additionalComments || '',
+          }));
         } else if (response.status === 404) {
           toast.error('Patient not found or you do not have permission to view this record');
         } else if (response.status === 401) {
@@ -129,90 +110,99 @@ export default function Step2Page() {
         setIsDataLoading(false);
       }
     };
-
     fetchPatientData();
-  }, [patientId, token, dispatch]);
+  }, [patientId, token]);
 
+  const caseCategoryOptions = caseCategories.map(cat => ({
+    label: cat.category,
+    value: cat.category,
+  }));
+
+  const priceOptions = caseCategories.reduce((acc, cat) => {
+    acc[cat.category] = cat.plans.map(plan => ({ label: plan.label, value: plan.value }));
+    return acc;
+  }, {});
+
+  // Local handleChange for all fields
   const handleChange = (e) => {
     const { name, value, type } = e.target;
-    if (name.includes(".")) {
-      const [section, field] = name.split(".");
-      dispatch(setNestedField({ section, field, value: type === "number" ? Number(value) : value }));
+    if (name.startsWith('extraction.') || name.startsWith('interproximalReduction.') || name.startsWith('measureOfIPR.')) {
+      const [section, field] = name.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [section]: {
+          ...prev[section],
+          [field]: name === 'extraction.required' ? value === 'true' : value
+        }
+      }));
     } else {
-      // Reset price when case category changes
       if (name === "caseCategory") {
-        dispatch(setField({ field: "selectedPrice", value: "" }));
+        setFormData(prev => ({ ...prev, selectedPrice: "" }));
       }
-      dispatch(setField({ field: name, value: type === "number" ? Number(value) : value }));
+      setFormData(prev => ({ ...prev, [name]: type === "number" ? Number(value) : value }));
     }
   };
 
-  const handleExtractionChange = (e) => {
-    dispatch(setNestedField({
-      section: "extraction",
-      field: "required",
-      value: e.target.value === "true",
-    }));
-  };
-
-  const nextStep = async (e) => {
+  const handleNext = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    // Validation
+    if (!formData.chiefComplaint) {
+      toast.error("Chief Complaint is required.");
+      return;
+    }
+    if (!formData.caseType) {
+      toast.error("Case Type is required.");
+      return;
+    }
+    if (formData.caseType === "Single Arch" && !formData.singleArchType) {
+      toast.error("Please select an arch type.");
+      return;
+    }
+    if (!formData.caseCategory) {
+      toast.error("Case Category is required.");
+      return;
+    }
+    if (!formData.selectedPrice) {
+      toast.error("Package is required.");
+      return;
+    }
+    setSaving(true);
     try {
-      // Validation
-      if (!formData.caseCategory) {
-        toast.error("Please select a case category.");
-        return;
-      }
-      if (formData.extraction.required === undefined) {
-        toast.error("Please specify if extraction is required.");
-        return;
-      }
-
-      // Save data to database using update-details API
-      const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId || '').trim()}`, {
+      const payload = {
+        chiefComplaint: formData.chiefComplaint,
+        caseType: formData.singleArchType || formData.caseType, // Use singleArchType if it exists
+        singleArchType: formData.singleArchType,
+        caseCategory: formData.caseCategory,
+        selectedPrice: formData.selectedPrice,
+        caseCategoryDetails: formData.caseCategoryDetails,
+        treatmentPlan: formData.treatmentPlan,
+        extraction: formData.extraction,
+        interproximalReduction: formData.interproximalReduction,
+        measureOfIPR: formData.measureOfIPR,
+        additionalComments: formData.additionalComments,
+      };
+      const response = await fetch(`/api/admin/patients/update-details?id=${patientId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          chiefComplaint: formData.chiefComplaint,
-          caseType: formData.caseType,
-          singleArchType: formData.singleArchType,
-          caseCategory: formData.caseCategory,
-          selectedPrice: formData.selectedPrice,
-          extraction: formData.extraction,
-          interproximalReduction: formData.interproximalReduction,
-          measureOfIPR: formData.measureOfIPR,
-          caseCategoryDetails: formData.caseCategoryDetails,
-          treatmentPlan: formData.treatmentPlan,
-          additionalComments: formData.additionalComments,
-        })
+        body: JSON.stringify(payload)
       });
-
       if (!response.ok) {
-        const error = await response.json();
-        if (response.status === 404) {
-          throw new Error('Patient not found or you do not have permission to modify this record');
-        } else if (response.status === 401) {
-          throw new Error('Unauthorized access. Please log in again.');
-        } else {
-          throw new Error(error.message || 'Failed to save data');
-        }
+        throw new Error("Failed to save data");
       }
-
-      toast.success('Details updated successfully');
-      // Proceed to next step
-      router.push(`/patients/create-patient-record/step-3?id=${patientId}`);
+      toast.success("Data saved successfully!");
+      router.push(`/admin/patients/create-patient-record/step-3?id=${patientId}`);
     } catch (error) {
-      toast.error(error.message || 'Failed to save data. Please try again.');
+      toast.error(error.message || "An error occurred while saving.");
     } finally {
-      setIsLoading(false);
+      setSaving(false);
     }
   };
-  const prevStep = () => {
-    router.push(`/patients/create-patient-record/step-1?id=${patientId}`);
+
+  const handleBack = () => {
+    router.push(`/admin/patients/create-patient-record/step-1?id=${patientId}`);
   };
 
   return (
@@ -247,7 +237,7 @@ export default function Step2Page() {
           </div>
         )}
         
-        <form className="space-y-8" onSubmit={nextStep}>
+        <form className="space-y-8" onSubmit={handleNext}>
           <div className="space-y-6">
             <div>
               <Label>Chief Complaint</Label>
@@ -272,10 +262,7 @@ export default function Step2Page() {
                       name="caseType"
                       value="Single Arch"
                       checked={formData.caseType === "Single Arch" || formData.caseType === "Single Upper Arch" || formData.caseType === "Single Lower Arch"}
-                      onChange={(e) => {
-                        handleChange(e);
-                        dispatch(setField({ field: "caseType", value: "Single Arch" }));
-                      }}
+                      onChange={handleChange}
                       className="mr-2 accent-blue-500"
                       required
                     />
@@ -287,11 +274,7 @@ export default function Step2Page() {
                       name="caseType"
                       value="Double Arch"
                       checked={formData.caseType === "Double Arch"}
-                      onChange={(e) => {
-                        handleChange(e);
-                        dispatch(setField({ field: "singleArchType", value: "" }));
-                        dispatch(setField({ field: "caseType", value: "Double Arch" }));
-                      }}
+                      onChange={handleChange}
                       className="mr-2 accent-blue-500"
                       required
                     />
@@ -302,55 +285,47 @@ export default function Step2Page() {
                 {(formData.caseType === "Single Arch" || formData.caseType === "Single Upper Arch" || formData.caseType === "Single Lower Arch") && (
                   <div className="mt-4">
                     <Label>Arch *</Label>
-                    <Select
-                      options={[
-                        { label: "Upper Arch", value: "Single Upper Arch" },
-                        { label: "Lower Arch", value: "Single Lower Arch" },
-                      ]}
+                    <ReactSelect
                       name="singleArchType"
-                      value={formData.singleArchType || ""}
-                      onChange={(e) => {
-                        handleChange(e);
-                        dispatch(setField({ field: "caseType", value: e.target.value }));
-                      }}
-                      required
+                      options={singleArchTypeOptions}
+                      value={singleArchTypeOptions.find(opt => opt.value === formData.singleArchType) || null}
+                      onChange={(opt) => handleChange({ target: { name: 'singleArchType', value: opt?.value } })}
                     />
                   </div>
                 )}
               </div>
-            </div>
+            </div> 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-1">
               <div>
                 <Label>Case Category *</Label>
-                <Select
-                  options={[
-                    { label: "Flexi", value: "Flexi" },
-                    { label: "Premium", value: "Premium" },
-                    { label: "Elite", value: "Elite" },
-                  ]}
+                <ReactSelect
                   name="caseCategory"
-                  value={formData.caseCategory}
-                  onChange={handleChange}
-                  required
+                  options={caseCategoryOptions}
+                  value={caseCategoryOptions.find(opt => opt.value === formData.caseCategory) || null}
+                  onChange={(opt) => handleChange({ target: { name: 'caseCategory', value: opt?.value } })}
+                  isLoading={isCategoriesLoading}
                 />
               </div>
 
               {/* Price Selection appears when case category is selected */}
               {formData.caseCategory && (
                 <div className="mt-2">
-                  <Label>Select Package *</Label>
+                  <Label>Package</Label>
                   <div className="relative">
-                    <SelectField
-                      options={[
-                        ...(priceOptions[formData.caseCategory] || [])
-                      ]}
+                    <ReactSelect
                       name="selectedPrice"
-                      value={formData.selectedPrice || ""}
-                      onChange={handleChange}
-                      required
-                      className="pl-10"
+                      options={priceOptions[formData.caseCategory] || []}
+                      value={(priceOptions[formData.caseCategory] || []).find(opt => opt.value === formData.selectedPrice) || null}
+                      onChange={(opt) => handleChange({ target: { name: 'selectedPrice', value: opt?.value } })}
+                      isLoading={isCategoriesLoading}
+                      styles={{
+                        control: (base) => ({
+                          ...base,
+                          paddingLeft: "2rem",
+                        }),
+                      }}
                     />
-                    <CurrencyDollarIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" />
+                    <CurrencyDollarIcon className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-blue-400 pointer-events-none" />
                   </div>
                 </div>
               )}
@@ -388,8 +363,8 @@ export default function Step2Page() {
                       type="radio"
                       name="extraction.required"
                       value="true"
-                      checked={formData.extraction.required === true}
-                      onChange={handleExtractionChange}
+                      checked={formData.extraction?.required === true}
+                      onChange={handleChange}
                       className="mr-2 accent-blue-500"
                     />
                     Yes
@@ -399,8 +374,8 @@ export default function Step2Page() {
                       type="radio"
                       name="extraction.required"
                       value="false"
-                      checked={formData.extraction.required === false}
-                      onChange={handleExtractionChange}
+                      checked={formData.extraction?.required === false}
+                      onChange={handleChange}
                       className="mr-2 accent-blue-500"
                     />
                     No
@@ -411,7 +386,7 @@ export default function Step2Page() {
                 <Label>Extraction Comments</Label>
                 <TextArea
                   name="extraction.comments"
-                  value={formData.extraction.comments}
+                  value={formData.extraction?.comments}
                   onChange={handleChange}
                   rows={3}
                   className="focus:ring-2 focus:ring-blue-200"
@@ -421,146 +396,56 @@ export default function Step2Page() {
             {/* IPR Section */}
             <div className="p-4 border border-blue-100 dark:border-gray-700 rounded-lg bg-blue-50/50 dark:bg-gray-800/50">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <AdjustmentsHorizontalIcon className="w-5 h-5 text-blue-400" /> 
+                <AdjustmentsHorizontalIcon className="w-5 h-5 text-blue-400" />
                 Interproximal Reduction (IPR)
               </h3>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <div>
-                  <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="interproximalReduction.detail1"
-                        checked={formData.interproximalReduction.detail1 === "Anterior Region (3 To 3)"}
-                        onChange={(e) => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "Anterior Region (3 To 3)" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Anterior Region (3 To 3)
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="interproximalReduction.detail2"
-                        checked={formData.interproximalReduction.detail2 === "Posterior Region (Distal To Canine)"}
-                        onChange={(e) => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "Posterior Region (Distal To Canine)" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Posterior Region (Distal To Canine)
-                    </label>
-                  </div>
-                </div>
-                <div>
-                  <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="interproximalReduction.detail3"
-                        checked={formData.interproximalReduction.detail3 === "plan as required"}
-                        onChange={(e) => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "plan as required" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      plan as required
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="interproximalReduction.detail4"
-                        checked={formData.interproximalReduction.detail4 === "No IPR"}
-                        onChange={(e) => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "No IPR" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      No IPR
-                    </label>
-                  </div>
-                </div>
+                {interproximalReductionOptions.map((option, index) => (
+                  <label key={option} className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name={`interproximalReduction.detail${index + 1}`}
+                      checked={formData.interproximalReduction[`detail${index + 1}`] === option}
+                      onChange={(e) => handleChange({
+                        target: {
+                          name: e.target.name,
+                          value: e.target.checked ? option : ""
+                        }
+                      })}
+                      className="mr-2 accent-blue-500 w-4 h-4"
+                    />
+                    {option}
+                  </label>
+                ))}
               </div>
             </div>
 
             {/* Measure of IPR Section */}
             <div className="p-4 border border-blue-100 dark:border-gray-700 rounded-lg bg-blue-50/50 dark:bg-gray-800/50">
               <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <ArrowsRightLeftIcon className="w-5 h-5 text-blue-400" /> 
+                <ArrowsRightLeftIcon className="w-5 h-5 text-blue-400" />
                 Measure of IPR
               </h3>
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div>
-                  <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="measureOfIPR.detailA"
-                        checked={formData.measureOfIPR.detailA === "Upto 0.25mm/surface"}
-                        onChange={(e) => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "Upto 0.25mm/surface" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Upto 0.25mm/surface
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="measureOfIPR.detailC"
-                        checked={formData.measureOfIPR.detailC === "Plan as required"}
-                        onChange={(e) => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "Plan as required" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Plan as required
-                    </label>
-                  </div>
-                </div>
-                <div>
-                  <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="measureOfIPR.detailB"
-                        checked={formData.measureOfIPR.detailB === "0.25mm to 0.5mm/surface"}
-                        onChange={(e) => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "0.25mm to 0.5mm/surface" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      0.25mm to 0.5mm/surface
-                    </label>
-                   
-                  </div>
-                </div>
-                
+                {measureOfIPROptions.map((option, index) => (
+                  <label key={option} className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name={`measureOfIPR.detail${String.fromCharCode(65 + index)}`}
+                      checked={formData.measureOfIPR[`detail${String.fromCharCode(65 + index)}`] === option}
+                      onChange={(e) => handleChange({
+                        target: {
+                          name: e.target.name,
+                          value: e.target.checked ? option : ""
+                        }
+                      })}
+                      className="mr-2 accent-blue-500 w-4 h-4"
+                    />
+                    {option}
+                  </label>
+                ))}
               </div>
             </div>
-
 
             <div className="p-4 border border-blue-100 dark:border-gray-700 rounded-lg bg-blue-50/50 dark:bg-gray-800/50">
               <div>
@@ -578,7 +463,7 @@ export default function Step2Page() {
           </div>
           <div className="flex justify-between mt-8">
             <Button
-              onClick={prevStep}
+              onClick={handleBack}
               variant="outline"
               className="flex items-center gap-2"
             >
@@ -588,9 +473,9 @@ export default function Step2Page() {
               type="submit"
               variant="primary"
               className="flex items-center gap-2"
-              disabled={isLoading}
+              disabled={saving}
             >
-              {isLoading ? (
+              {saving ? (
                 <>
                   <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />

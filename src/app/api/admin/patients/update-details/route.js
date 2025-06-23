@@ -1,4 +1,4 @@
-import { verifyAuth } from '@/app/api/middleware/authMiddleware';
+import { admin } from '@/app/api/middleware/authMiddleware';
 import dbConnect from '@/app/api/config/db';
 import Patient from '@/app/api/models/Patient';
 import mongoose from 'mongoose';
@@ -12,8 +12,8 @@ export async function GET(req) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
     }
-    // Verify authentication
-    const authResult = await verifyAuth(req);
+    // Verify admin authentication
+    const authResult = await admin(req);
     if (!authResult.success) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -23,15 +23,12 @@ export async function GET(req) {
     
     await dbConnect();
 
-    // Find patient and check if it belongs to the logged-in user
-    const patient = await Patient.findOne({
-      _id: id,
-      userId: authResult.user.id // Use id from decoded token
-    }).lean();
+    // Find patient (no userId restriction for admin)
+    const patient = await Patient.findOne({ _id: id }).populate('userId').lean();
 
     if (!patient) {
       return NextResponse.json(
-        { error: 'Patient not found or you do not have permission to view this record' },
+        { error: 'Patient not found' },
         { status: 404 }
       );
     }
@@ -53,7 +50,7 @@ export async function PUT(req) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
     }
-    const authResult = await verifyAuth(req);
+    const authResult = await admin(req);
     if (!authResult.success) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -98,13 +95,13 @@ export async function PUT(req) {
         additionalComments: body.additionalComments,
         // Step-4 field
         scanFiles: body.scanFiles,
+        userId: body.userId,
       }).filter(([_, v]) => v !== undefined)
     );
 
     const updatedPatient = await Patient.findOneAndUpdate(
       {
         _id: id,
-        userId: authResult.user.id,
       },
       { $set: fieldsToUpdate },
       { new: true, runValidators: true }
@@ -112,7 +109,7 @@ export async function PUT(req) {
 
     if (!updatedPatient) {
       return NextResponse.json(
-        { error: 'Patient not found or you do not have permission to modify this record' },
+        { error: 'Patient not found' },
         { status: 404 }
       );
     }
@@ -134,8 +131,8 @@ export async function DELETE(req) {
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
       return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
     }
-    // Verify authentication
-    const authResult = await verifyAuth(req);
+    // Verify admin authentication
+    const authResult = await admin(req);
     if (!authResult.success) {
       return NextResponse.json(
         { error: 'Unauthorized' },
@@ -145,15 +142,12 @@ export async function DELETE(req) {
 
     await dbConnect();
 
-    // Delete patient only if it belongs to the logged-in user
-    const patient = await Patient.findOneAndDelete({
-      _id: id,
-      userId: authResult.user.id // Use id from decoded token
-    });
+    // Delete patient
+    const patient = await Patient.findOneAndDelete({ _id: id });
 
     if (!patient) {
       return NextResponse.json(
-        { error: 'Patient not found or you do not have permission to delete this record' },
+        { error: 'Patient not found' },
         { status: 404 }
       );
     }

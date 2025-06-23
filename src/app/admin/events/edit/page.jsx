@@ -1,0 +1,226 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import { app } from "@/utils/firebase";
+import { useDropzone } from "react-dropzone";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import { v4 as uuidv4 } from "uuid";
+
+import DatePicker from "@/components/form/date-picker";
+import InputField from "@/components/form/input/InputField";
+import Button from "@/components/ui/button/Button";
+import Label from "@/components/form/Label";
+
+const EditPage = () => {
+  const { token } = useSelector((state) => state.auth);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const eventId = searchParams.get("id");
+
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [eventDate, setEventDate] = useState(new Date());
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // State for the single file upload
+  const [imageUrl, setImageUrl] = useState(null);
+  const [fileKey, setFileKey] = useState(null);
+  const [progress, setProgress] = useState(0);
+  const [originalFileKey, setOriginalFileKey] = useState(null);
+
+  useEffect(() => {
+    const fetchEvent = async () => {
+      if (!eventId) return;
+      setLoading(true);
+      try {
+        const response = await fetch(`/api/events?id=${eventId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error("Failed to fetch event");
+        const event = await response.json();
+        setName(event.name || "");
+        setDescription(event.description || "");
+        setEventDate(event.eventDate ? new Date(event.eventDate) : new Date());
+        setImageUrl(event.image?.fileUrl || null);
+        setFileKey(event.image?.fileKey || null);
+        setOriginalFileKey(event.image?.fileKey || null);
+      } catch (error) {
+        toast.error(error.message || "Failed to load event data");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvent();
+    // eslint-disable-next-line
+  }, [eventId]);
+
+  const handleFileUpload = (file) => {
+    if (!file) return;
+    const fileExtension = file.name.split(".").pop()?.toLowerCase() || "";
+    if (!["jpg", "jpeg", "png", "gif"].includes(fileExtension)) {
+      toast.error("Invalid file type. Please upload an image.");
+      return;
+    }
+    const uniqueFileName = `${uuidv4()}-${file.name}`;
+    const storagePath = `events/${uniqueFileName}`;
+    const storageRef = ref(getStorage(app), storagePath);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+    uploadTask.on(
+      "state_changed",
+      (snapshot) => setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
+      (error) => {
+        toast.error(`Upload failed: ${error.message}`);
+        setProgress(0);
+      },
+      () => {
+        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+          setImageUrl(downloadURL);
+          setFileKey(storagePath);
+          toast.success("File uploaded successfully");
+          setProgress(100);
+        });
+      }
+    );
+  };
+
+  const handleDeleteFile = async () => {
+    if (!fileKey) return;
+    const fileRef = ref(getStorage(app), fileKey);
+    try {
+      await deleteObject(fileRef);
+      setImageUrl(null);
+      setFileKey(null);
+      setProgress(0);
+      toast.success("Image deleted successfully");
+    } catch (error) {
+      toast.error(`Failed to delete image: ${error.message}`);
+    }
+  };
+
+  const handleFinalSubmit = async (e) => {
+    e.preventDefault();
+    if (!name || !description || !eventDate || !imageUrl) {
+      toast.error("Please fill all fields and upload an image.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/admin/events?id=${eventId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          name,
+          description,
+          eventDate,
+          image: { fileUrl: imageUrl, fileKey: fileKey },
+        }),
+      });
+      if (!response.ok) {
+        // If server returns error, delete the uploaded image if it was new
+        if (fileKey && fileKey !== originalFileKey) await handleDeleteFile();
+        throw new Error((await response.json()).message || "Failed to update event");
+      }
+      toast.success("Event updated successfully!");
+      router.push("/admin/events");
+    } catch (error) {
+      toast.error(error.message || "An error occurred.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const UploadComponent = () => {
+    const onDrop = (acceptedFiles) => acceptedFiles.length > 0 && handleFileUpload(acceptedFiles[0]);
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, multiple: false, accept: { "image/*": [".jpeg", ".jpg", ".png", ".gif"] } });
+    return (
+      <div className="text-center">
+        <Label>Event Image</Label>
+        {!imageUrl ? (
+          progress > 0 && progress < 100 ? (
+            <div className="w-full mt-2">
+              <div className="flex justify-between mb-1">
+                <span className="text-sm font-medium text-blue-700">Uploading...</span>
+                <span className="text-sm font-medium text-blue-700">{Math.round(progress)}%</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2.5">
+                <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
+              </div>
+            </div>
+          ) : (
+            <div {...getRootProps()} className={`mt-2 flex justify-center items-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none ${isDragActive ? "border-blue-500 bg-blue-50" : ""}`}>
+              <input {...getInputProps()} />
+              <span className="flex items-center space-x-2">
+                <span className="font-medium text-gray-600">Drop file or <span className="text-blue-600 underline">browse</span></span>
+              </span>
+            </div>
+          )
+        ) : (
+          <div className="relative group max-w-xs mx-auto mt-2">
+            <div className="rounded-xl shadow-lg border flex flex-col items-center justify-center h-48">
+              <img src={imageUrl} alt="Event" className="w-full h-full object-contain rounded-xl" />
+              <button type="button" onClick={handleDeleteFile} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-lg opacity-80 hover:opacity-100 transition-opacity">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
+        <span className="text-lg text-gray-600 dark:text-gray-300">Loading event...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Edit Event</h1>
+      <form onSubmit={handleFinalSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-md">
+        <InputField
+          label="Event Name"
+          placeholder="Enter event name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <div>
+          <Label>Event Description</Label>
+          <textarea
+            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            rows="4"
+            placeholder="Enter event description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          ></textarea>
+        </div>
+        <div>
+          <Label>Event Date</Label>
+          <DatePicker
+            id="event-date"
+            selectedDate={eventDate}
+            onChange={(date) => setEventDate(date)}
+          />
+        </div>
+        <UploadComponent />
+        <div className="flex justify-end pt-4 border-t">
+          <Button type="submit" disabled={isSubmitting || (progress > 0 && progress < 100)}>
+            {isSubmitting ? "Saving..." : "Save Changes"}
+          </Button>
+        </div>
+      </form>
+    </div>
+  );
+};
+
+export default EditPage;

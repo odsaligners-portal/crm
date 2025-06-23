@@ -3,11 +3,11 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import Select from "@/components/form/select/SelectField";
-import { BriefcaseIcon, DocumentTextIcon, GlobeAltIcon, MapIcon, ShieldCheckIcon, SparklesIcon, UserCircleIcon } from "@heroicons/react/24/solid";
+import { GlobeAltIcon, MapIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { motion } from "framer-motion";
 
 const luxuryBg = `fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center bg-white`;
 const glassCard = "relative bg-white/95 backdrop-blur-xl border border-blue-200 rounded-3xl shadow-2xl p-8 mb-12 overflow-hidden";
@@ -35,7 +35,7 @@ export default function ViewPatientDetails() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
-  const { token } = useSelector((state) => state.auth);
+  const { token, role } = useSelector((state) => state.auth);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");

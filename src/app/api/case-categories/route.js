@@ -47,19 +47,21 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     //Verify authentication
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
+    const authResult = await verifyAuth(request);
+    if (!authResult.success) {
       return NextResponse.json(
-        { success: false, message: 'Authentication required' },
+        { success: false, message: authResult.error || 'Authentication required' },
         { status: 401 }
       );
     }
 
-    const decoded = await verifyAuth(token);
-    if (!decoded) {
+    const { user: decoded } = authResult;
+    
+    // Check if user is an admin
+    if (decoded.role !== 'admin') {
       return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
+        { success: false, message: 'Forbidden: Only admins can create case categories.' },
+        { status: 403 }
       );
     }
 
@@ -121,19 +123,21 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     // Verify authentication
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
+    const authResult = await verifyAuth(request);
+    if (!authResult.success) {
       return NextResponse.json(
-        { success: false, message: 'Authentication required' },
+        { success: false, message: authResult.error || 'Invalid token' },
         { status: 401 }
       );
     }
 
-    const decoded = await verifyAuth(token);
-    if (!decoded) {
+    const { user: decoded } = authResult;
+
+    // Check if user is an admin
+    if (decoded.role !== 'admin') {
       return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
+        { success: false, message: 'Forbidden: Only admins can update case categories.' },
+        { status: 403 }
       );
     }
 
@@ -198,19 +202,21 @@ export async function PUT(request) {
 export async function DELETE(request) {
   try {
     // Verify authentication
-    const token = request.headers.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
+    const authResult = await verifyAuth(request);
+    if (!authResult.success) {
       return NextResponse.json(
-        { success: false, message: 'Authentication required' },
+        { success: false, message: authResult.error || 'Authentication required' },
         { status: 401 }
       );
     }
 
-    const decoded = await verifyAuth(token);
-    if (!decoded) {
+    const { user: decoded } = authResult;
+
+    // Check if user is an admin
+    if (decoded.role !== 'admin') {
       return NextResponse.json(
-        { success: false, message: 'Invalid token' },
-        { status: 401 }
+        { success: false, message: 'Forbidden: Only admins can delete case categories.' },
+        { status: 403 }
       );
     }
 

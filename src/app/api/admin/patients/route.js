@@ -26,10 +26,13 @@ export async function GET(req) {
 
   // Get userId from token
   const authResult = await admin(req);
-  if (!authResult.success || !authResult.user || !authResult.user.id) {
+  
+  if (!authResult.success) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   
+  const query = {};
+
   // Search functionality
   if (search) {
     query.$or = [
@@ -88,10 +91,10 @@ export async function GET(req) {
   try {
     const skip = (page - 1) * limit;
     const patients = await Patient.find(query)
+      .populate('userId', 'name')
       .sort(sortOption)
       .skip(skip)
-      .limit(limit)
-      .populate('userId');
+      .limit(limit);
 
     const total = await Patient.countDocuments(query);
     const totalPages = Math.ceil(total / limit);
@@ -119,18 +122,15 @@ export async function POST(req) {
   try {
     await dbConnect();
 
-    // Get userId from token
-    const authResult = await verifyAuth(req);
-    
-    
-    if (!authResult.success || !authResult.user || !authResult.user.id) {
+    // Only allow admin users
+    const authResult = await admin(req);
+    if (!authResult.success) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    const userId = authResult.user.id;
-    
-    let patientData = {
-      userId: userId,
-    };
+
+    // Optionally, you can get the admin userId if needed
+    // const userId = authResult.user.id;
+    let patientData = {};
 
     // Check content type to determine how to parse the request
     const contentType = req.headers.get('content-type') || '';
@@ -139,11 +139,9 @@ export async function POST(req) {
       // Handle JSON data
       const jsonData = await req.json();
       patientData = { ...patientData, ...jsonData };
-      console.log('Received JSON data:', patientData);
     } else if (contentType.includes('multipart/form-data')) {
       // Handle FormData
       const formData = await req.formData();
-      console.log('FormData received');
       
       // Process form fields
       for (const [key, value] of formData.entries()) {
@@ -191,7 +189,6 @@ export async function POST(req) {
       while (!isUnique && attempts < maxAttempts) {
         const randomNum = Math.floor(1000000 + Math.random() * 9000000); // 7-digit
         caseId = `${prefix}${stateAbbr}${randomNum}`;
-        console.log('Attempting caseId:', caseId);
         const exists = await Patient.findOne({ caseId });
         if (!exists) isUnique = true;
         attempts++;
@@ -206,19 +203,15 @@ export async function POST(req) {
 
     // Only generate caseId if not already present (first creation)
     if (!patientData.caseId) {
-      
       patientData.caseId = await generateUniqueCaseId(patientData.state);
-      
     }
     // --- END CASE ID GENERATION ---
 
-   // Create patient
+    // Create patient
     const patient = await Patient.create(patientData);
-  
     return NextResponse.json(patient, { status: 201 });
   } catch (error) {
     console.error('Error in POST:', error);
-    
     // Handle duplicate key error
     if (error.code === 11000) {
       return NextResponse.json(
@@ -226,7 +219,6 @@ export async function POST(req) {
         { status: 400 }
       );
     }
-
     // Handle validation errors
     if (error.name === 'ValidationError') {
       const validationErrors = Object.values(error.errors).map(
@@ -237,7 +229,6 @@ export async function POST(req) {
         { status: 400 }
       );
     }
-
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

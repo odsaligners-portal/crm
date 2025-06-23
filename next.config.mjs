@@ -1,7 +1,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['images.unsplash.com', 'images.remotePatterns'],
+    domains: ['firebasestorage.googleapis.com'],
   },
   eslint: {
     ignoreDuringBuilds: true,

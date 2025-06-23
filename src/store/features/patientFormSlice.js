@@ -22,8 +22,8 @@ const initialState = {
   singleArchType: '',
   selectedPrice: '',
   extraction: { required: false, comments: '' },
-  interproximalReduction: { detail1: '', detail2: '', detail3: '', detail4: '' },
-  measureOfIPR: { detailA: '', detailB: '', detailC: '' },
+  interproximalReduction: [],
+  measureOfIPR: [],
   additionalComments: '',
   midline: '',
   midlineComments: '',
@@ -42,9 +42,6 @@ const patientFormSlice = createSlice({
     setField: (state, action) => {
       state[action.payload.field] = action.payload.value;
     },
-    setNestedField: (state, action) => {
-      state[action.payload.section][action.payload.field] = action.payload.value;
-    },
     setForm: (state, action) => {
       Object.assign(state, action.payload);
     },
@@ -55,5 +52,5 @@ const patientFormSlice = createSlice({
   },
 });
 
-export const { setField, setNestedField, setForm, resetForm, setFiles } = patientFormSlice.actions;
+export const { setField, setForm, resetForm, setFiles } = patientFormSlice.actions;
 export default patientFormSlice.reducer; 

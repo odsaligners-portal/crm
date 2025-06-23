@@ -3,14 +3,11 @@ import User from '../models/User';
 
 export const protect = async (req) => {
   try {
-    let token;
-
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith('Bearer')
-    ) {
-      token = req.headers.authorization.split(' ')[1];
+    const authorization = req.headers.get('authorization');
+    if (!authorization || !authorization.startsWith('Bearer ')) {
+      return { success: false, error: 'Not authorized to access this route' };
     }
+    const token = authorization.split(' ')[1];
 
     if (!token) {
       return {
@@ -38,7 +35,7 @@ export const protect = async (req) => {
       return {
         success: false,
         error: 'Not authorized to access this route',
-        err : err,
+        err : err.message,
       };
     }
   } catch (error) {
@@ -54,8 +51,7 @@ export const admin = async (req) => {
     const authResult = await protect(req);
     if (!authResult.success) {
       return authResult;
-    }
-
+    } 
     if (authResult.user.role !== 'admin') {
       return {
         success: false,

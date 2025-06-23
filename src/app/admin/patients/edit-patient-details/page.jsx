@@ -3,137 +3,31 @@ import Input from "@/components/form/input/InputField";
 import TextArea from "@/components/form/input/TextArea";
 import Label from "@/components/form/Label";
 import Button from "@/components/ui/button/Button";
+import {
+  archExpansionOptions,
+  caseTypes,
+  genders,
+  imageLabels,
+  interproximalReductionOptions,
+  measureOfIPROptions,
+  midlineOptions,
+  modelLabels
+} from '@/constants/data';
+import { countriesData } from '@/utils/countries';
 import { storage } from "@/utils/firebase";
-import { SparklesIcon, GlobeAltIcon, MapIcon } from "@heroicons/react/24/outline";
+import { GlobeAltIcon, MapIcon, SparklesIcon } from "@heroicons/react/24/outline";
 import { deleteObject, getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useSelector } from "react-redux";
+import ReactSelect from "react-select";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
-import ReactSelect from "react-select";
-import { motion } from "framer-motion";
 
 const sectionClass = "mb-8 p-6 rounded-2xl shadow bg-white/80 dark:bg-gray-900/80 border border-blue-100 dark:border-gray-800";
 
-const priceOptions = {
-  "Flexi": [
-    { label: "Basic Plan - $999", value: "999" },
-    { label: "Standard Plan - $1299", value: "1299" },
-    { label: "Premium Plan - $1599", value: "1599" }
-  ],
-  "Premium": [
-    { label: "Silver Plan - $1999", value: "1999" },
-    { label: "Gold Plan - $2499", value: "2499" },
-    { label: "Platinum Plan - $2999", value: "2999" }
-  ],
-  "Elite": [
-    { label: "Executive Plan - $3499", value: "3499" },
-    { label: "VIP Plan - $3999", value: "3999" },
-    { label: "Luxury Plan - $4499", value: "4499" }
-  ]
-};
-
-const imageLabels = [
-  'Upper arch',
-  'Lower arch',
-  'Anterior View',
-  'Left View',
-  'Right View',
-  'Profile View',
-  'Frontal View',
-  'Smiling',
-  'Panoramic Radiograph',
-  'Lateral Radiograph',
-  'Others',
-];
-const modelLabels = ['Select PLY/STL File 1', 'Select PLY/STL File 2'];
-
-
-const genderOptions = [
-  { label: "Male", value: "Male" },
-  { label: "Female", value: "Female" },
-  { label: "Other", value: "Other" }
-];
-const caseCategoryOptions = [
-  { label: "Flexi", value: "Flexi" },
-  { label: "Premium", value: "Premium" },
-  { label: "Elite", value: "Elite" }
-];
-const singleArchTypeOptions = [
-  { label: "Single Upper Arch", value: "Single Upper Arch" },
-  { label: "Single Lower Arch", value: "Single Lower Arch" }
-];
-
-const countriesData = {
-  "United States": [
-    "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado", "Connecticut",
-    "Delaware", "Florida", "Georgia", "Hawaii", "Idaho", "Illinois", "Indiana", "Iowa",
-    "Kansas", "Kentucky", "Louisiana", "Maine", "Maryland", "Massachusetts", "Michigan",
-    "Minnesota", "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada", "New Hampshire",
-    "New Jersey", "New Mexico", "New York", "North Carolina", "North Dakota", "Ohio",
-    "Oklahoma", "Oregon", "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
-    "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington", "West Virginia",
-    "Wisconsin", "Wyoming"
-  ],
-  "Canada": [
-    "Alberta", "British Columbia", "Manitoba", "New Brunswick", "Newfoundland and Labrador",
-    "Northwest Territories", "Nova Scotia", "Nunavut", "Ontario", "Prince Edward Island",
-    "Quebec", "Saskatchewan", "Yukon"
-  ],
-  "United Kingdom": [
-    "England", "Scotland", "Wales", "Northern Ireland"
-  ],
-  "Australia": [
-    "Australian Capital Territory", "New South Wales", "Northern Territory", "Queensland",
-    "South Australia", "Tasmania", "Victoria", "Western Australia"
-  ],
-  "Germany": [
-    "Baden-Württemberg", "Bavaria", "Berlin", "Brandenburg", "Bremen", "Hamburg", "Hesse",
-    "Lower Saxony", "Mecklenburg-Vorpommern", "North Rhine-Westphalia", "Rhineland-Palatinate",
-    "Saarland", "Saxony", "Saxony-Anhalt", "Schleswig-Holstein", "Thuringia"
-  ],
-  "France": [
-    "Auvergne-Rhône-Alpes", "Bourgogne-Franche-Comté", "Bretagne", "Centre-Val de Loire",
-    "Corse", "Grand Est", "Hauts-de-France", "Île-de-France", "Normandie", "Nouvelle-Aquitaine",
-    "Occitanie", "Pays de la Loire", "Provence-Alpes-Côte d'Azur"
-  ],
-  "India": [
-    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh", "Goa", "Gujarat",
-    "Haryana", "Himachal Pradesh", "Jharkhand", "Karnataka", "Kerala", "Madhya Pradesh",
-    "Maharashtra", "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab",
-    "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", "Uttarakhand",
-    "West Bengal"
-  ],
-  "China": [
-    "Anhui", "Beijing", "Chongqing", "Fujian", "Gansu", "Guangdong", "Guangxi", "Guizhou",
-    "Hainan", "Hebei", "Heilongjiang", "Henan", "Hubei", "Hunan", "Inner Mongolia", "Jiangsu",
-    "Jiangxi", "Jilin", "Liaoning", "Ningxia", "Qinghai", "Shaanxi", "Shandong", "Shanghai",
-    "Shanxi", "Sichuan", "Tianjin", "Tibet", "Xinjiang", "Yunnan", "Zhejiang"
-  ],
-  "Japan": [
-    "Aichi", "Akita", "Aomori", "Chiba", "Ehime", "Fukui", "Fukuoka", "Fukushima", "Gifu",
-    "Gunma", "Hiroshima", "Hokkaido", "Hyogo", "Ibaraki", "Ishikawa", "Iwate", "Kagawa",
-    "Kagoshima", "Kanagawa", "Kochi", "Kumamoto", "Kyoto", "Mie", "Miyagi", "Miyazaki",
-    "Nagano", "Nagasaki", "Nara", "Niigata", "Oita", "Okayama", "Okinawa", "Osaka", "Saga",
-    "Saitama", "Shiga", "Shimane", "Shizuoka", "Tochigi", "Tokushima", "Tokyo", "Tottori",
-    "Toyama", "Wakayama", "Yamagata", "Yamaguchi", "Yamanashi"
-  ],
-  "Brazil": [
-    "Acre", "Alagoas", "Amapá", "Amazonas", "Bahia", "Ceará", "Distrito Federal", "Espírito Santo",
-    "Goiás", "Maranhão", "Mato Grosso", "Mato Grosso do Sul", "Minas Gerais", "Pará", "Paraíba",
-    "Paraná", "Pernambuco", "Piauí", "Rio de Janeiro", "Rio Grande do Norte", "Rio Grande do Sul",
-    "Rondônia", "Roraima", "Santa Catarina", "São Paulo", "Sergipe", "Tocantins"
-  ],
-  "Mexico": [
-    "Aguascalientes", "Baja California", "Baja California Sur", "Campeche", "Chiapas", "Chihuahua",
-    "Coahuila", "Colima", "Ciudad de México", "Durango", "Estado de México", "Guanajuato", "Guerrero",
-    "Hidalgo", "Jalisco", "Michoacán", "Morelos", "Nayarit", "Nuevo León", "Oaxaca", "Puebla",
-    "Querétaro", "Quintana Roo", "San Luis Potosí", "Sinaloa", "Sonora", "Tabasco", "Tamaulipas",
-    "Tlaxcala", "Veracruz", "Yucatán", "Zacatecas"
-  ]
-};
 const countries = Object.keys(countriesData);
 
 export default function EditPatientDetails() {
@@ -147,12 +41,37 @@ export default function EditPatientDetails() {
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const [caseCategories, setCaseCategories] = useState([]);
+  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
+
   const [fileKeys, setFileKeys] = useState(Array(13).fill(undefined));
   const [imageUrls, setImageUrls] = useState(Array(13).fill(undefined));
   const [progresses, setProgresses] = useState(Array(13).fill(0));
 
   const [selectedCountry, setSelectedCountry] = useState(form?.country || "");
   const [selectedState, setSelectedState] = useState(form?.state || "");
+
+  const [doctors, setDoctors] = useState([]);
+
+  useEffect(() => {
+    const fetchCaseCategories = async () => {
+      if (!token) return;
+      setIsCategoriesLoading(true);
+      try {
+        const response = await fetch('/api/case-categories?active=true', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (!response.ok) throw new Error('Failed to fetch case categories');
+        const result = await response.json();
+        setCaseCategories(result.data);
+      } catch (err) {
+        toast.error(err.message);
+      } finally {
+        setIsCategoriesLoading(false);
+      }
+    };
+    fetchCaseCategories();
+  }, [token]);
 
   useEffect(() => {
     if (!patientId) {
@@ -163,10 +82,13 @@ export default function EditPatientDetails() {
     const fetchPatient = async () => {
       setLoading(true);
       try {
-        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, { headers: { 'Authorization': `Bearer ${token}` } });
+        const response = await fetch(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, { headers: { 'Authorization': `Bearer ${token}` } });
         if (!response.ok) throw new Error("Failed to fetch patient");
         const result = await response.json();
-        setForm(result);
+        setForm({
+          ...result,
+          userId: typeof result.userId === 'object' ? result.userId._id : result.userId
+        });
         
         const loadedUrls = Array(13).fill(undefined);
         const loadedKeys = Array(13).fill(undefined);
@@ -187,6 +109,17 @@ export default function EditPatientDetails() {
     };
     fetchPatient();
   }, [patientId, token]);
+
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      const res = await fetch('/api/user/profile?role=doctor');
+      if (res.ok) {
+        const data = await res.json();
+        setDoctors(data.doctors || []);
+      }
+    };
+    fetchDoctors();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -267,16 +200,20 @@ export default function EditPatientDetails() {
         scanFiles[fieldName] = [{ fileUrl: url, fileKey: fileKeys[idx], uploadedAt: new Date().toISOString() }];
       }
     });
-    const updatedForm = { ...form, scanFiles };
+    const updatedForm = { 
+      ...form, 
+      scanFiles,
+      userId: typeof form.userId === 'object' ? form.userId._id : form.userId // always string
+    };
     try {
-      const response = await fetch(`/api/patients/update-details?id=${patientId}`, {
+      const response = await fetch(`/api/admin/patients/update-details?id=${patientId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(updatedForm),
       });
       if (!response.ok) throw new Error("Failed to save changes");
       toast.success("Changes saved successfully!");
-      router.push('/patients');
+      router.push('/admin/patients');
     } catch (error) { toast.error(`Error saving: ${error.message}`); } 
     finally { setSaving(false); }
   };
@@ -326,7 +263,17 @@ export default function EditPatientDetails() {
     );
   };
 
-  if (loading) return <div className="flex justify-center items-center min-h-[40vh]">Loading...</div>;
+  const caseCategoryOptions = caseCategories.map(cat => ({
+    label: cat.category,
+    value: cat.category,
+  }));
+
+  const priceOptions = caseCategories.reduce((acc, cat) => {
+    acc[cat.category] = cat.plans.map(plan => ({ label: plan.label, value: plan.value }));
+    return acc;
+  }, {});
+
+  if (loading || isCategoriesLoading) return <div className="flex justify-center items-center min-h-[40vh]">Loading...</div>;
   if (error) return <div className="text-red-500 text-center py-8">{error}</div>;
   if (!form) return null;
 
@@ -353,7 +300,29 @@ export default function EditPatientDetails() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-lg">
               <div><Label>Patient Name</Label><Input name="patientName" value={form.patientName} onChange={handleChange} /></div>
               <div><Label>Age</Label><Input name="age" value={form.age} onChange={handleChange} /></div>
-              <div><Label>Gender</Label><ReactSelect name="gender" options={genderOptions} value={genderOptions.find(opt => opt.value === form.gender) || null} onChange={(opt) => handleChange({ target: { name: "gender", value: opt?.value } })} /></div>
+              <div><Label>Gender</Label><ReactSelect
+                name="gender"
+                options={genders.map(g => ({ label: g, value: g }))}
+                value={genders.map(g => ({ label: g, value: g })).find(opt => opt.value === form.gender) || null}
+                onChange={(opt) => handleChange({ target: { name: "gender", value: opt?.value } })}
+              /></div>
+              <div className="md:col-span-3 col-span-1">
+                <Label>Assign Doctor</Label>
+                <select
+                  name="userId"
+                  className="w-full px-4 py-3 bg-blue-50 rounded-xl font-semibold text-blue-900"
+                  value={typeof form.userId === 'object' ? form.userId._id : form.userId || ""}
+                  onChange={e => setForm(prev => ({ ...prev, userId: e.target.value }))}
+                  required
+                >
+                  <option value="">Select Doctor</option>
+                  {doctors.map(doc => (
+                    <option key={doc._id} value={doc._id}>
+                      {doc.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div><Label>Past Medical History</Label><TextArea name="pastMedicalHistory" value={form.pastMedicalHistory} onChange={handleChange} /></div>
@@ -530,8 +499,8 @@ export default function EditPatientDetails() {
                     <Label>Arch</Label>
                     <ReactSelect
                       name="singleArchType"
-                      options={singleArchTypeOptions}
-                      value={singleArchTypeOptions.find(opt => opt.value === (form.singleArchType || form.caseType)) || null}
+                      options={caseTypes.filter(type => type !== 'Double Arch').map(type => ({ label: type, value: type }))}
+                      value={caseTypes.filter(type => type !== 'Double Arch').map(type => ({ label: type, value: type })).find(opt => opt.value === (form.singleArchType || form.caseType)) || null}
                       onChange={(opt) => {
                         handleChange({ target: { name: "singleArchType", value: opt?.value } });
                         setForm((prev) => ({ ...prev, caseType: opt?.value }));
@@ -559,6 +528,7 @@ export default function EditPatientDetails() {
                       options={priceOptions[form.caseCategory] || []}
                       value={(priceOptions[form.caseCategory] || []).find(opt => opt.value === form.selectedPrice) || null}
                       onChange={(opt) => setForm((prev) => ({ ...prev, selectedPrice: opt?.value }))}
+                      isLoading={isCategoriesLoading}
                     />
                   </div>
                 )}
@@ -607,159 +577,64 @@ export default function EditPatientDetails() {
           {/* Section 3: IPR, Midline & Arch Expansion */}
           <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.7, type: 'spring' }} className="mb-8 p-8 rounded-3xl shadow-2xl bg-white/70 dark:bg-gray-900/70 border border-blue-200/60 dark:border-gray-800/80 backdrop-blur-xl hover:shadow-blue-200/40 transition-all">
             <div className="text-2xl font-extrabold bg-gradient-to-r from-blue-700 via-blue-400 to-blue-700 bg-clip-text text-transparent mb-6 flex items-center gap-3"><SparklesIcon className="w-7 h-7 text-blue-400 animate-pulse" /> IPR, Midline & Arch Expansion</div>
-            {/* IPR Section (checkboxes) */}
+            
             <div className="p-4 border border-blue-100 dark:border-gray-700 rounded-lg bg-blue-50/50 dark:bg-gray-800/50 mb-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                Interproximal Reduction (IPR)
-              </h3>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">Interproximal Reduction (IPR)</h3>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-                <div>
-                  <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="interproximalReduction.detail1"
-                        checked={form.interproximalReduction?.detail1 === "Anterior Region (3 To 3)"}
-                        onChange={e => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "Anterior Region (3 To 3)" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Anterior Region (3 To 3)
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="interproximalReduction.detail2"
-                        checked={form.interproximalReduction?.detail2 === "Posterior Region (Distal To Canine)"}
-                        onChange={e => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "Posterior Region (Distal To Canine)" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Posterior Region (Distal To Canine)
-                    </label>
-                  </div>
-                </div>
-                <div>
-                  <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="interproximalReduction.detail3"
-                        checked={form.interproximalReduction?.detail3 === "plan as required"}
-                        onChange={e => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "plan as required" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      plan as required
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="interproximalReduction.detail4"
-                        checked={form.interproximalReduction?.detail4 === "No IPR"}
-                        onChange={e => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "No IPR" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      No IPR
-                    </label>
-                  </div>
-                </div>
+                {interproximalReductionOptions.map((option, index) => (
+                  <label key={option} className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name={`interproximalReduction.detail${index + 1}`}
+                      checked={form.interproximalReduction && form.interproximalReduction[`detail${index + 1}`] === option}
+                      onChange={(e) => handleChange({
+                        target: {
+                          name: e.target.name,
+                          value: e.target.checked ? option : ""
+                        }
+                      })}
+                      className="mr-2 accent-blue-500 w-4 h-4"
+                    />
+                    {option}
+                  </label>
+                ))}
               </div>
             </div>
-            {/* Measure of IPR Section (checkboxes) */}
+
             <div className="p-4 border border-blue-100 dark:border-gray-700 rounded-lg bg-blue-50/50 dark:bg-gray-800/50 mb-6">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                Measure of IPR
-              </h3>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">Measure of IPR</h3>
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <div>
-                  <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="measureOfIPR.detailA"
-                        checked={form.measureOfIPR?.detailA === "Upto 0.25mm/surface"}
-                        onChange={e => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "Upto 0.25mm/surface" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Upto 0.25mm/surface
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="measureOfIPR.detailC"
-                        checked={form.measureOfIPR?.detailC === "Plan as required"}
-                        onChange={e => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "Plan as required" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      Plan as required
-                    </label>
-                  </div>
-                </div>
-                <div>
-                  <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        name="measureOfIPR.detailB"
-                        checked={form.measureOfIPR?.detailB === "0.25mm to 0.5mm/surface"}
-                        onChange={e => handleChange({
-                          target: {
-                            name: e.target.name,
-                            value: e.target.checked ? "0.25mm to 0.5mm/surface" : ""
-                          }
-                        })}
-                        className="mr-2 accent-blue-500 w-4 h-4"
-                      />
-                      0.25mm to 0.5mm/surface
-                    </label>
-                  </div>
-                </div>
+                {measureOfIPROptions.map((option, index) => (
+                  <label key={option} className="flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      name={`measureOfIPR.detail${String.fromCharCode(65 + index)}`}
+                      checked={form.measureOfIPR && form.measureOfIPR[`detail${String.fromCharCode(65 + index)}`] === option}
+                      onChange={(e) => handleChange({
+                        target: {
+                          name: e.target.name,
+                          value: e.target.checked ? option : ""
+                        }
+                      })}
+                      className="mr-2 accent-blue-500 w-4 h-4"
+                    />
+                    {option}
+                  </label>
+                ))}
               </div>
             </div>
-            {/* IPR Comments */}
+
             <div className="p-4 border border-blue-100 dark:border-gray-700 rounded-lg bg-blue-50/50 dark:bg-gray-800/50 mb-6">
               <div>
                 <Label>IPR Comments</Label>
-                <TextArea
-                  name="additionalComments"
-                  value={form.additionalComments || ""}
-                  onChange={handleChange}
-                  rows={3}
-                />
+                <TextArea name="additionalComments" value={form.additionalComments || ""} onChange={handleChange} rows={3} />
               </div>
             </div>
+
             <div className="mb-6">
               <Label>Midline</Label>
               <div className="flex flex-wrap gap-3 mt-2">
-                {['Adjust as Needed', 'Correct through IPR', 'Move to Left', 'Move to Right', 'None'].map(opt => (
+                {midlineOptions.map(opt => (
                   <label key={opt} className="flex items-center gap-2">
                     <input type="radio" name="midline" value={opt} checked={form.midline === opt} onChange={handleChange} className="accent-blue-500" />
                     <span>{opt}</span>
@@ -774,7 +649,7 @@ export default function EditPatientDetails() {
             <div className="mb-6">
               <Label>Arch Expansion</Label>
               <div className="flex flex-wrap gap-3 mt-2">
-                {['Move to Right', 'Expand in Anterior', 'Expand in Posterior', 'No Expansion Required', 'None'].map(opt => (
+                {archExpansionOptions.map(opt => (
                   <label key={opt} className="flex items-center gap-2">
                     <input type="radio" name="archExpansion" value={opt} checked={form.archExpansion === opt} onChange={handleChange} className="accent-blue-500" />
                     <span>{opt}</span>
