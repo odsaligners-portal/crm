@@ -14,6 +14,8 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import * as XLSX from 'xlsx';
+import ConfirmationModal from '@/components/common/ConfirmationModal';
+import { useModal } from '@/hooks/useModal';
 const countries = Object.keys(countriesData);
 
 export default function ViewPatientRecords() {
@@ -30,6 +32,8 @@ export default function ViewPatientRecords() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [isViewCommentsModalOpen, setIsViewCommentsModalOpen] = useState(false);
   const [patientForComments, setPatientForComments] = useState(null);
+  const { isOpen: isDeleteModalOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal();
+  const [patientToDelete, setPatientToDelete] = useState(null);
 
   const handleOpenUploadModal = (patient) => {
     setSelectedPatient(patient);
@@ -239,26 +243,29 @@ export default function ViewPatientRecords() {
   };
 
   const handleDeletePatient = async (patientId, patientName) => {
-    if (!confirm(`Are you sure you want to delete patient "${patientName}"? This action cannot be undone.`)) {
-      return;
-    }
+    setPatientToDelete({ _id: patientId, patientName });
+    openDeleteModal();
+  };
 
+  const confirmDeletePatient = async () => {
+    if (!patientToDelete) return;
     try {
-      const response = await fetch(`/api/admin/patients/update-details?id=${patientId}`, {
+      const response = await fetch(`/api/admin/patients/update-details?id=${patientToDelete._id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
       if (!response.ok) {
         throw new Error('Failed to delete patient');
       }
-
       toast.success('Patient deleted successfully');
       fetchPatients(); // Refresh the list
     } catch (error) {
       toast.error(error.message || 'Failed to delete patient');
+    } finally {
+      setPatientToDelete(null);
+      closeDeleteModal();
     }
   };
 
@@ -273,40 +280,29 @@ export default function ViewPatientRecords() {
   }
 
   return (
-    <>
-      <UploadModal
-        isOpen={isUploadModalOpen}
-        onClose={handleCloseUploadModal}
-        patient={selectedPatient}
-      />
-      <ViewCommentsModal
-        isOpen={isViewCommentsModalOpen}
-        onClose={handleCloseViewCommentsModal}
-        patient={patientForComments}
-      />
-      <div className="p-4 lg:p-6 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-2xl font-extrabold text-blue-800 dark:text-white/90 tracking-tight drop-shadow-lg">
-              Patient Records
-            </h1>
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 font-medium">
-              Manage and view all patient records
-            </p>
-          </div>
-          <div className="flex gap-3">
-            <Button onClick={exportToExcel} className="px-4 py-2 shadow-md bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform">
-              Export to Excel
-            </Button>
-            <Button
-              onClick={() => router.push("/admin/patients/create-patient-record/step-1")}
-              className="px-4 py-2 shadow-md bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform"
-            >
-              <PlusIcon className="mr-2 h-4 w-4" />
-              Add Patient
-            </Button>
-          </div>
+    <div className="p-5 lg:p-10 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold text-blue-800 dark:text-white/90 tracking-tight drop-shadow-lg">
+            Patient Records
+          </h1>
+          <p className="mt-2 text-base text-gray-500 dark:text-gray-400 font-medium">
+            Manage and view all patient records
+          </p>
         </div>
+        <div className="flex gap-3">
+          <Button onClick={exportToExcel} className="px-4 py-2 shadow-md bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform">
+            Export to Excel
+          </Button>
+          <Button
+            onClick={() => router.push("/doctor/patients/create-patient-record/step-1")}
+            className="px-4 py-2 shadow-md bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform"
+          >
+            <PlusIcon className="mr-2 h-4 w-4" />
+            Add Patient
+          </Button>
+        </div>
+      </div>
 
         {/* Search and Filters */}
         <div className="mb-8 space-y-4">
@@ -598,14 +594,24 @@ export default function ViewPatientRecords() {
             <div className="text-2xl font-bold text-blue-700 dark:text-blue-200 mb-2">No patients found</div>
             <div className="text-gray-500 mb-6">Try adjusting your filters or add a new patient record.</div>
             <Button
-              onClick={() => router.push("/doctor/patients/create-patient-record/step-1")}
+              onClick={() => router.push("/admin/patients/create-patient-record/step-1")}
               className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:scale-105 transition-transform"
             >
               Add your first patient
             </Button>
           </div>
         )}
+
+        <ConfirmationModal
+          isOpen={isDeleteModalOpen}
+          onClose={() => { setPatientToDelete(null); closeDeleteModal(); }}
+          onConfirm={confirmDeletePatient}
+          title="Delete Patient"
+          message={patientToDelete ? `Are you sure you want to delete patient "${patientToDelete.patientName}"? This action cannot be undone.` : ''}
+          confirmButtonText="Delete"
+          cancelButtonText="Cancel"
+        />
       </div>
-    </>
+
   );
 }
