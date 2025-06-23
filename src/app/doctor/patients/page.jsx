@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import * as XLSX from 'xlsx';
 import UploadModal from "@/components/admin/patients/UploadModal";
 import ViewCommentsModal from "@/components/admin/patients/ViewCommentsModal";
+import FileUploadModal, { ViewFilesModal } from '@/components/admin/patients/FileUploadModal';
 
 const countries = Object.keys(countriesData);
 
@@ -32,6 +33,10 @@ export default function ViewPatientRecords() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [isViewCommentsModalOpen, setIsViewCommentsModalOpen] = useState(false);
   const [patientForComments, setPatientForComments] = useState(null);
+  const [showFileUploadModal, setShowFileUploadModal] = useState(false);
+  const [fileUploadPatient, setFileUploadPatient] = useState(null);
+  const [showViewFilesModal, setShowViewFilesModal] = useState(false);
+  const [viewFilesPatient, setViewFilesPatient] = useState(null);
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -441,6 +446,7 @@ export default function ViewPatientRecords() {
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Patient Name</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Location</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Comments</TableCell>
+                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Files</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Actions</TableCell>
                 </TableRow>
               </TableHeader>
@@ -453,7 +459,6 @@ export default function ViewPatientRecords() {
                   >
                     <TableCell className="font-semibold text-blue-600 dark:text-blue-300 text-center py-1 px-2">{patient.caseId}</TableCell>
                     <TableCell className="h-10 flex justify-center items-center gap-2 font-medium text-center py-1 px-2">
-                      <AvatarText name={patient.patientName} />
                       <span className="flex items-center">{patient.patientName}</span>
                     </TableCell>
                     <TableCell className="text-center py-1 px-2">
@@ -479,6 +484,32 @@ export default function ViewPatientRecords() {
                           className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
                         >
                           See
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-center py-1 px-2">
+                      <div className="flex gap-1 justify-center">
+                        <Button
+                          onClick={() => {
+                            setFileUploadPatient(patient);
+                            setShowFileUploadModal(true);
+                          }}
+                          size="xs"
+                          variant="outline"
+                          className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                        >
+                          Upload
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setViewFilesPatient(patient);
+                            setShowViewFilesModal(true);
+                          }}
+                          size="xs"
+                          variant="outline"
+                          className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                        >
+                          See Files
                         </Button>
                       </div>
                     </TableCell>
@@ -575,6 +606,25 @@ export default function ViewPatientRecords() {
           patient={patientForComments}
         />
       )}
+
+      <FileUploadModal
+        isOpen={showFileUploadModal}
+        onClose={() => {
+          setShowFileUploadModal(false);
+          setFileUploadPatient(null);
+        }}
+        patient={fileUploadPatient}
+        token={token}
+      />
+      <ViewFilesModal
+        isOpen={showViewFilesModal}
+        onClose={() => {
+          setShowViewFilesModal(false);
+          setViewFilesPatient(null);
+        }}
+        patient={viewFilesPatient}
+        token={token}
+      />
     </div>
   );
 }

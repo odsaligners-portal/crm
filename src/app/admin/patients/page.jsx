@@ -14,8 +14,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import * as XLSX from 'xlsx';
-import ConfirmationModal from '@/components/common/ConfirmationModal';
-import { useModal } from '@/hooks/useModal';
+import FileUploadModal, { ViewFilesModal } from '@/components/admin/patients/FileUploadModal';
 const countries = Object.keys(countriesData);
 
 export default function ViewPatientRecords() {
@@ -32,8 +31,12 @@ export default function ViewPatientRecords() {
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [isViewCommentsModalOpen, setIsViewCommentsModalOpen] = useState(false);
   const [patientForComments, setPatientForComments] = useState(null);
-  const { isOpen: isDeleteModalOpen, openModal: openDeleteModal, closeModal: closeDeleteModal } = useModal();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [patientToDelete, setPatientToDelete] = useState(null);
+  const [showFileUploadModal, setShowFileUploadModal] = useState(false);
+  const [fileUploadPatient, setFileUploadPatient] = useState(null);
+  const [showViewFilesModal, setShowViewFilesModal] = useState(false);
+  const [viewFilesPatient, setViewFilesPatient] = useState(null);
 
   const handleOpenUploadModal = (patient) => {
     setSelectedPatient(patient);
@@ -242,15 +245,15 @@ export default function ViewPatientRecords() {
     endDate: 'End Date',
   };
 
-  const handleDeletePatient = async (patientId, patientName) => {
-    setPatientToDelete({ _id: patientId, patientName });
-    openDeleteModal();
-  };
-
-  const confirmDeletePatient = async () => {
-    if (!patientToDelete) return;
+  const handleDeletePatient = async (patientId, patientName, skipConfirm = false) => {
+    if (!skipConfirm) {
+      // fallback, but should not be used
+      if (!confirm(`Are you sure you want to delete patient "${patientName}"? This action cannot be undone.`)) {
+        return;
+      }
+    }
     try {
-      const response = await fetch(`/api/admin/patients/update-details?id=${patientToDelete._id}`, {
+      const response = await fetch(`/api/admin/patients/update-details?id=${patientId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -263,9 +266,6 @@ export default function ViewPatientRecords() {
       fetchPatients(); // Refresh the list
     } catch (error) {
       toast.error(error.message || 'Failed to delete patient');
-    } finally {
-      setPatientToDelete(null);
-      closeDeleteModal();
     }
   };
 
@@ -478,6 +478,7 @@ export default function ViewPatientRecords() {
                     <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Case Date</TableCell>
                     <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Location</TableCell>
                     <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Comments</TableCell>
+                    <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Files</TableCell>
                     <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Actions</TableCell>
                   </TableRow>
                 </TableHeader>
@@ -509,7 +510,7 @@ export default function ViewPatientRecords() {
                             variant="outline"
                             className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
                           >
-                            Upload
+                            Add
                           </Button>
                           <Button
                             onClick={() => handleOpenViewCommentsModal(patient)}
@@ -518,6 +519,32 @@ export default function ViewPatientRecords() {
                             className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
                           >
                             See
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center py-1 px-2">
+                        <div className="flex gap-1 justify-center">
+                          <Button
+                            onClick={() => {
+                              setFileUploadPatient(patient);
+                              setShowFileUploadModal(true);
+                            }}
+                            size="xs"
+                            variant="outline"
+                            className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          >
+                            Upload
+                          </Button>
+                          <Button
+                            onClick={() => {
+                              setViewFilesPatient(patient);
+                              setShowViewFilesModal(true);
+                            }}
+                            size="xs"
+                            variant="outline"
+                            className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          >
+                            See Files
                           </Button>
                         </div>
                       </TableCell>
@@ -540,7 +567,10 @@ export default function ViewPatientRecords() {
                             <PencilIcon className="w-3 h-3" /> Edit
                           </Button>
                           <Button
-                            onClick={() => handleDeletePatient(patient._id, patient.patientName)}
+                            onClick={() => {
+                              setPatientToDelete(patient);
+                              setShowDeleteModal(true);
+                            }}
                             size="xs"
                             variant="outline"
                             className="border-red-400 text-red-600 hover:bg-red-100/60 dark:hover:bg-red-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
@@ -602,14 +632,63 @@ export default function ViewPatientRecords() {
           </div>
         )}
 
-        <ConfirmationModal
-          isOpen={isDeleteModalOpen}
-          onClose={() => { setPatientToDelete(null); closeDeleteModal(); }}
-          onConfirm={confirmDeletePatient}
-          title="Delete Patient"
-          message={patientToDelete ? `Are you sure you want to delete patient "${patientToDelete.patientName}"? This action cannot be undone.` : ''}
-          confirmButtonText="Delete"
-          cancelButtonText="Cancel"
+        {showDeleteModal && patientToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full">
+              <h2 className="text-xl font-bold mb-4 text-red-600">Delete Patient</h2>
+              <p className="mb-6">Are you sure you want to delete patient <span className="font-semibold">{patientToDelete.patientName}</span>? This action cannot be undone.</p>
+              <div className="flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setPatientToDelete(null);
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={async () => {
+                    await handleDeletePatient(patientToDelete._id, patientToDelete.patientName, true);
+                    setShowDeleteModal(false);
+                    setPatientToDelete(null);
+                  }}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <UploadModal
+          isOpen={isUploadModalOpen}
+          onClose={handleCloseUploadModal}
+          patient={selectedPatient}
+        />
+        <ViewCommentsModal
+          isOpen={isViewCommentsModalOpen}
+          onClose={handleCloseViewCommentsModal}
+          patient={patientForComments}
+        />
+        <FileUploadModal
+          isOpen={showFileUploadModal}
+          onClose={() => {
+            setShowFileUploadModal(false);
+            setFileUploadPatient(null);
+          }}
+          patient={fileUploadPatient}
+          token={token}
+        />
+        <ViewFilesModal
+          isOpen={showViewFilesModal}
+          onClose={() => {
+            setShowViewFilesModal(false);
+            setViewFilesPatient(null);
+          }}
+          patient={viewFilesPatient}
+          token={token}
         />
       </div>
 

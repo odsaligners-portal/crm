@@ -1,83 +1,78 @@
 "use client";
 import { useSidebar } from "@/context/SidebarContext";
 import {
-  BoxCubeIcon,
-  CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  PlusIcon,
-  TableIcon,
-  UserCircleIcon,
-  DocsIcon,
-  AppWindowIcon,
-  BarChartIcon,
-  CalendarIcon,
-  LayoutDashboard,
-} from "@/icons/index";
+  MdDashboard, MdTableChart, MdAdd, MdComment, MdEvent, MdPerson, MdDescription, MdPieChart, MdWidgets, MdLogin, MdList, MdPageview, MdMenuBook, MdVideoLibrary
+} from 'react-icons/md';
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { ChevronDownIcon, HorizontaLDots } from "@/icons";
 
 const navItems = [
   {
-    icon: <GridIcon />,
+    icon: <MdDashboard />,
     name: "Dashboard",
     path: "/admin",
   },
   {
     name: "Patients",
-    icon: <GridIcon />,
+    icon: <MdTableChart />,
     subItems: [{ name: "Patient Records", path: "/admin/patients", pro: false },{ name: "Create Patient Record", path: "/admin/patients/create-patient-record/step-1", pro: false },],
   },
   {
-    icon: <ListIcon />,
+    icon: <MdList />,
     name: "Case Categories",
     path: "/admin/case-categories",
   },
   {
     name: "Events",
-    icon: <GridIcon />,
+    icon: <MdEvent />,
     subItems: [{ name: "Events", path: "/admin/events", pro: false },{ name: "Add Event", path: "/admin/add-event", pro: false },],
   },
   {
-    icon: <ListIcon />,
+    icon: <MdComment />,
     name: "View Comments",
     path: "/admin/view-comments",
   },
   {
-    icon: <ListIcon />,
+    icon: <MdPerson />,
     name: "Doctors",
     path: "/admin/doctors",
   },
   {
-    icon: <UserCircleIcon />,
+    icon: <MdMenuBook />,
+    name: "Educational Material",
+    path: "/admin/educational-material",
+  },
+  {
+    icon: <MdVideoLibrary />,
+    name: "Tutorials",
+    path: "/admin/tutorials",
+  },
+  {
+    icon: <MdPerson />,
     name: "User Profile",
     path: "/admin/profile",
   },
   {
-    icon: <DocsIcon />,
+    icon: <MdDescription />,
     name: "Terms & Conditions",
     path: "/admin/terms-and-conditions",
   },
   {
     name: "Forms",
-    icon: <ListIcon />,
+    icon: <MdList />,
     subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
   },
   {
     name: "Tables",
-    icon: <TableIcon />,
+    icon: <MdTableChart />,
     subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
   },
   {
     name: "Pages",
-    icon: <PageIcon />,
+    icon: <MdPageview />,
     subItems: [
       { name: "Blank Page", path: "/blank", pro: false },
       { name: "404 Error", path: "/error-404", pro: false },
@@ -87,7 +82,7 @@ const navItems = [
 
 const othersItems = [
   {
-    icon: <PieChartIcon />,
+    icon: <MdPieChart />,
     name: "Charts",
     subItems: [
       { name: "Line Chart", path: "/line-chart", pro: false },
@@ -95,7 +90,7 @@ const othersItems = [
     ],
   },
   {
-    icon: <BoxCubeIcon />,
+    icon: <MdWidgets />,
     name: "UI Elements",
     subItems: [
       { name: "Alerts", path: "/alerts", pro: false },
@@ -107,7 +102,7 @@ const othersItems = [
     ],
   },
   {
-    icon: <PlugInIcon />,
+    icon: <MdLogin />,
     name: "Authentication",
     subItems: [
       { name: "Sign In", path: "/signin", pro: false },

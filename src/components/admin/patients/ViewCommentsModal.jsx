@@ -79,7 +79,7 @@ const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
                   <div key={comment._id} className="p-4 mb-4 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 shadow-sm">
                       <div className="flex justify-between items-baseline mb-2">
                           <p className="font-bold text-gray-800 dark:text-white">
-                              {comment.commentedBy.name}
+                              Commented By: {comment.commentedBy.name}
                               {/* <span className={`ml-2 text-xs font-medium px-2 py-0.5 rounded-full ${comment.commentedBy.userType === 'admin' ? 'bg-purple-200 text-purple-800' : 'bg-blue-200 text-blue-800'}`}>
                                   {comment.commentedBy.userType}
                               </span> */}

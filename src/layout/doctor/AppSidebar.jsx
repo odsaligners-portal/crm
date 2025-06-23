@@ -1,58 +1,69 @@
 "use client";
 import { useSidebar } from "@/context/SidebarContext";
 import {
-  BoxCubeIcon,
-  CalenderIcon,
-  ChevronDownIcon,
-  DocsIcon,
-  GridIcon,
-  HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  PlusIcon,
-  TableIcon,
-  UserCircleIcon,
+  HorizontaLDots
 } from "@/icons/index";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback } from "react";
+import {
+  MdAdd, MdComment,
+  MdDashboard,
+  MdDescription,
+  MdEvent,
+  MdLogin,
+  MdMenuBook,
+  MdPerson,
+  MdPieChart,
+  MdTableChart,
+  MdVideoLibrary,
+  MdWidgets
+} from 'react-icons/md';
 
 const navItems = [
   {
-    icon: <GridIcon />,
+    icon: <MdDashboard />,
     name: "Dashboard",
     path: "/doctor",
   },
   {
-    icon: <ListIcon />,
+    icon: <MdTableChart />,
     name: "Patient Records",
     path: "/doctor/patients",
   },
   {
-    icon: <PlusIcon />,
+    icon: <MdAdd />,
     name: "Create Patient Record",
     path: "/doctor/patients/create-patient-record/step-1",
   },
   {
-    icon: <ListIcon />,
+    icon: <MdComment />,
     name: "View Comments",
     path: "/doctor/view-comments",
   },
   {
-    icon: <ListIcon />,
+    icon: <MdEvent />,
     name: "Events",
     path: "/doctor/events",
   },
   {
-    icon: <UserCircleIcon />,
+    icon: <MdMenuBook />,
+    name: "Educational Material",
+    path: "/doctor/educational-material",
+  },
+  {
+    icon: <MdVideoLibrary />,
+    name: "Tutorials",
+    path: "/doctor/tutorials",
+  },
+  {
+    icon: <MdPerson />,
     name: "User Profile",
     path: "/doctor/profile",
   },
   {
-    icon: <DocsIcon />,
+    icon: <MdDescription />,
     name: "Terms & Conditions",
     path: "/doctor/terms-and-conditions",
   },
@@ -60,7 +71,7 @@ const navItems = [
 
 const othersItems = [
   {
-    icon: <PieChartIcon />,
+    icon: <MdPieChart />,
     name: "Charts",
     subItems: [
       { name: "Line Chart", path: "/line-chart", pro: false },
@@ -68,7 +79,7 @@ const othersItems = [
     ],
   },
   {
-    icon: <BoxCubeIcon />,
+    icon: <MdWidgets />,
     name: "UI Elements",
     subItems: [
       { name: "Alerts", path: "/alerts", pro: false },
@@ -80,7 +91,7 @@ const othersItems = [
     ],
   },
   {
-    icon: <PlugInIcon />,
+    icon: <MdLogin />,
     name: "Authentication",
     subItems: [
       { name: "Sign In", path: "/signin", pro: false },
