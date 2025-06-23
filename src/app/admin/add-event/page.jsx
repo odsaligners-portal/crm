@@ -26,13 +26,21 @@ const AddEventPage = () => {
   const [imageUrl, setImageUrl] = useState(null);
   const [fileKey, setFileKey] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [fileType, setFileType] = useState(null); // 'image' or 'video'
 
   const handleFileUpload = (file) => {
     if (!file) return;
 
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
-    if (!['jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
-      toast.error('Invalid file type. Please upload an image.');
+    const imageExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+    const videoExtensions = ['mp4', 'mov', 'avi', 'webm', 'mkv'];
+    let type = null;
+    if (imageExtensions.includes(fileExtension)) {
+      type = 'image';
+    } else if (videoExtensions.includes(fileExtension)) {
+      type = 'video';
+    } else {
+      toast.error('Invalid file type. Please upload an image or video.');
       return;
     }
 
@@ -51,6 +59,7 @@ const AddEventPage = () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
           setImageUrl(downloadURL);
           setFileKey(storagePath);
+          setFileType(type);
           toast.success("File uploaded successfully");
           setProgress(100);
         });
@@ -79,7 +88,7 @@ const AddEventPage = () => {
       eventDate,
        imageUrl,fileKey )
     if (!name || !description || !eventDate || !imageUrl) {
-      toast.error("Please fill all fields and upload an image.");
+      toast.error("Please fill all fields and upload an image or video.");
       return;
     }
     setIsSubmitting(true);
@@ -94,7 +103,7 @@ const AddEventPage = () => {
           name,
           description,
           eventDate,
-          image: { fileUrl: imageUrl, fileKey: fileKey },
+          image: { fileUrl: imageUrl, fileKey: fileKey, fileType: fileType },
         }),
       });
 
@@ -116,11 +125,11 @@ const AddEventPage = () => {
 
   const UploadComponent = () => {
     const onDrop = (acceptedFiles) => acceptedFiles.length > 0 && handleFileUpload(acceptedFiles[0]);
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, multiple: false, accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.gif'] } });
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, multiple: false, accept: { 'image/*': ['.jpeg', '.jpg', '.png', '.gif'], 'video/*': ['.mp4', '.mov', '.avi', '.webm', '.mkv'] } });
     
     return (
       <div className="text-center">
-        <Label>Event Image</Label>
+        <Label>Event Image/Video</Label>
         {!imageUrl ? (
           progress > 0 && progress < 100 ? (
             <div className="w-full mt-2">
@@ -136,14 +145,18 @@ const AddEventPage = () => {
             <div {...getRootProps()} className={`mt-2 flex justify-center items-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none ${isDragActive ? 'border-blue-500 bg-blue-50' : ''}`}>
               <input {...getInputProps()} />
               <span className="flex items-center space-x-2">
-                <span className="font-medium text-gray-600">Drop file or <span className="text-blue-600 underline">browse</span></span>
+                <span className="font-medium text-gray-600">Drop image or video file or <span className="text-blue-600 underline">browse</span></span>
               </span>
             </div>
           )
         ) : (
           <div className="relative group max-w-xs mx-auto mt-2">
             <div className="rounded-xl shadow-lg border flex flex-col items-center justify-center h-48">
-              <img src={imageUrl} alt="Event" className="w-full h-full object-contain rounded-xl" />
+              {fileType === 'image' ? (
+                <img src={imageUrl} alt="Event" className="w-full h-full object-contain rounded-xl" />
+              ) : fileType === 'video' ? (
+                <video src={imageUrl} controls className="w-full h-full object-contain rounded-xl" />
+              ) : null}
               <button type="button" onClick={handleDeleteFile} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-lg opacity-80 hover:opacity-100 transition-opacity">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />

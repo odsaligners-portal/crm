@@ -11,9 +11,24 @@ export async function GET(req) {
     // If query param role=doctor, return all doctors
     const { searchParams } = new URL(req.url);
     const role = searchParams.get('role');
+    const id = searchParams.get('id');
+    const otherAdmins = searchParams.get('otherAdmins');
     if (role === 'doctor') {
       const doctors = await User.find({ role: 'doctor' });
       return NextResponse.json({ doctors });
+    }
+    if (otherAdmins === 'true') {
+      const superAdminId = process.env.SUPER_ADMIN_ID;
+      const admins = await User.find({ role: 'admin', _id: { $ne: superAdminId } })
+        .select('id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess');
+      return NextResponse.json({ admins });
+    }
+    if (id) {
+      const user = await User.findById(id).select('name role');
+      if (!user) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+      return NextResponse.json({ user: { id: user._id, name: user.name, role: user.role } });
     }
 
     // Get token from authorization header
@@ -74,7 +89,7 @@ export async function PUT(req) {
     // Get request body
     const body = await req.json();
 
-    // Dynamically build the update object with provided fields
+    // Only allow updating the current user's own profile
     const updateData = {};
     const fields = [
       'name', 'email', 'mobile', 'gender', 'country', 'state', 

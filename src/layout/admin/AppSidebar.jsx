@@ -1,7 +1,8 @@
 "use client";
 import { useSidebar } from "@/context/SidebarContext";
 import {
-  MdDashboard, MdTableChart, MdAdd, MdComment, MdEvent, MdPerson, MdDescription, MdPieChart, MdWidgets, MdLogin, MdList, MdPageview, MdMenuBook, MdVideoLibrary
+  MdDashboard, MdTableChart, MdAdd, MdComment, MdEvent, MdPerson, MdDescription, MdPieChart, MdWidgets, MdLogin, MdList, MdPageview, MdMenuBook, MdVideoLibrary,
+  MdNotifications
 } from 'react-icons/md';
 import Image from "next/image";
 import Link from "next/link";
@@ -29,6 +30,11 @@ const navItems = [
     name: "Events",
     icon: <MdEvent />,
     subItems: [{ name: "Events", path: "/admin/events", pro: false },{ name: "Add Event", path: "/admin/add-event", pro: false },],
+  },
+  {
+    icon: <MdNotifications />,
+    name: "Notifications",
+    path: "/admin/notifications",
   },
   {
     icon: <MdComment />,

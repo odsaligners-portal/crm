@@ -5,6 +5,81 @@ import PatientComment from '@/app/api/models/PatientComment';
 import User from '@/app/api/models/User';
 import { verifyAuth } from '@/app/api/middleware/authMiddleware';
 import { sendEmail } from '@/app/api/utils/mailer';
+import Notification from '@/app/api/models/Notification';
+
+
+export const GET = async (req) => {
+  try {
+    await dbConnect();
+    const authResult = await verifyAuth(req);
+    if (!authResult.success) {
+      return NextResponse.json({ message: authResult.error }, { status: 401 });
+    }
+    const { user } = authResult;
+
+    const commentId = req.nextUrl.searchParams.get('commentId');
+    const patientCommentId = req.nextUrl.searchParams.get('patientCommentId');
+    
+    if (commentId && patientCommentId) {
+      // Find the PatientComment document by patientCommentId
+      const doc = await PatientComment.findById(patientCommentId).lean();
+      if (!doc) {
+        return NextResponse.json({ message: 'PatientComment not found' }, { status: 404 });
+      }
+      // Find the specific comment
+      const comment = doc.comments.find(c => c._id.toString() === commentId);
+      if (!comment) {
+        return NextResponse.json({ message: 'Comment not found' }, { status: 404 });
+      }
+      return NextResponse.json({ comment: { ...comment, patientName: doc.patientName } });
+    }
+  
+
+    const patientId = req.nextUrl.searchParams.get('patientId');
+
+    if (!patientId) {
+      return NextResponse.json({ message: 'Patient ID is required' }, { status: 400 });
+    }
+
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return NextResponse.json({ message: 'Patient not found' }, { status: 404 });
+    }
+
+    const caseId = patient.caseId;
+
+    // Check if patient has userId and handle the authorization properly
+    if (user.role !== 'admin') {
+      // For non-admin users, check if they own the patient
+      if (!patient.userId) {
+        return NextResponse.json({ message: 'Patient record is invalid' }, { status: 400 });
+      }
+      
+      // Convert both IDs to strings for comparison
+      const patientUserId = patient.userId.toHexString();
+      
+      const currentUserId = user.id;
+      
+      if (patientUserId !== currentUserId) {
+        return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
+      }
+    }
+
+    const patientComment = await PatientComment.findOne({ patientId });
+
+    if (!patientComment) {
+      return NextResponse.json([], { status: 200 });
+    }
+
+    return NextResponse.json({
+      comments : patientComment.comments,
+      caseId
+    }, { status: 200 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ message: 'Server Error' }, { status: 500 });
+  }
+};
 
 // POST - Add a new comment to a patient
 export async function POST(request) {
@@ -78,6 +153,7 @@ export async function POST(request) {
 
     patientComment.comments.push(newComment);
     await patientComment.save();
+    const savedComment = patientComment.comments[patientComment.comments.length - 1];
     
     // --- Email Notification Logic ---
     try {
@@ -121,7 +197,27 @@ export async function POST(request) {
     }
     // --- End of Email Notification Logic ---
 
-    return NextResponse.json(patientComment.comments.slice(-1)[0], { status: 201 });
+    // --- Notification Logic ---
+    let commentFor = 'admin';
+    let title = '';
+    if (commenter.role === 'admin') {
+      // Notify doctor
+      commentFor = patient.userId?._id || null;
+      title = `Admin commented on patient: ${patient.patientName} (CaseId: ${patient.caseId})`;
+    } else {
+      // Notify admin
+      title = `Doctor commented on patient: ${patient.patientName} (CaseId: ${patient.caseId})`;
+    }
+    await Notification.create({
+      title,
+      patientCommentId: patientComment._id,
+      commentId: savedComment._id,
+      commentFor,
+      commentedBy: commenter.id,
+    });
+    // --- End Notification Logic ---
+
+    return NextResponse.json(savedComment, { status: 201 });
 
   } catch (error) {
     console.error('Error adding comment:', error);
@@ -132,57 +228,3 @@ export async function POST(request) {
   }
 }
 
-export const GET = async (req) => {
-  try {
-    await dbConnect();
-    const authResult = await verifyAuth(req);
-    if (!authResult.success) {
-      return NextResponse.json({ message: authResult.error }, { status: 401 });
-    }
-    const { user } = authResult;
-
-    const patientId = req.nextUrl.searchParams.get('patientId');
-
-    if (!patientId) {
-      return NextResponse.json({ message: 'Patient ID is required' }, { status: 400 });
-    }
-
-    const patient = await Patient.findById(patientId);
-    if (!patient) {
-      return NextResponse.json({ message: 'Patient not found' }, { status: 404 });
-    }
-
-    const caseId = patient.caseId;
-
-    // Check if patient has userId and handle the authorization properly
-    if (user.role !== 'admin') {
-      // For non-admin users, check if they own the patient
-      if (!patient.userId) {
-        return NextResponse.json({ message: 'Patient record is invalid' }, { status: 400 });
-      }
-      
-      // Convert both IDs to strings for comparison
-      const patientUserId = patient.userId.toHexString();
-      
-      const currentUserId = user.id;
-      
-      if (patientUserId !== currentUserId) {
-        return NextResponse.json({ message: 'Unauthorized' }, { status: 403 });
-      }
-    }
-
-    const patientComment = await PatientComment.findOne({ patientId });
-
-    if (!patientComment) {
-      return NextResponse.json([], { status: 200 });
-    }
-
-    return NextResponse.json({
-      comments : patientComment.comments,
-      caseId
-    }, { status: 200 });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json({ message: 'Server Error' }, { status: 500 });
-  }
-};

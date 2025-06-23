@@ -27,15 +27,15 @@ export async function POST(request) {
 
     const { name, description, eventDate, image } = await request.json();
 
-    if (!name || !description || !eventDate || !image) {
-      return NextResponse.json({ message: 'All fields are required' }, { status: 400 });
+    if (!name || !description || !eventDate || !image || !image.fileType) {
+      return NextResponse.json({ message: 'All fields are required, including fileType' }, { status: 400 });
     }
 
     const newEvent = new Event({
       name,
       description,
       eventDate,
-      image: { fileUrl: image.fileUrl, fileKey: image.fileKey || '' }, // fileKey is optional now
+      image: { fileUrl: image.fileUrl, fileKey: image.fileKey || '', fileType: image.fileType },
       createdBy: user.id,
     });
 

@@ -65,13 +65,22 @@ const EventsPage = () => {
                         {allEvents.map((event) => (
                             <div key={event._id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
                                 <div className="relative h-56 w-full">
-                                    <Image
-                                        src={event.image.fileUrl}
-                                        alt={event.name}
-                                        layout="fill"
-                                        objectFit="cover"
-                                        className="transition-transform duration-500 hover:scale-105"
-                                    />
+                                    {event.image.fileType === 'video' ? (
+                                        <video
+                                            src={event.image.fileUrl}
+                                            controls
+                                            className="w-full h-full object-cover rounded-t-2xl"
+                                            style={{ height: '100%', width: '100%' }}
+                                        />
+                                    ) : (
+                                        <Image
+                                            src={event.image.fileUrl}
+                                            alt={event.name}
+                                            layout="fill"
+                                            objectFit="cover"
+                                            className="transition-transform duration-500 hover:scale-105"
+                                        />
+                                    )}
                                 </div>
                                 <div className="p-6 flex flex-col flex-1 justify-between">
                                     <div>

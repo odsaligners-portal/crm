@@ -2,6 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { FaPhone, FaCity, FaEnvelope } from "react-icons/fa";
+import { useModal } from "@/hooks/useModal";
+import { Modal } from "@/components/ui/modal";
+import UserInfoCard from "@/components/user-profile/UserInfoCard";
+import EyeIcon from "@/icons/eye.svg";
 
 function getInitials(name) {
   if (!name) return "?";
@@ -15,6 +19,8 @@ export default function AdminDoctorsPage() {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const { isOpen, openModal, closeModal } = useModal();
 
   useEffect(() => {
     const fetchDoctors = async () => {
@@ -58,6 +64,14 @@ export default function AdminDoctorsPage() {
               key={doc._id}
               className="relative bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-8 flex flex-col items-center border border-blue-100 dark:border-gray-800 hover:shadow-blue-200 dark:hover:shadow-blue-900 transition-shadow duration-300 group overflow-hidden"
             >
+              {/* View Icon Button */}
+              <button
+                className="absolute top-3 right-3 bg-blue-100 hover:bg-blue-200 dark:bg-blue-800 dark:hover:bg-blue-700 rounded-full p-2 shadow-md z-10"
+                onClick={() => { setSelectedDoctor(doc); openModal(); }}
+                title="View Details"
+              >
+                <EyeIcon width={22} height={22} className="text-blue-600 dark:text-blue-300" />
+              </button>
               {/* User Badge/Avatar or Profile Picture */}
               {doc.profilePicture && doc.profilePicture.url ? (
                 <img
@@ -101,6 +115,27 @@ export default function AdminDoctorsPage() {
           ))}
         </div>
       )}
+      {/* Modal for doctor details */}
+      <Modal isOpen={isOpen} onClose={closeModal}>
+        {selectedDoctor && (
+          <div className="flex flex-col items-center justify-center p-4 max-w-lg w-full min-h-[60vh] mx-auto">
+            <div className="flex flex-col items-center mb-6">
+              {selectedDoctor.profilePicture && selectedDoctor.profilePicture.url ? (
+                <img
+                  src={selectedDoctor.profilePicture.url}
+                  alt={selectedDoctor.name + " profile"}
+                  className="w-32 h-32 rounded-full border-4 border-blue-400 shadow-lg object-cover mb-2"
+                />
+              ) : (
+                <div className="w-32 h-32 rounded-full bg-gradient-to-br from-blue-500 to-blue-300 dark:from-blue-800 dark:to-blue-500 flex items-center justify-center text-white text-4xl font-bold mb-2 border-4 border-white dark:border-gray-900">
+                  {getInitials(selectedDoctor.name)}
+                </div>
+              )}
+            </div>
+            <UserInfoCard userData={selectedDoctor} />
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

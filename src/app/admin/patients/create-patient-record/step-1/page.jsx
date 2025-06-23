@@ -278,6 +278,26 @@ export default function Step1() {
         
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-6">
+            {/* Doctor Dropdown */}
+            <div className="mt-6">
+              <Label>Assign Doctor *</Label>
+              <select
+                name="userId"
+                value={formData.userId || ''}
+                onChange={handleChange}
+                required
+                className="w-full border rounded px-3 py-2"
+              >
+                <option value="">Select Doctor</option>
+                {doctorsLoading ? (
+                  <option disabled>Loading doctors...</option>
+                ) : (
+                  doctors.map((doc) => (
+                    <option key={doc._id} value={doc._id}>{doc.name}</option>
+                  ))
+                )}
+              </select>
+            </div>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
               <div>
                 <Label>Patient Name *</Label>
@@ -323,26 +343,7 @@ export default function Step1() {
                 </select>
               </div>
             </div>
-            {/* Doctor Dropdown */}
-            <div className="mt-6">
-              <Label>Assign Doctor *</Label>
-              <select
-                name="userId"
-                value={formData.userId || ''}
-                onChange={handleChange}
-                required
-                className="w-full border rounded px-3 py-2"
-              >
-                <option value="">Select Doctor</option>
-                {doctorsLoading ? (
-                  <option disabled>Loading doctors...</option>
-                ) : (
-                  doctors.map((doc) => (
-                    <option key={doc._id} value={doc._id}>{doc.name}</option>
-                  ))
-                )}
-              </select>
-            </div>
+            
             <div className="space-y-4">
               <div>
                 <Label>Past Medical History</Label>

@@ -14,6 +14,7 @@ const eventSchema = new mongoose.Schema({
   image: {
     fileUrl: { type: String, required: true },
     fileKey: { type: String, required: true },
+    fileType: { type: String, enum: ['image', 'video'], required: true },
   },
   eventDate: {
     type: Date,

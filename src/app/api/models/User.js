@@ -71,6 +71,22 @@ const userSchema = new mongoose.Schema({
     fileKey: { type: String, default: '' },
     uploadedAt: { type: Date, default: Date.now },
   },
+  userDeleteAccess: {
+    type: Boolean,
+    default: false,
+  },
+  eventUpdateAccess: {
+    type: Boolean,
+    default: false,
+  },
+  commentUpdateAccess: {
+    type: Boolean,
+    default: false,
+  },
+  caseCategoryUpdateAccess: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true
 });
