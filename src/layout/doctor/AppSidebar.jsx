@@ -14,12 +14,14 @@ import {
   MdEvent,
   MdLogin,
   MdMenuBook,
+  MdNotifications,
   MdPerson,
   MdPieChart,
   MdTableChart,
   MdVideoLibrary,
   MdWidgets
 } from 'react-icons/md';
+import { useSelector } from "react-redux";
 
 const navItems = [
   {
@@ -36,6 +38,11 @@ const navItems = [
     icon: <MdAdd />,
     name: "Create Patient Record",
     path: "/doctor/patients/create-patient-record/step-1",
+  },
+  {
+    icon: <MdNotifications />,
+    name: "Notifications",
+    path: "/doctor/notifications",
   },
   {
     icon: <MdComment />,
@@ -100,9 +107,58 @@ const othersItems = [
   },
 ];
 
+const renderMenuItems = (
+  navItems,
+  menuType,
+  isActive,
+  isExpanded,
+  isHovered,
+  isMobileOpen,
+  unreadCount
+) => (
+  <ul className="flex flex-col gap-4">
+    {navItems.map((nav, index) => (
+      <li key={nav.name}>
+        {nav.subItems ? (
+          null
+        ) : (
+          nav.path && (
+            <Link
+              href={nav.path}
+              className={`menu-item group ${
+                isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+              }`}
+            >
+              <span
+                className={`${
+                  isActive(nav.path)
+                    ? "menu-item-icon-active"
+                    : "menu-item-icon-inactive"
+                } relative`}
+              >
+                {nav.icon}
+                {/* Unread notification badge for Notifications */}
+                {nav.name === "Notifications" && unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full px-1.5 py-0.5 shadow-lg border-2 border-white animate-bounce z-10 min-w-[20px] text-center">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </span>
+              {(isExpanded || isHovered || isMobileOpen) && (
+                <span className={`menu-item-text`}>{nav.name}</span>
+              )}
+            </Link>
+          )
+        )}
+      </li>
+    ))}
+  </ul>
+);
+
 const AppSidebar = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const unreadCount = useSelector((state) => state.notification.unreadCount);
 
   const isActive = useCallback((path) => path === pathname, [pathname]);
 
@@ -171,31 +227,7 @@ const AppSidebar = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              <ul className="flex flex-col gap-4">
-                {navItems.map((nav) => (
-                  <li key={nav.name}>
-                    <Link
-                      href={nav.path}
-                      className={`menu-item group ${
-                        isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                      }`}
-                    >
-                      <span
-                        className={`${
-                          isActive(nav.path)
-                            ? "menu-item-icon-active"
-                            : "menu-item-icon-inactive"
-                        }`}
-                      >
-                        {nav.icon}
-                      </span>
-                      {(isExpanded || isHovered || isMobileOpen) && (
-                        <span className={`menu-item-text`}>{nav.name}</span>
-                      )}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+              {renderMenuItems(navItems, "navItems", isActive, isExpanded, isHovered, isMobileOpen, unreadCount)}
             </div>
           </div>
         </nav>

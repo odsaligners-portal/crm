@@ -11,11 +11,13 @@ export async function POST(req) {
 
     // Get token from authorization header
     const authResult = await verifyAuth(req);
+    
     if (!authResult.success || authResult.user.role !== 'admin') {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
-    const { userData } = authResult;
-
+    const data = authResult;
+    const userData = data.user;
+    
     // Get request body
     const body = await req.json();
     const superAdminId = process.env.SUPER_ADMIN_ID;

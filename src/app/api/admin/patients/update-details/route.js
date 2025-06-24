@@ -139,6 +139,12 @@ export async function DELETE(req) {
         { status: 401 }
       );
     }
+    if (!authResult.user.userDeleteAccess) {
+      return NextResponse.json(
+        { error: 'You do not have permission to delete patients.' },
+        { status: 403 }
+      );
+    }
 
     await dbConnect();
 

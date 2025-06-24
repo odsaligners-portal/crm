@@ -23,35 +23,27 @@ const userSchema = new mongoose.Schema({
   },
   mobile: {
     type: String,
-    required: [true, 'Please provide your mobile number'],
   },
   gender: {
     type: String,
-    required: [true, 'Please provide your gender'],
   },
   country: {
     type: String,
-    required: [true, 'Please provide your country'],
   },
   state: {
     type: String,
-    required: [true, 'Please provide your state'],
   },
   city: {
     type: String,
-    required: [true, 'Please provide your city'],
   },
   experience: {
     type: String,
-    required: [true, 'Please provide your experience'],
   },
   doctorType: {
     type: String,
-    required: [true, "Please provide the doctor's type"],
   },
   address: {
     type: String,
-    required: [true, 'Please provide your address'],
   },
   role: {
     type: String,

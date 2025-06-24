@@ -2,13 +2,14 @@
 import { useSidebar } from "@/context/SidebarContext";
 import {
   MdDashboard, MdTableChart, MdAdd, MdComment, MdEvent, MdPerson, MdDescription, MdPieChart, MdWidgets, MdLogin, MdList, MdPageview, MdMenuBook, MdVideoLibrary,
-  MdNotifications
+  MdNotifications, MdAdminPanelSettings
 } from 'react-icons/md';
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDownIcon, HorizontaLDots } from "@/icons";
+import { useSelector } from "react-redux";
 
 const navItems = [
   {
@@ -29,7 +30,7 @@ const navItems = [
   {
     name: "Events",
     icon: <MdEvent />,
-    subItems: [{ name: "Events", path: "/admin/events", pro: false },{ name: "Add Event", path: "/admin/add-event", pro: false },],
+    path: "/admin/events",
   },
   {
     icon: <MdNotifications />,
@@ -120,6 +121,23 @@ const othersItems = [
 const AppSidebar = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
+  const { user, token } = useSelector((state) => state.auth) || {};
+  const superAdminId = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID;
+  const isSuperAdmin = user && user.id && superAdminId && user.id === superAdminId;
+  const unreadCount = useSelector((state) => state.notification.unreadCount);
+
+  // Dynamically add Admin dropdown for superadmin
+  let dynamicNavItems = [...navItems];
+  if (isSuperAdmin) {
+    dynamicNavItems.splice(1, 0, {
+      name: "Admin",
+      icon: <MdAdminPanelSettings />,
+      subItems: [
+        { name: "Admin", path: "/admin/other-admins", pro: false },
+        { name: "Create New Admin", path: "/admin/other-admins/create", pro: false },
+      ],
+    });
+  }
 
   const renderMenuItems = (
     navItems,
@@ -173,13 +191,19 @@ const AppSidebar = () => {
                 }`}
               >
                 <span
-                  className={`${
+                  className={`$${
                     isActive(nav.path)
                       ? "menu-item-icon-active"
                       : "menu-item-icon-inactive"
-                  }`}
+                  } relative`}
                 >
                   {nav.icon}
+                  {/* Unread notification badge for Notifications */}
+                  {nav.name === "Notifications" && unreadCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full px-1.5 py-0.5 shadow-lg border-2 border-white animate-bounce z-10 min-w-[20px] text-center">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
                   <span className={`menu-item-text`}>{nav.name}</span>
@@ -260,7 +284,7 @@ const AppSidebar = () => {
     // Check if the current path matches any submenu item
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+      const items = menuType === "main" ? dynamicNavItems : othersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -373,7 +397,7 @@ const AppSidebar = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(dynamicNavItems, "main")}
             </div>
 
             <div className="">

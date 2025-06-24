@@ -72,7 +72,14 @@ const AddCaseCategoryModal = ({ isOpen, onClose, onCategoryAdded }) => {
         body: JSON.stringify(formData)
       });
 
-      const result = await response.json();
+      let result = {};
+      try {
+        result = await response.json();
+      } catch (jsonErr) {
+        // If response is not JSON
+        result = { message: response.statusText };
+      }
+
       if (response.ok) {
         toast.success('Category added successfully!');
         if(onCategoryAdded) {
@@ -80,10 +87,10 @@ const AddCaseCategoryModal = ({ isOpen, onClose, onCategoryAdded }) => {
         }
         onClose();
       } else {
-        throw new Error(result.message || 'Failed to add category');
+        toast.error(result.message || response.statusText || 'Failed to add category');
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || 'An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);
     }

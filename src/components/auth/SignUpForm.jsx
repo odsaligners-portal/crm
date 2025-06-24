@@ -16,7 +16,7 @@ import { useDropzone } from 'react-dropzone';
 import { storage } from '@/utils/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
-export default function SignUpForm() {
+export default function SignUpForm({ heading = "Sign Up", description = "Enter your details to create an account" }) {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [showPassword, setShowPassword] = useState(false);
@@ -161,10 +161,10 @@ export default function SignUpForm() {
         <div>
           <div className="mb-5 sm:mb-8">
             <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
-              Sign Up
+              {heading}
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Enter your details to create an account
+              {description}
             </p>
           </div>
           <div>

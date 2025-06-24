@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/app/api/config/db';
 import CaseCategory from '@/app/api/models/CaseCategory';
-import { verifyAuth } from '@/app/api/middleware/authMiddleware';
+import { verifyAuth, admin } from '@/app/api/middleware/authMiddleware';
 
 // GET - Fetch all case categories or fetch one by ID
 export async function GET(request) {
@@ -46,21 +46,19 @@ export async function GET(request) {
 // POST - Add a new case category
 export async function POST(request) {
   try {
-    //Verify authentication
-    const authResult = await verifyAuth(request);
+    // Use admin middleware
+    const authResult = await admin(request);
     if (!authResult.success) {
       return NextResponse.json(
         { success: false, message: authResult.error || 'Authentication required' },
         { status: 401 }
       );
     }
-
-    const { user: decoded } = authResult;
-    
-    // Check if user is an admin
-    if (decoded.role !== 'admin') {
+    const user = authResult.user;
+    // Check if user has caseCategoryUpdateAccess
+    if (!user.caseCategoryUpdateAccess) {
       return NextResponse.json(
-        { success: false, message: 'Forbidden: Only admins can create case categories.' },
+        { success: false, message: 'Forbidden: You do not have permission to create case categories.' },
         { status: 403 }
       );
     }
@@ -122,21 +120,19 @@ export async function POST(request) {
 // PUT - Update a case category
 export async function PUT(request) {
   try {
-    // Verify authentication
-    const authResult = await verifyAuth(request);
+    // Use admin middleware
+    const authResult = await admin(request);
     if (!authResult.success) {
       return NextResponse.json(
         { success: false, message: authResult.error || 'Invalid token' },
         { status: 401 }
       );
     }
-
-    const { user: decoded } = authResult;
-
-    // Check if user is an admin
-    if (decoded.role !== 'admin') {
+    const user = authResult.user;
+    // Check if user has caseCategoryUpdateAccess
+    if (!user.caseCategoryUpdateAccess) {
       return NextResponse.json(
-        { success: false, message: 'Forbidden: Only admins can update case categories.' },
+        { success: false, message: 'Forbidden: You do not have permission to update case categories.' },
         { status: 403 }
       );
     }
@@ -201,21 +197,19 @@ export async function PUT(request) {
 // DELETE - Delete a case category
 export async function DELETE(request) {
   try {
-    // Verify authentication
-    const authResult = await verifyAuth(request);
+    // Use admin middleware
+    const authResult = await admin(request);
     if (!authResult.success) {
       return NextResponse.json(
         { success: false, message: authResult.error || 'Authentication required' },
         { status: 401 }
       );
     }
-
-    const { user: decoded } = authResult;
-
-    // Check if user is an admin
-    if (decoded.role !== 'admin') {
+    const user = authResult.user;
+    // Check if user has caseCategoryUpdateAccess
+    if (!user.caseCategoryUpdateAccess) {
       return NextResponse.json(
-        { success: false, message: 'Forbidden: Only admins can delete case categories.' },
+        { success: false, message: 'Forbidden: You do not have permission to delete case categories.' },
         { status: 403 }
       );
     }

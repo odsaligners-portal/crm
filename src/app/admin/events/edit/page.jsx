@@ -24,6 +24,7 @@ const EditPage = () => {
   const [eventDate, setEventDate] = useState(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [hasEventUpdateAccess, setHasEventUpdateAccess] = useState(null);
 
   // State for the single file upload
   const [imageUrl, setImageUrl] = useState(null);
@@ -58,6 +59,23 @@ const EditPage = () => {
     fetchEvent();
     // eslint-disable-next-line
   }, [eventId]);
+
+  useEffect(() => {
+    const fetchAccess = async () => {
+      if (!token) return setHasEventUpdateAccess(false);
+      try {
+        const res = await fetch('/api/user/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Failed to fetch user profile');
+        const data = await res.json();
+        setHasEventUpdateAccess(!!data.user?.eventUpdateAccess);
+      } catch (err) {
+        setHasEventUpdateAccess(false);
+      }
+    };
+    fetchAccess();
+  }, [token]);
 
   const handleFileUpload = (file) => {
     if (!file) return;
@@ -197,6 +215,18 @@ const EditPage = () => {
         <span className="text-lg text-gray-600 dark:text-gray-300">Loading event...</span>
       </div>
     );
+  }
+
+  if (hasEventUpdateAccess === false) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
+        <span className="text-lg text-red-600 dark:text-red-400 font-bold">Access Denied</span>
+        <span className="text-gray-600 dark:text-gray-300 mt-2">You do not have permission to edit events.</span>
+      </div>
+    );
+  }
+  if (hasEventUpdateAccess === null) {
+    return null; // or a spinner if you want
   }
 
   return (

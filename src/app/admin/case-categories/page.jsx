@@ -7,6 +7,7 @@ import EditCaseCategoryModal from "@/components/admin/case-categories/EditModal"
 import AddCaseCategoryModal from "@/components/admin/case-categories/AddModal";
 import Button from "@/components/ui/button/Button";
 import ConfirmationModal from "@/components/common/ConfirmationModal";
+import { useRouter } from 'next/navigation';
 
 
 const CaseCategoriesPage = () => {
@@ -21,6 +22,8 @@ const CaseCategoriesPage = () => {
   const [categoryToDelete, setCategoryToDelete] = useState(null);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
+  const [hasCaseCategoryUpdateAccess, setHasCaseCategoryUpdateAccess] = useState(false);
 
   const handleOpenEditModal = (category) => {
     setSelectedCategory(category);
@@ -98,6 +101,20 @@ const CaseCategoriesPage = () => {
   useEffect(() => {
     if (token) {
       fetchCaseCategories();
+      // Fetch access rights
+      const fetchAccess = async () => {
+        try {
+          const res = await fetch('/api/user/profile', {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (!res.ok) throw new Error('Failed to fetch user profile');
+          const data = await res.json();
+          setHasCaseCategoryUpdateAccess(!!data.user?.caseCategoryUpdateAccess);
+        } catch (err) {
+          setHasCaseCategoryUpdateAccess(false);
+        }
+      };
+      fetchAccess();
     }
   }, [token]);
 
@@ -135,10 +152,12 @@ const CaseCategoriesPage = () => {
         </div>
 
         <div className="flex justify-end mb-6">
-            <Button onClick={() => setIsAddModalOpen(true)}>
-                <PlusIcon className="h-5 w-5 mr-2" />
-                Add New Category
-            </Button>
+            {hasCaseCategoryUpdateAccess && (
+                <Button onClick={() => setIsAddModalOpen(true)}>
+                    <PlusIcon className="h-5 w-5 mr-2" />
+                    Add New Category
+                </Button>
+            )}
         </div>
 
         {isLoading ? (
@@ -165,12 +184,16 @@ const CaseCategoriesPage = () => {
                             </h2>
                         </div>
                         <div className="flex items-center shrink-0">
-                            <Button onClick={() => handleOpenEditModal(category)} variant="ghost" size="sm" className="p-2">
-                                <PencilIcon className="h-5 w-5 text-gray-500 hover:text-blue-600" />
-                            </Button>
-                             <Button onClick={() => openConfirmationModal(category._id)} variant="ghost" size="sm" className="p-2">
-                                <TrashIcon className="h-5 w-5 text-gray-500 hover:text-red-600" />
-                            </Button>
+                            {hasCaseCategoryUpdateAccess && (
+                                <>
+                                  <Button onClick={() => handleOpenEditModal(category)} variant="ghost" size="sm" className="p-2">
+                                      <PencilIcon className="h-5 w-5 text-gray-500 hover:text-blue-600" />
+                                  </Button>
+                                  <Button onClick={() => openConfirmationModal(category._id)} variant="ghost" size="sm" className="p-2">
+                                      <TrashIcon className="h-5 w-5 text-gray-500 hover:text-red-600" />
+                                  </Button>
+                                </>
+                            )}
                         </div>
                     </div>
                     {!category.active && (

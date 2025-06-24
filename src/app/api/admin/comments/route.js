@@ -3,6 +3,7 @@ import dbConnect from '@/app/api/config/db';
 import Patient from '@/app/api/models/Patient';
 import PatientComment from '@/app/api/models/PatientComment';
 import { verifyAuth } from '@/app/api/middleware/authMiddleware';
+import { admin } from '@/app/api/middleware/authMiddleware';
 
 export const GET = async (req) => {
   try {
@@ -50,4 +51,67 @@ export const GET = async (req) => {
     console.error('Error fetching all comments for admin:', error);
     return NextResponse.json({ message: 'Server Error' }, { status: 500 });
   }
-}; 
+};
+
+export async function DELETE(request) {
+  try {
+    const authResult = await admin(request);
+    if (!authResult.success) {
+      return NextResponse.json({ success: false, message: authResult.error || 'Authentication required' }, { status: 401 });
+    }
+    const user = authResult.user;
+    if (!user.commentUpdateAccess) {
+      return NextResponse.json({ success: false, message: 'Forbidden: You do not have permission to delete comments.' }, { status: 403 });
+    }
+    await dbConnect();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    if (!id) {
+      return NextResponse.json({ success: false, message: 'Comment ID is required' }, { status: 400 });
+    }
+    // Remove the comment from the comments array in PatientComment
+    const result = await PatientComment.updateOne(
+      { 'comments._id': id },
+      { $pull: { comments: { _id: id } } }
+    );
+    if (result.modifiedCount === 0) {
+      return NextResponse.json({ success: false, message: 'Comment not found' }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, message: 'Comment deleted successfully' });
+  } catch (error) {
+    return NextResponse.json({ success: false, message: 'Failed to delete comment' }, { status: 500 });
+  }
+}
+
+export async function PUT(request) {
+  try {
+    const authResult = await admin(request);
+    if (!authResult.success) {
+      return NextResponse.json({ success: false, message: authResult.error || 'Authentication required' }, { status: 401 });
+    }
+    const user = authResult.user;
+    if (!user.commentUpdateAccess) {
+      return NextResponse.json({ success: false, message: 'Forbidden: You do not have permission to update comments.' }, { status: 403 });
+    }
+    await dbConnect();
+    const body = await request.json();
+    const { id, comment } = body;
+    if (!id || typeof comment !== 'string') {
+      return NextResponse.json({ success: false, message: 'Comment ID and new comment text are required' }, { status: 400 });
+    }
+    // Update the comment text in the comments array in PatientComment
+    const result = await PatientComment.findOneAndUpdate(
+      { 'comments._id': id },
+      { $set: { 'comments.$.comment': comment } },
+      { new: true }
+    );
+    if (!result) {
+      return NextResponse.json({ success: false, message: 'Comment not found' }, { status: 404 });
+    }
+    // Return the updated comment object
+    const updatedComment = result.comments.find(c => c._id.toString() === id);
+    return NextResponse.json({ success: true, message: 'Comment updated successfully', data: updatedComment });
+  } catch (error) {
+    return NextResponse.json({ success: false, message: 'Failed to update comment' }, { status: 500 });
+  }
+} 

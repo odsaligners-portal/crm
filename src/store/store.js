@@ -2,11 +2,13 @@ import { configureStore } from '@reduxjs/toolkit';
 import { useDispatch, useSelector } from 'react-redux';
 import authReducer from './features/auth/authSlice';
 import patientFormReducer from './features/patientFormSlice';
+import notificationReducer from './features/notificationSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     patientForm: patientFormReducer,
+    notification: notificationReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

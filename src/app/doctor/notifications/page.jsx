@@ -6,7 +6,7 @@ import Button from '@/components/ui/button/Button';
 import { XMarkIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid';
 import { setNotifications, markAsRead } from '@/store/features/notificationSlice';
 
-export default function NotificationsPage() {
+export default function DoctorNotificationsPage() {
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
   const notifications = useSelector((state) => state.notification.notifications);
@@ -29,7 +29,6 @@ export default function NotificationsPage() {
         if (!res.ok) throw new Error("Failed to fetch notifications");
         const data = await res.json();
         dispatch(setNotifications(data.notifications || []));
-        
         // Fetch creator names for doctor notifications (one by one)
         const doctorIds = Array.from(new Set((data.notifications || [])
           .filter(n => n.commentedBy && n.commentedBy !== 'admin')
@@ -61,13 +60,12 @@ export default function NotificationsPage() {
     const interval = setInterval(fetchNotifications, 300000); // 5 minutes
     return () => clearInterval(interval);
   }, [token]);
- 
+
   const handleViewComment = async (patientCommentId, commentId, notificationId) => {
     setModalOpen(true);
     setModalLoading(true);
     setModalError(null);
     setModalComment(null);
-    
     try {
       const res = await fetch(`/api/patients/comments?patientCommentId=${patientCommentId}&commentId=${commentId}`, {
         headers: {
@@ -228,4 +226,4 @@ export default function NotificationsPage() {
       </Modal>
     </div>
   );
-}
+} 

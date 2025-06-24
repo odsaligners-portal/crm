@@ -1,29 +1,35 @@
 import { NextResponse } from 'next/server';
 import dbConnect from '@/app/api/config/db';
 import Event from '@/app/api/models/Event';
+import User from '@/app/api/models/User';
 import { verifyAuth } from '@/app/api/middleware/authMiddleware';
 import { getStorage, ref, deleteObject } from 'firebase/storage';
 import { app } from '@/utils/firebase';
 
 const storage = getStorage(app);
 
-// Helper to verify admin role
-async function verifyAdmin(request) {
+// Helper to verify admin role and event update access
+async function verifyAdminWithEventAccess(request) {
     const authResult = await verifyAuth(request);
     if (!authResult.success || authResult.user.role !== 'admin') {
         return { success: false, message: 'Unauthorized', status: 401 };
     }
-    return { success: true, user: authResult.user };
+    // Fetch user from DB to get latest access fields
+    const user = await User.findById(authResult.user.id);
+    if (!user || !user.eventUpdateAccess) {
+        return { success: false, message: 'You do not have access to update events', status: 403 };
+    }
+    return { success: true, user };
 }
 
 export async function POST(request) {
   try {
     await dbConnect();
-    const authResult = await verifyAuth(request);
-    if (!authResult.success || authResult.user.role !== 'admin') {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    const adminCheck = await verifyAdminWithEventAccess(request);
+    if (!adminCheck.success) {
+      return NextResponse.json({ message: adminCheck.message }, { status: adminCheck.status });
     }
-    const { user } = authResult;
+    const { user } = adminCheck;
 
     const { name, description, eventDate, image } = await request.json();
 
@@ -54,7 +60,7 @@ export async function POST(request) {
 
 // DELETE an event using query parameter
 export async function DELETE(request) {
-    const adminCheck = await verifyAdmin(request);
+    const adminCheck = await verifyAdminWithEventAccess(request);
     if (!adminCheck.success) {
         return NextResponse.json({ message: adminCheck.message }, { status: adminCheck.status });
     }
@@ -89,7 +95,7 @@ export async function DELETE(request) {
 
 // UPDATE an event using query parameter
 export async function PUT(request) {
-    const adminCheck = await verifyAdmin(request);
+    const adminCheck = await verifyAdminWithEventAccess(request);
     if (!adminCheck.success) {
         return NextResponse.json({ message: adminCheck.message }, { status: adminCheck.status });
     }

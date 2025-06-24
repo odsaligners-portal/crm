@@ -15,11 +15,12 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import * as XLSX from 'xlsx';
 import FileUploadModal, { ViewFilesModal } from '@/components/admin/patients/FileUploadModal';
+import ConfirmationModal from '@/components/common/ConfirmationModal';
 const countries = Object.keys(countriesData);
 
 export default function ViewPatientRecords() {
   const router = useRouter();
-  const { token } = useSelector((state) => state.auth);
+  const { token, user } = useSelector((state) => state.auth);
   const [patients, setPatients] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,6 +38,8 @@ export default function ViewPatientRecords() {
   const [fileUploadPatient, setFileUploadPatient] = useState(null);
   const [showViewFilesModal, setShowViewFilesModal] = useState(false);
   const [viewFilesPatient, setViewFilesPatient] = useState(null);
+  const [hasUserDeleteAccess, setHasUserDeleteAccess] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleOpenUploadModal = (patient) => {
     setSelectedPatient(patient);
@@ -127,6 +130,23 @@ export default function ViewPatientRecords() {
       }
     };
     fetchCaseCategories();
+  }, [token]);
+
+  useEffect(() => {
+    const fetchAccess = async () => {
+      if (!token) return;
+      try {
+        const res = await fetch('/api/user/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error('Failed to fetch user profile');
+        const data = await res.json();
+        setHasUserDeleteAccess(!!data.user?.userDeleteAccess);
+      } catch (err) {
+        setHasUserDeleteAccess(false);
+      }
+    };
+    fetchAccess();
   }, [token]);
 
   const handleSearch = (e) => {
@@ -245,27 +265,28 @@ export default function ViewPatientRecords() {
     endDate: 'End Date',
   };
 
-  const handleDeletePatient = async (patientId, patientName, skipConfirm = false) => {
-    if (!skipConfirm) {
-      // fallback, but should not be used
-      if (!confirm(`Are you sure you want to delete patient "${patientName}"? This action cannot be undone.`)) {
-        return;
-      }
-    }
+  const handleDeletePatient = async () => {
+    if (!patientToDelete) return;
+    setIsDeleting(true);
     try {
-      const response = await fetch(`/api/admin/patients/update-details?id=${patientId}`, {
+      const response = await fetch(`/api/admin/patients/update-details?id=${patientToDelete._id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
       if (!response.ok) {
-        throw new Error('Failed to delete patient');
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to delete patient');
       }
       toast.success('Patient deleted successfully');
-      fetchPatients(); // Refresh the list
+      setPatients((prev) => prev.filter((p) => p._id !== patientToDelete._id));
+      setShowDeleteModal(false);
+      setPatientToDelete(null);
     } catch (error) {
       toast.error(error.message || 'Failed to delete patient');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -566,6 +587,7 @@ export default function ViewPatientRecords() {
                           >
                             <PencilIcon className="w-3 h-3" /> Edit
                           </Button>
+                          {hasUserDeleteAccess && (
                           <Button
                             onClick={() => {
                               setPatientToDelete(patient);
@@ -577,6 +599,7 @@ export default function ViewPatientRecords() {
                           >
                             <TrashBinIcon className="w-3 h-3" /> Delete
                           </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -632,35 +655,21 @@ export default function ViewPatientRecords() {
           </div>
         )}
 
-        {showDeleteModal && patientToDelete && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-            <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full">
-              <h2 className="text-xl font-bold mb-4 text-red-600">Delete Patient</h2>
-              <p className="mb-6">Are you sure you want to delete patient <span className="font-semibold">{patientToDelete.patientName}</span>? This action cannot be undone.</p>
-              <div className="flex justify-end gap-3">
-                <Button
-                  variant="outline"
-                  onClick={() => {
+        <ConfirmationModal
+          isOpen={showDeleteModal && !!patientToDelete}
+          onClose={() => {
+            if (!isDeleting) {
                     setShowDeleteModal(false);
                     setPatientToDelete(null);
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={async () => {
-                    await handleDeletePatient(patientToDelete._id, patientToDelete.patientName, true);
-                    setShowDeleteModal(false);
-                    setPatientToDelete(null);
-                  }}
-                >
-                  Delete
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+            }
+          }}
+          onConfirm={handleDeletePatient}
+          title="Delete Patient"
+          message={patientToDelete ? `Are you sure you want to delete patient '${patientToDelete.patientName}'? This action cannot be undone.` : ''}
+          confirmButtonText={isDeleting ? "Deleting..." : "Delete"}
+          confirmButtonProps={{ disabled: isDeleting }}
+          cancelButtonText="Cancel"
+        />
 
         <UploadModal
           isOpen={isUploadModalOpen}

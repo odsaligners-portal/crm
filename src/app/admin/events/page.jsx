@@ -9,6 +9,8 @@ import { useSelector } from 'react-redux';
 import { PencilIcon, TrashBinIcon } from '@/icons';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import { useModal } from '@/hooks/useModal';
+import { useRouter } from 'next/navigation';
+import { MdAdd } from 'react-icons/md';
 
 const EventsPage = () => {
     const { token } = useSelector((state) => state.auth);
@@ -17,6 +19,8 @@ const EventsPage = () => {
     const [eventToDelete, setEventToDelete] = useState(null);
     const { isOpen, openModal, closeModal } = useModal();
     const [modalLoading, setModalLoading] = useState(false);
+    const [hasEventUpdateAccess, setHasEventUpdateAccess] = useState(false);
+    const router = useRouter();
 
     useEffect(() => {
         const fetchEvents = async () => {
@@ -46,6 +50,23 @@ const EventsPage = () => {
 
         fetchEvents();
     }, []);
+
+    useEffect(() => {
+        const fetchAccess = async () => {
+            if (!token) return;
+            try {
+                const res = await fetch('/api/user/profile', {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                if (!res.ok) throw new Error('Failed to fetch user profile');
+                const data = await res.json();
+                setHasEventUpdateAccess(!!data.user?.eventUpdateAccess);
+            } catch (err) {
+                setHasEventUpdateAccess(false);
+            }
+        };
+        fetchAccess();
+    }, [token]);
 
     // Delete event handler
     const handleDeleteEvent = (eventId) => {
@@ -100,6 +121,14 @@ const EventsPage = () => {
                 <header className="text-center mb-12">
                     <h1 className="text-4xl md:text-5xl font-extrabold mb-2 text-gray-900 dark:text-white">Our Events</h1>
                     <p className="text-lg text-gray-600 dark:text-gray-300">Join us for our upcoming events and connect with the community.</p>
+                    {hasEventUpdateAccess && (
+                        <button
+                            onClick={() => router.push('/admin/add-event')}
+                            className="mt-6 flex items-center justify-center px-5 py-2 bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-lg shadow-md hover:scale-105 transition-transform mx-auto"
+                        >
+                            <MdAdd className="mr-2 text-lg" /> Add Event
+                        </button>
+                    )}
                 </header>
 
                 {allEvents.length > 0 ? (
@@ -124,17 +153,21 @@ const EventsPage = () => {
                                         />
                                     )}
                                     <div className="absolute top-4 right-4 flex space-x-2">
-                                        <Link href={`/admin/events/edit?id=${event._id}`}>
-                                            <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100">
-                                                <PencilIcon className="h-5 w-5 text-gray-600" />
-                                            </button>
-                                        </Link>
-                                        <button
-                                            className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
-                                            onClick={() => handleDeleteEvent(event._id)}
-                                        >
-                                            <TrashBinIcon className="h-5 w-5 text-red-500" />
-                                        </button>
+                                        {hasEventUpdateAccess && (
+                                            <>
+                                                <Link href={`/admin/events/edit?id=${event._id}`}>
+                                                    <button className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100">
+                                                        <PencilIcon className="h-5 w-5 text-gray-600" />
+                                                    </button>
+                                                </Link>
+                                                <button
+                                                    className="p-2 bg-white rounded-full shadow-md hover:bg-gray-100"
+                                                    onClick={() => handleDeleteEvent(event._id)}
+                                                >
+                                                    <TrashBinIcon className="h-5 w-5 text-red-500" />
+                                                </button>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="p-6 flex flex-col flex-1 justify-between">
