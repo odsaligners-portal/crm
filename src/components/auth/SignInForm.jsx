@@ -11,6 +11,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from "react";
 import { toast } from 'react-toastify';
 import Loader from "@/components/common/Loader";
+import { setNotifications } from '@/store/features/notificationSlice';
 
 export default function SignInForm() {
   const router = useRouter();
@@ -52,6 +53,18 @@ export default function SignInForm() {
         token: data.token,
         role: data.user.role
       }));
+
+      // Fetch notifications and set in Redux
+      try {
+        const notifRes = await fetch('/api/notifications', {
+          headers: { Authorization: `Bearer ${data.token}` },
+        });
+        if (notifRes.ok) {
+          const notifData = await notifRes.json();
+          console.log(notifData)
+          dispatch(setNotifications(notifData.notifications || []));
+        }
+      } catch (e) { /* ignore */ }
 
       toast.success('Successfully logged in!');
       setIsLoading(true);
