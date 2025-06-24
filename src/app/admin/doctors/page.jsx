@@ -1,11 +1,10 @@
 "use client"
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { FaPhone, FaCity, FaEnvelope } from "react-icons/fa";
+import { FaPhone, FaCity, FaEnvelope, FaEye } from "react-icons/fa";
 import { useModal } from "@/hooks/useModal";
 import { Modal } from "@/components/ui/modal";
 import UserInfoCard from "@/components/user-profile/UserInfoCard";
-import EyeIcon from "@/icons/eye.svg";
 
 function getInitials(name) {
   if (!name) return "?";
@@ -66,11 +65,11 @@ export default function AdminDoctorsPage() {
             >
               {/* View Icon Button */}
               <button
-                className="absolute top-3 right-3 bg-blue-100 hover:bg-blue-200 dark:bg-blue-800 dark:hover:bg-blue-700 rounded-full p-2 shadow-md z-10"
+                className="absolute top-3 right-3 w-10 h-10 aspect-square flex items-center justify-center bg-blue-100 hover:bg-blue-200 dark:bg-blue-800 dark:hover:bg-blue-700 rounded-full shadow-md z-10 p-0"
                 onClick={() => { setSelectedDoctor(doc); openModal(); }}
                 title="View Details"
               >
-                <EyeIcon width={22} height={22} className="text-blue-600 dark:text-blue-300" />
+                <FaEye size={22} className="text-blue-600 dark:text-blue-300 leading-none relative top-[1px]" />
               </button>
               {/* User Badge/Avatar or Profile Picture */}
               {doc.profilePicture && doc.profilePicture.url ? (

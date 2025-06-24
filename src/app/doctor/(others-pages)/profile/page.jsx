@@ -6,6 +6,8 @@ import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { fetchWithError } from "@/utils/apiErrorHandler";
+import Link from "next/link";
+import { FaEdit } from "react-icons/fa";
 
 export default function Profile() {
   const [userData, setUserData] = useState({
@@ -70,7 +72,7 @@ export default function Profile() {
 
   return (
     <div>
-      <div className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+      <div className="relative rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
         <h3 className="mb-5 text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-7">
           Profile
         </h3>
@@ -90,6 +92,13 @@ export default function Profile() {
         <div className="space-y-6">
           <UserInfoCard userData={userData}/>
         </div>
+        <Link
+          href="/doctor/profile/edit"
+          className="absolute top-4 right-4 flex items-center justify-center w-10 h-10 rounded-full bg-blue-100 hover:bg-blue-200 dark:bg-blue-800 dark:hover:bg-blue-700 text-blue-700 dark:text-blue-200 shadow-md z-10"
+          title="Edit Profile"
+        >
+          <FaEdit size={22} />
+        </Link>
       </div>
     </div>
   );

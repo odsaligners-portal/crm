@@ -11,15 +11,15 @@ export async function GET(req) {
   if (!authResult.success) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
-
-  const doctorId = authResult.user._id;
-
+  
+  const doctorId = authResult.user.id;
+  console.log(authResult.user.id)
   try {
-    const myPatients = await Patient.countDocuments({ doctor: doctorId });
+    const myPatients = await Patient.countDocuments({ userId: doctorId });
     
     // Assuming 'pending' status exists. If not, this will be 0.
-    const pendingCases = await Patient.countDocuments({ userId: doctorId, status: 'in-progress' });
-
+    const pendingCases = await Patient.countDocuments({ userId: doctorId, progressStatus: 'in-progress' });
+    
     return NextResponse.json({
       success: true,
       data: {

@@ -3,6 +3,7 @@ import { handleError, AppError } from '../../utils/errorHandler';
 import connectDB from '../../config/db';
 import User from '../../models/User';
 import jwt from 'jsonwebtoken';
+import { verifyAuth } from '../../middleware/authMiddleware';
 
 export async function GET(req) {
   try {
@@ -49,10 +50,10 @@ export async function GET(req) {
     }
 
     const token = authHeader.split(' ')[1];
-    
+
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
-    
+
     // Get user data
     const user = await User.findById(decoded.id).select('-password');
     if (!user) {
@@ -91,63 +92,43 @@ export async function PUT(req) {
   try {
     await connectDB();
 
-    // Get token from authorization header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AppError('Not authorized', 401);
+    const authResult = await verifyAuth(req);
+    if (!authResult.success) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
-
-    const token = authHeader.split(' ')[1];
-    
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    const user = authResult.user;
     
     // Get request body
     const body = await req.json();
 
-    // Only allow updating the current user's own profile
-    const updateData = {};
-    const fields = [
-      'name', 'email', 'mobile', 'gender', 'country', 'state', 
-      'city', 'experience', 'doctorType', 'address'
-    ];
+    // Allow updating all fields provided in the body
+    const updateData = { ...body };
 
-    fields.forEach(field => {
-      if (body[field] !== undefined) {
-        updateData[field] = body[field];
-      }
-    });
-
-    const user = await User.findByIdAndUpdate(
-      decoded.id,
+    const updatedUser = await User.findByIdAndUpdate(
+      user.id,
       { $set: updateData },
       { new: true, runValidators: true }
     ).select('-password');
 
-    if (!user) {
+    if (!updatedUser) {
       throw new AppError('User not found', 404);
     }
 
     return NextResponse.json({
       user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        userDeleteAccess: user.userDeleteAccess,
-        eventUpdateAccess: user.eventUpdateAccess,
-        commentUpdateAccess: user.commentUpdateAccess,
-        caseCategoryUpdateAccess: user.caseCategoryUpdateAccess,
-        changeDoctorPasswordAccess: user.changeDoctorPasswordAccess,
-        mobile: user.mobile,
-        gender: user.gender,
-        country: user.country,
-        state: user.state,
-        city: user.city,
-        experience: user.experience,
-        doctorType: user.doctorType,
-        address: user.address,
-        profilePicture: user.profilePicture || { url: '', fileKey: '', uploadedAt: null },
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+        mobile: updatedUser.mobile,
+        gender: updatedUser.gender,
+        country: updatedUser.country,
+        state: updatedUser.state,
+        city: updatedUser.city,
+        experience: updatedUser.experience,
+        doctorType: updatedUser.doctorType,
+        address: updatedUser.address,
+        profilePicture: updatedUser.profilePicture || { url: '', fileKey: '', uploadedAt: null },
       }
     });
 
