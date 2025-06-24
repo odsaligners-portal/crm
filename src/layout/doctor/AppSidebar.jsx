@@ -13,6 +13,7 @@ import {
   MdDescription,
   MdEvent,
   MdLogin,
+  MdLoop,
   MdMenuBook,
   MdNotifications,
   MdPerson,
@@ -38,6 +39,11 @@ const navItems = [
     icon: <MdAdd />,
     name: "Create Patient Record",
     path: "/doctor/patients/create-patient-record/step-1",
+  },
+  {
+    icon: <MdLoop />,
+    name: "Manage Patient Progress",
+    path: "/doctor/patients/manage-status",
   },
   {
     icon: <MdNotifications />,

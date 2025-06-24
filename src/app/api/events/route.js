@@ -27,6 +27,7 @@ export async function GET(request) {
     }
 
     const events = await Event.find({}).populate('createdBy', 'name').sort({ eventDate: -1 });
+    
     return NextResponse.json(events, { status: 200 });
 
   } catch (error) {

@@ -189,6 +189,11 @@ const patientSchema = new mongoose.Schema(
       fileKey: { type: String, default: '' },
       uploadedAt: { type: Date, default: Date.now },
     },
+    progressStatus: {
+      type: String,
+      enum: ['in-progress', 'midway', 'completed'],
+      default: 'in-progress',
+    },
   },
   {
     timestamps: true,

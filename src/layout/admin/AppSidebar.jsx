@@ -2,7 +2,8 @@
 import { useSidebar } from "@/context/SidebarContext";
 import {
   MdDashboard, MdTableChart, MdAdd, MdComment, MdEvent, MdPerson, MdDescription, MdPieChart, MdWidgets, MdLogin, MdList, MdPageview, MdMenuBook, MdVideoLibrary,
-  MdNotifications, MdAdminPanelSettings
+  MdNotifications, MdAdminPanelSettings,
+  MdLoop
 } from 'react-icons/md';
 import Image from "next/image";
 import Link from "next/link";
@@ -41,6 +42,11 @@ const navItems = [
     icon: <MdComment />,
     name: "View Comments",
     path: "/admin/view-comments",
+  },
+  {
+    icon: <MdLoop />,
+    name: "Manage Patient Progress",
+    path: "/admin/patients/manage-status",
   },
   {
     icon: <MdPerson />,
