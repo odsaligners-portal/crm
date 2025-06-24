@@ -75,7 +75,15 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  passwordChangeAccess: {
+    type: Boolean,
+    default: false,
+  },
   caseCategoryUpdateAccess: {
+    type: Boolean,
+    default: false,
+  },
+  changeDoctorPasswordAccess: {
     type: Boolean,
     default: false,
   },

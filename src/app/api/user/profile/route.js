@@ -14,13 +14,24 @@ export async function GET(req) {
     const id = searchParams.get('id');
     const otherAdmins = searchParams.get('otherAdmins');
     if (role === 'doctor') {
-      const doctors = await User.find({ role: 'doctor' });
+      const search = searchParams.get('search');
+      let query = { role: 'doctor' };
+      if (search) {
+        query = {
+          ...query,
+          $or: [
+            { name: { $regex: search, $options: 'i' } },
+            { email: { $regex: search, $options: 'i' } },
+          ],
+        };
+      }
+      const doctors = await User.find(query);
       return NextResponse.json({ doctors });
     }
     if (otherAdmins === 'true') {
       const superAdminId = process.env.SUPER_ADMIN_ID;
       const admins = await User.find({ role: 'admin', _id: { $ne: superAdminId } })
-        .select('id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess');
+        .select('id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess changeDoctorPasswordAccess');
       return NextResponse.json({ admins });
     }
     if (id) {
@@ -58,6 +69,7 @@ export async function GET(req) {
         eventUpdateAccess: user.eventUpdateAccess,
         commentUpdateAccess: user.commentUpdateAccess,
         caseCategoryUpdateAccess: user.caseCategoryUpdateAccess,
+        changeDoctorPasswordAccess: user.changeDoctorPasswordAccess,
         mobile: user.mobile,
         gender: user.gender,
         country: user.country,
@@ -126,6 +138,7 @@ export async function PUT(req) {
         eventUpdateAccess: user.eventUpdateAccess,
         commentUpdateAccess: user.commentUpdateAccess,
         caseCategoryUpdateAccess: user.caseCategoryUpdateAccess,
+        changeDoctorPasswordAccess: user.changeDoctorPasswordAccess,
         mobile: user.mobile,
         gender: user.gender,
         country: user.country,

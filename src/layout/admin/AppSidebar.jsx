@@ -3,7 +3,8 @@ import { useSidebar } from "@/context/SidebarContext";
 import {
   MdDashboard, MdTableChart, MdAdd, MdComment, MdEvent, MdPerson, MdDescription, MdPieChart, MdWidgets, MdLogin, MdList, MdPageview, MdMenuBook, MdVideoLibrary,
   MdNotifications, MdAdminPanelSettings,
-  MdLoop
+  MdLoop,
+  MdLockReset
 } from 'react-icons/md';
 import Image from "next/image";
 import Link from "next/link";
@@ -54,6 +55,11 @@ const navItems = [
     path: "/admin/doctors",
   },
   {
+    icon: <MdLockReset />,
+    name: "Change Doctor Password",
+    path: "/admin/change-doctor-password",
+  },
+  {
     icon: <MdMenuBook />,
     name: "Educational Material",
     path: "/admin/educational-material",
@@ -72,24 +78,6 @@ const navItems = [
     icon: <MdDescription />,
     name: "Terms & Conditions",
     path: "/admin/terms-and-conditions",
-  },
-  {
-    name: "Forms",
-    icon: <MdList />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
-  },
-  {
-    name: "Tables",
-    icon: <MdTableChart />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
-  },
-  {
-    name: "Pages",
-    icon: <MdPageview />,
-    subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
-    ],
   },
 ];
 
@@ -128,14 +116,36 @@ const AppSidebar = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
   const { user, token } = useSelector((state) => state.auth) || {};
+  const [hasPasswordAccess, setHasPasswordAccess] = useState(false);
   const superAdminId = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID;
   const isSuperAdmin = user && user.id && superAdminId && user.id === superAdminId;
   const unreadCount = useSelector((state) => state.notification.unreadCount);
 
+  useEffect(() => {
+    const fetchAccess = async () => {
+      if (!token) return;
+      try {
+        const res = await fetch('/api/user/profile', {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        if (res.ok && data.user) {
+          setHasPasswordAccess(data.user.changeDoctorPasswordAccess);
+        } else {
+          setHasPasswordAccess(false);
+        }
+      } catch (error) {
+        console.error("Failed to fetch access rights", error);
+        setHasPasswordAccess(false);
+      }
+    };
+    fetchAccess();
+  }, [token]);
+
   // Dynamically add Admin dropdown for superadmin
-  let dynamicNavItems = [...navItems];
+  let tempNavItems = [...navItems];
   if (isSuperAdmin) {
-    dynamicNavItems.splice(1, 0, {
+    tempNavItems.splice(1, 0, {
       name: "Admin",
       icon: <MdAdminPanelSettings />,
       subItems: [
@@ -143,7 +153,26 @@ const AppSidebar = () => {
         { name: "Create New Admin", path: "/admin/other-admins/create", pro: false },
       ],
     });
+    // Insert 'Change Super Admin Password' after 'Change Doctor Password'
+    const doctorPwdIdx = tempNavItems.findIndex(item => item.name === "Change Doctor Password");
+    if (doctorPwdIdx !== -1) {
+      tempNavItems.splice(doctorPwdIdx + 1, 0, {
+        icon: <MdLockReset />,
+        name: "Change Super Admin Password",
+        path: "/admin/change-superadmin-password",
+      });
+    }
   }
+  
+  const dynamicNavItems = tempNavItems.filter(item => {
+    if (item.name === "Change Doctor Password") {
+      return hasPasswordAccess;
+    }
+    if (item.name === "Change Super Admin Password") {
+      return isSuperAdmin;
+    }
+    return true;
+  });
 
   const renderMenuItems = (
     navItems,
@@ -404,23 +433,6 @@ const AppSidebar = () => {
                 )}
               </h2>
               {renderMenuItems(dynamicNavItems, "main")}
-            </div>
-
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(othersItems, "others")}
             </div>
           </div>
         </nav>

@@ -33,6 +33,7 @@ export async function POST(req) {
       'eventUpdateAccess',
       'commentUpdateAccess',
       'caseCategoryUpdateAccess',
+      'changeDoctorPasswordAccess',
     ];
     const updateData = {};
     accessFields.forEach(field => {
@@ -44,7 +45,7 @@ export async function POST(req) {
       body.targetAdminId,
       { $set: updateData },
       { new: true, runValidators: true }
-    ).select('id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess');
+    ).select('id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess changeDoctorPasswordAccess');
     if (!user) {
       throw new AppError('Admin not found', 404);
     }
@@ -57,6 +58,7 @@ export async function POST(req) {
         eventUpdateAccess: user.eventUpdateAccess,
         commentUpdateAccess: user.commentUpdateAccess,
         caseCategoryUpdateAccess: user.caseCategoryUpdateAccess,
+        changeDoctorPasswordAccess: user.changeDoctorPasswordAccess,
       }
     });
   } catch (error) {

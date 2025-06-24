@@ -164,10 +164,11 @@ export default function OtherAdminsPage() {
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">S.N.</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Name</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Email</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">User Delete Access</TableCell>
+                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Patient Delete Access</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Event Update Access</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Comment Update Access</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Case Category Update Access</TableCell>
+                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Change Doctor Password Access</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Actions</TableCell>
                 </TableRow>
               </TableHeader>
@@ -219,6 +220,17 @@ export default function OtherAdminsPage() {
                         value={admin.caseCategoryUpdateAccess ? "Yes" : "No"}
                         disabled={!isSuperAdmin || updating[(admin._id || admin.id) + "caseCategoryUpdateAccess"]}
                         onChange={e => handleAccessChange(admin._id || admin.id, "caseCategoryUpdateAccess", e.target.value)}
+                        className="rounded border px-2 py-1 bg-white dark:bg-gray-800"
+                      >
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    </TableCell>
+                    <TableCell className="p-2 border text-center">
+                      <select
+                        value={admin.changeDoctorPasswordAccess ? "Yes" : "No"}
+                        disabled={!isSuperAdmin || updating[(admin._id || admin.id) + "changeDoctorPasswordAccess"]}
+                        onChange={e => handleAccessChange(admin._id || admin.id, "changeDoctorPasswordAccess", e.target.value)}
                         className="rounded border px-2 py-1 bg-white dark:bg-gray-800"
                       >
                         <option value="Yes">Yes</option>
