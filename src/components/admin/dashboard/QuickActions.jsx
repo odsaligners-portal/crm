@@ -41,7 +41,7 @@ const QuickActions = () => {
             className={`flex flex-col items-center justify-center p-4 text-white rounded-lg transition-transform transform hover:scale-105 ${action.color}`}
           >
             {action.icon}
-            <span className="mt-2 text-sm font-semibold">{action.label}</span>
+            <span className="mt-2 text-sm font-semibold text-center">{action.label}</span>
           </Link>
         ))}
       </div>

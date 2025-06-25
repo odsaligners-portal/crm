@@ -5,7 +5,6 @@ import QuickActions from '@/components/admin/dashboard/QuickActions';
 import RecentActivity from '@/components/admin/dashboard/RecentActivity';
 import RecentPatients from '@/components/admin/dashboard/RecentPatients';
 import UserMap from '@/components/admin/dashboard/UserMap';
-import Loader from '@/components/common/Loader';
 import { useEffect, useMemo, useState } from 'react';
 import { MdLocalHospital, MdPeople, MdPersonAdd } from 'react-icons/md';
 import { useSelector } from 'react-redux';

@@ -60,6 +60,11 @@ const navItems = [
     path: "/admin/change-doctor-password",
   },
   {
+    icon: <MdPerson />,
+    name: "User Profile",
+    path: "/admin/profile",
+  },
+  {
     icon: <MdMenuBook />,
     name: "Educational Material",
     path: "/admin/educational-material",
@@ -68,11 +73,6 @@ const navItems = [
     icon: <MdVideoLibrary />,
     name: "Tutorials",
     path: "/admin/tutorials",
-  },
-  {
-    icon: <MdPerson />,
-    name: "User Profile",
-    path: "/admin/profile",
   },
   {
     icon: <MdDescription />,

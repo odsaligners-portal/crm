@@ -6,7 +6,7 @@ import Select from "react-select";
 import { Country, State } from "country-state-city";
 import { useDropzone } from "react-dropzone";
 import { storage } from "@/utils/firebase";
-import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
+import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { toast } from "react-toastify";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { useSelector } from "react-redux";
@@ -87,6 +87,22 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
       }
     );
   };
+
+  const handleRemovePhoto = async () => {
+    if (photoFileKey) {
+      try {
+        const imageRef = ref(storage, photoFileKey);
+        await deleteObject(imageRef);
+        toast.success('Profile image deleted from storage.');
+      } catch (err) {
+        toast.error('Failed to delete image from storage.');
+      }
+    }
+    setPhotoUrl('');
+    setPhotoFileKey('');
+    setPhotoUploadedAt(null);
+  };
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] }, multiple: false });
 
   const handleSubmit = async (e) => {
@@ -134,7 +150,23 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
           <div {...getRootProps()} className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-4 cursor-pointer transition ${isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white dark:bg-gray-800'}`}>
             <input {...getInputProps()} />
             {photoUrl ? (
-              <img src={photoUrl} alt="Profile Preview" className="w-24 h-24 rounded-full object-cover mb-2" />
+              <>
+                <div className="relative mb-2">
+                  <img src={photoUrl} alt="Profile Preview" className="w-24 h-24 rounded-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    className="absolute top-0 right-0 bg-white bg-opacity-80 rounded-full p-1 shadow hover:bg-red-100"
+                    style={{ transform: 'translate(40%, -40%)' }}
+                    disabled={uploading || isSubmitting}
+                    aria-label="Remove profile image"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </>
             ) : (
               <span className="text-gray-500 dark:text-gray-400">Drop an image here, or click to select</span>
             )}
