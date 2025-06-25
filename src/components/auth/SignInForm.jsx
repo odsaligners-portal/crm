@@ -156,12 +156,6 @@ export default function SignInForm() {
                     Remember me
                   </p>
                 </div>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
-                >
-                  Forgot Password?
-                </Link>
               </div>
               {/* <!-- Button --> */}
               <div>
