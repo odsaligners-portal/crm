@@ -4,6 +4,7 @@ import Patient from '@/app/api/models/Patient';
 import PatientComment from '@/app/api/models/PatientComment';
 import { verifyAuth } from '@/app/api/middleware/authMiddleware';
 import { admin } from '@/app/api/middleware/authMiddleware';
+import Notification from '@/app/api/models/Notification';
 
 export const GET = async (req) => {
   try {
@@ -74,10 +75,12 @@ export async function DELETE(request) {
       { 'comments._id': id },
       { $pull: { comments: { _id: id } } }
     );
+    // Also delete notifications related to this comment
+    await Notification.deleteMany({ commentId: id });
     if (result.modifiedCount === 0) {
       return NextResponse.json({ success: false, message: 'Comment not found' }, { status: 404 });
     }
-    return NextResponse.json({ success: true, message: 'Comment deleted successfully' });
+    return NextResponse.json({ success: true, message: 'Comment and related notifications deleted successfully' });
   } catch (error) {
     return NextResponse.json({ success: false, message: 'Failed to delete comment' }, { status: 500 });
   }

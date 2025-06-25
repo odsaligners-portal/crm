@@ -1,13 +1,13 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import MetricCard from '@/components/admin/dashboard/MetricCard';
 import { MdFolderShared, MdHourglassEmpty, MdNotifications } from 'react-icons/md';
-import Loader from '@/components/common/Loader';
 import UpcomingEvents from '@/components/doctor/dashboard/UpcomingEvents';
 import DoctorQuickLinks from '@/components/doctor/dashboard/QuickLinks';
 import AtAGlancePatients from '@/components/doctor/dashboard/AtAGlancePatients';
+import { setLoading } from '@/store/features/uiSlice';
 
 export default function DoctorDashboard() {
   const { token } = useSelector((state) => state.auth);
@@ -15,10 +15,12 @@ export default function DoctorDashboard() {
   const [stats, setStats] = useState(null);
   const [events, setEvents] = useState([]);
   const [atAGlanceData, setAtAGlanceData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLocalLoading] = useState(true);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
+      dispatch(setLoading(true));
       try {
         const [statsRes, eventsRes, atAGlanceRes] = await Promise.all([
           fetch('/api/doctor/dashboard/stats', { headers: { Authorization: `Bearer ${token}` } }),
@@ -41,14 +43,15 @@ export default function DoctorDashboard() {
       } catch (error) {
         toast.error(error.message || 'Failed to fetch dashboard data.');
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
+        setLocalLoading(false);
       }
     };
 
     if (token) {
       fetchData();
     }
-  }, [token]);
+  }, [token, dispatch]);
 
   if (loading) {
     return (
