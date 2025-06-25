@@ -1,15 +1,13 @@
 "use client";
-export const dynamic = "force-dynamic";
 import React, { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import MetricCard from '@/components/admin/dashboard/MetricCard';
 import { MdFolderShared, MdHourglassEmpty, MdNotifications } from 'react-icons/md';
+import Loader from '@/components/common/Loader';
 import UpcomingEvents from '@/components/doctor/dashboard/UpcomingEvents';
 import DoctorQuickLinks from '@/components/doctor/dashboard/QuickLinks';
 import AtAGlancePatients from '@/components/doctor/dashboard/AtAGlancePatients';
-import { fetchWithError } from '@/utils/apiErrorHandler';
-import { setLoading } from '@/store/features/uiSlice';
 
 export default function DoctorDashboard() {
   const { token } = useSelector((state) => state.auth);
@@ -17,29 +15,33 @@ export default function DoctorDashboard() {
   const [stats, setStats] = useState(null);
   const [events, setEvents] = useState([]);
   const [atAGlanceData, setAtAGlanceData] = useState([]);
-  const dispatch = useDispatch();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      dispatch(setLoading(true));
       try {
-        const headers = { Authorization: `Bearer ${token}` };
-        
-        const statsResult = await fetchWithError('/api/doctor/dashboard/stats', { headers });
-        if (statsResult) setStats(statsResult.data);
+        const [statsRes, eventsRes, atAGlanceRes] = await Promise.all([
+          fetch('/api/doctor/dashboard/stats', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/events', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/doctor/dashboard/at-a-glance', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
 
-        const eventsResult = await fetchWithError('/api/events', { headers });
-        if (eventsResult) setEvents(eventsResult);
-        
-        const atAGlanceResult = await fetchWithError('/api/doctor/dashboard/at-a-glance', { headers });
-        if (atAGlanceResult) setAtAGlanceData(atAGlanceResult.data);
+        const statsResult = await statsRes.json();
+        if (statsRes.ok) setStats(statsResult.data);
+        else toast.error(statsResult.message || 'Failed to fetch stats.');
+
+        const eventsResult = await eventsRes.json();
+        if (eventsRes.ok) setEvents(eventsResult);
+        else toast.error(eventsResult.message || 'Failed to fetch events.');
+
+        const atAGlanceResult = await atAGlanceRes.json();
+        if (atAGlanceRes.ok) setAtAGlanceData(atAGlanceResult.data);
+        else toast.error(atAGlanceResult.message || 'Failed to fetch at-a-glance data.');
 
       } catch (error) {
-        // fetchWithError already handles toasting the error.
-        // You can add additional component-specific error logic here if needed.
-        console.error("Failed to fetch all dashboard data:", error);
+        toast.error(error.message || 'Failed to fetch dashboard data.');
       } finally {
-        dispatch(setLoading(false));
+        setLoading(false);
       }
     };
 
@@ -47,6 +49,15 @@ export default function DoctorDashboard() {
       fetchData();
     }
   }, [token]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
+        <span className="text-lg text-gray-700 dark:text-gray-200 font-semibold">Loading dashboard...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

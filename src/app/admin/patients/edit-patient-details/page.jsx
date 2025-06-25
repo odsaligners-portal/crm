@@ -137,6 +137,14 @@ export default function EditPatientDetails() {
         setForm((prev) => ({ ...prev, caseCategory: value, selectedPrice: "" }));
         return;
       }
+      // Ensure selectedPrice is always a string
+      if (name === "selectedPrice") {
+        setForm((prev) => ({
+          ...prev,
+          selectedPrice: typeof value === "string" ? value : (value?.value || ""),
+        }));
+        return;
+      }
       setForm((prev) => ({
         ...prev,
         [name]: type === "checkbox" ? checked : value,
@@ -469,7 +477,7 @@ export default function EditPatientDetails() {
               <Label>Chief Complaint</Label>
               <TextArea name="chiefComplaint" value={form.chiefComplaint || ""} onChange={handleChange} />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
               <div>
                 <Label>Case Type</Label>
                 <div className="flex gap-6 mt-2">
@@ -519,19 +527,32 @@ export default function EditPatientDetails() {
               </div>
               <div>
                 <Label>Case Category</Label>
-                <select
+                <ReactSelect
                   name="caseCategory"
-                  value={form.caseCategory || ""}
-                  onChange={handleChange}
-                >
-                  <option value="">Select Case Category</option>
-                  {caseCategories.map((cat) => (
-                    <option key={cat.category} value={cat.category}>
-                      {cat.category}
-                    </option>
-                  ))}
-                </select>
+                  options={caseCategories.map(cat => ({ label: cat.category, value: cat.category }))}
+                  value={caseCategories.map(cat => ({ label: cat.category, value: cat.category })).find(opt => opt.value === form.caseCategory) || null}
+                  onChange={opt => handleChange({ target: { name: "caseCategory", value: opt?.value } })}
+                />
               </div>
+              {/* Plans/Packages Select */}
+              {form.caseCategory && (
+                <div>
+                  <Label>Package/Plan</Label>
+                  <ReactSelect
+                    name="selectedPrice"
+                    options={
+                      (caseCategories.find(cat => cat.category === form.caseCategory)?.plans || []).map(plan => ({ label: plan.label, value: plan.value }))
+                    }
+                    value={
+                      (caseCategories.find(cat => cat.category === form.caseCategory)?.plans || [])
+                        .map(plan => ({ label: plan.label, value: plan.value }))
+                        .find(opt => opt.value === form.selectedPrice) || null
+                    }
+                    onChange={opt => handleChange({ target: { name: "selectedPrice", value: opt?.value } })}
+                    isClearable
+                  />
+                </div>
+              )}
             </div>
             <div className="mt-6">
               <Label>Case Category Comments</Label>

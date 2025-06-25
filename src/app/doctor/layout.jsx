@@ -6,6 +6,7 @@ import AppSidebar from "@/layout/doctor/AppSidebar";
 import Backdrop from "@/layout/doctor/Backdrop";
 import { useAppSelector } from '@/store/store';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import React from "react";
 
 export default function DoctorLayout({
@@ -14,9 +15,10 @@ export default function DoctorLayout({
   const { isExpanded, isHovered, isMobileOpen } = useSidebar();
   const { user, role } = useAppSelector(state => state.auth);
   const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
   // Check if user is authenticated and has doctor role
-  React.useEffect(() => {
+  useEffect(() => {
     if (!user || !role) {
       router.push('/signin');
       return;
@@ -32,7 +34,23 @@ export default function DoctorLayout({
       }
       return;
     }
+
+    // If user is authorized, stop loading
+    setIsLoading(false);
   }, [user, role, router]);
+
+  // Show loading spinner while checking authentication or redirecting
+  if (isLoading || !user || role !== 'doctor') {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
+          <div className="text-lg font-medium text-gray-700 dark:text-gray-300">
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Dynamic class for main content margin based on sidebar state
   const mainContentMargin = isMobileOpen
