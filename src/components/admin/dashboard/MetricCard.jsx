@@ -12,7 +12,7 @@ const MetricCard = ({ title, value, icon, colorClass }) => {
           <h3 className="text-3xl font-extrabold flex items-end gap-2">
             <span className="inline-block animate-countup-pop">
               <CountUp
-                end={typeof value === 'number' ? value : parseFloat(value) || 0}
+                end={typeof value === 'number' ? value : value || 0}
                 duration={1.4}
                 separator="," 
                 decimals={value && value.toString().includes('.') ? 2 : 0}
