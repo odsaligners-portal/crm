@@ -4,9 +4,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { app } from "@/utils/firebase";
 import { useDropzone } from "react-dropzone";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
+import { setLoading } from "@/store/features/uiSlice";
+import { fetchWithError } from "@/utils/apiErrorHandler";
 
 import DatePicker from "@/components/form/date-picker";
 import InputField from "@/components/form/input/InputField";
@@ -18,12 +20,11 @@ const EditPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const eventId = searchParams.get("id");
+  const dispatch = useDispatch();
 
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [eventDate, setEventDate] = useState(new Date());
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [hasEventUpdateAccess, setHasEventUpdateAccess] = useState(null);
 
   // State for the single file upload
@@ -35,14 +36,12 @@ const EditPage = () => {
 
   useEffect(() => {
     const fetchEvent = async () => {
-      if (!eventId) return;
-      setLoading(true);
+      if (!eventId || !token) return;
+      dispatch(setLoading(true));
       try {
-        const response = await fetch(`/api/events?id=${eventId}`, {
+        const event = await fetchWithError(`/api/events?id=${eventId}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!response.ok) throw new Error("Failed to fetch event");
-        const event = await response.json();
         setName(event.name || "");
         setDescription(event.description || "");
         setEventDate(event.eventDate ? new Date(event.eventDate) : new Date());
@@ -51,31 +50,35 @@ const EditPage = () => {
         setOriginalFileKey(event.image?.fileKey || null);
         setFileType(event.image?.fileType || null);
       } catch (error) {
-        toast.error(error.message || "Failed to load event data");
+        // fetchWithError will handle toast
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     };
     fetchEvent();
     // eslint-disable-next-line
-  }, [eventId]);
+  }, [eventId, token, dispatch]);
 
   useEffect(() => {
     const fetchAccess = async () => {
-      if (!token) return setHasEventUpdateAccess(false);
+      if (!token) {
+        setHasEventUpdateAccess(false);
+        return;
+      }
+      dispatch(setLoading(true));
       try {
-        const res = await fetch('/api/user/profile', {
+        const data = await fetchWithError('/api/user/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) throw new Error('Failed to fetch user profile');
-        const data = await res.json();
         setHasEventUpdateAccess(!!data.user?.eventUpdateAccess);
       } catch (err) {
         setHasEventUpdateAccess(false);
+      } finally {
+        dispatch(setLoading(false));
       }
     };
     fetchAccess();
-  }, [token]);
+  }, [token, dispatch]);
 
   const handleFileUpload = (file) => {
     if (!file) return;
@@ -95,12 +98,14 @@ const EditPage = () => {
     const storagePath = `events/${uniqueFileName}`;
     const storageRef = ref(getStorage(app), storagePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
+    dispatch(setLoading(true));
     uploadTask.on(
       "state_changed",
       (snapshot) => setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
       (error) => {
         toast.error(`Upload failed: ${error.message}`);
         setProgress(0);
+        dispatch(setLoading(false));
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
@@ -109,6 +114,7 @@ const EditPage = () => {
           setFileType(type);
           toast.success("File uploaded successfully");
           setProgress(100);
+          dispatch(setLoading(false));
         });
       }
     );
@@ -117,6 +123,7 @@ const EditPage = () => {
   const handleDeleteFile = async () => {
     if (!fileKey) return;
     const fileRef = ref(getStorage(app), fileKey);
+    dispatch(setLoading(true));
     try {
       await deleteObject(fileRef);
       setImageUrl(null);
@@ -126,6 +133,8 @@ const EditPage = () => {
       toast.success("Image deleted successfully");
     } catch (error) {
       toast.error(`Failed to delete image: ${error.message}`);
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
@@ -135,9 +144,9 @@ const EditPage = () => {
       toast.error("Please fill all fields and upload an image or video.");
       return;
     }
-    setIsSubmitting(true);
+    dispatch(setLoading(true));
     try {
-      const response = await fetch(`/api/admin/events?id=${eventId}`, {
+      await fetchWithError(`/api/admin/events?id=${eventId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -150,17 +159,29 @@ const EditPage = () => {
           image: { fileUrl: imageUrl, fileKey: fileKey, fileType: fileType },
         }),
       });
-      if (!response.ok) {
-        // If server returns error, delete the uploaded image if it was new
-        if (fileKey && fileKey !== originalFileKey) await handleDeleteFile();
-        throw new Error((await response.json()).message || "Failed to update event");
+
+      // If the uploaded file was new, try to delete the old one
+      if (originalFileKey && fileKey !== originalFileKey) {
+        try {
+          const oldFileRef = ref(getStorage(app), originalFileKey);
+          await deleteObject(oldFileRef);
+        } catch (error) {
+          // Non-critical error, just log it
+          console.warn("Failed to delete old event image:", error);
+        }
       }
+
       toast.success("Event updated successfully!");
       router.push("/admin/events");
     } catch (error) {
-      toast.error(error.message || "An error occurred.");
+      // If server returns error, delete the uploaded image if it was new
+      if (fileKey && fileKey !== originalFileKey) {
+        const newFileRef = ref(getStorage(app), fileKey);
+        await deleteObject(newFileRef);
+      }
+      // fetchWithError will handle toast
     } finally {
-      setIsSubmitting(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -209,14 +230,6 @@ const EditPage = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
-        <span className="text-lg text-gray-600 dark:text-gray-300">Loading event...</span>
-      </div>
-    );
-  }
-
   if (hasEventUpdateAccess === false) {
     return (
       <div className="flex flex-col justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
@@ -259,8 +272,8 @@ const EditPage = () => {
         </div>
         <UploadComponent />
         <div className="flex justify-end pt-4 border-t">
-          <Button type="submit" disabled={isSubmitting || (progress > 0 && progress < 100)}>
-            {isSubmitting ? "Saving..." : "Save Changes"}
+          <Button type="submit" disabled={(progress > 0 && progress < 100)}>
+            Save Changes
           </Button>
         </div>
       </form>

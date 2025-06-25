@@ -7,13 +7,13 @@ import useDebounce from '@/hooks/useDebounce';
 import { useRouter } from "next/navigation";
 import { MdLockOutline } from 'react-icons/md';
 import { FaEye, FaEyeSlash } from 'react-icons/fa';
+import { useDispatch } from "react-redux";
+import { fetchWithError } from "@/utils/apiErrorHandler";
+import { setLoading } from "@/store/features/uiSlice";
 
 export default function ChangeDoctorPasswordPage() {
   const [doctors, setDoctors] = useState([]);
   const [admins, setAdmins] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isSearching, setIsSearching] = useState(false);
-  const [updating, setUpdating] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [passwords, setPasswords] = useState({});
   const [adminPasswords, setAdminPasswords] = useState({});
@@ -21,6 +21,7 @@ export default function ChangeDoctorPasswordPage() {
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const { token } = useSelector((state) => state.auth) || {};
   const router = useRouter();
+  const dispatch = useDispatch();
   const [hasAccess, setHasAccess] = useState(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
@@ -36,48 +37,43 @@ export default function ChangeDoctorPasswordPage() {
 
   useEffect(() => {
     const fetchAccess = async () => {
+      dispatch(setLoading(true));
       try {
-        const res = await fetch('/api/user/profile', {
+        const data = await fetchWithError('/api/user/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const data = await res.json();
-        if (!res.ok) {
-          throw new Error(data.message || 'Failed to fetch access rights');
-        }
         setHasAccess(data.user.changeDoctorPasswordAccess);
         const superAdminId = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID;
         if (data.user.id === superAdminId) {
           setIsSuperAdmin(true);
         }
       } catch (err) {
-        toast.error(err.message || "Could not verify access rights.");
         setHasAccess(false);
+      } finally {
+        dispatch(setLoading(false));
       }
     };
 
     if (token) {
       fetchAccess();
     } else if (token === null) {
+      dispatch(setLoading(false));
       setHasAccess(false);
     }
-  }, [token]);
+  }, [token, dispatch]);
 
   useEffect(() => {
     async function fetchUsers() {
-      if (!loading) {
-        setIsSearching(true);
-      }
+      dispatch(setLoading(true));
       try {
         // Fetch doctors
         const doctorUrl = new URL('/api/user/profile?role=doctor', window.location.origin);
         if (debouncedSearchTerm) {
           doctorUrl.searchParams.append('search', debouncedSearchTerm);
         }
-        const doctorRes = await fetch(doctorUrl, {
+        const doctorData = await fetchWithError(doctorUrl, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const doctorData = await doctorRes.json();
-        if (!doctorRes.ok) throw new Error(doctorData.message || "Failed to fetch doctors");
         setDoctors(doctorData.doctors || []);
 
         // Fetch other admins if super admin
@@ -86,26 +82,22 @@ export default function ChangeDoctorPasswordPage() {
           if (debouncedSearchTerm) {
             adminUrl.searchParams.append('search', debouncedSearchTerm);
           }
-          const adminRes = await fetch(adminUrl, {
+          const adminData = await fetchWithError(adminUrl, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          const adminData = await adminRes.json();
-          if (!adminRes.ok) throw new Error(adminData.message || "Failed to fetch admins");
           setAdmins(adminData.admins || []);
         }
       } catch (err) {
-        toast.error(err.message || "Failed to fetch users");
       } finally {
-        setLoading(false);
-        setIsSearching(false);
+        dispatch(setLoading(false));
       }
     }
     if (token && hasAccess) {
       fetchUsers();
     } else if (hasAccess === false) {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
-  }, [token, debouncedSearchTerm, hasAccess, loading, isSuperAdmin]);
+  }, [token, debouncedSearchTerm, hasAccess, isSuperAdmin, dispatch]);
 
   const handlePasswordChange = (userId, field, value, userType = 'doctor') => {
     const setPasswordsState = userType === 'admin' ? setAdminPasswords : setPasswords;
@@ -127,11 +119,9 @@ export default function ChangeDoctorPasswordPage() {
       return toast.error("Passwords do not match.");
     }
 
-    setUpdating((prev) => ({ ...prev, [userId]: true }));
-    const toastId = toast.loading("Updating password...");
-
+    dispatch(setLoading(true));
     try {
-      const res = await fetch("/api/admin/users/change-password", {
+      await fetchWithError("/api/admin/users/change-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -140,22 +130,16 @@ export default function ChangeDoctorPasswordPage() {
         body: JSON.stringify({ userId, password }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to update password");
-
-      toast.dismiss(toastId);
       toast.success("Password updated successfully");
       const setPasswordsState = userType === 'admin' ? setAdminPasswords : setPasswords;
       setPasswordsState(prev => ({ ...prev, [userId]: { password: '', confirmPassword: '' } }));
     } catch (err) {
-      toast.dismiss(toastId);
-      toast.error(err.message || "Failed to update password");
     } finally {
-      setUpdating((prev) => ({ ...prev, [userId]: false }));
+      dispatch(setLoading(false));
     }
   };
 
-  if (loading || hasAccess === null) return (
+  if (hasAccess === null) return (
     <div className="p-5 lg:p-6 flex items-center justify-center h-64">
       <div className="w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full animate-spin border-t-brand-500"></div>
     </div>
@@ -231,7 +215,6 @@ export default function ChangeDoctorPasswordPage() {
                         value={adminPasswords[admin._id]?.password || ''}
                         onChange={(e) => handlePasswordChange(admin._id, 'password', e.target.value, 'admin')}
                         className="w-full rounded border px-2 py-1 bg-white dark:bg-gray-800 text-xs pr-8"
-                        disabled={updating[admin._id]}
                       />
                       <button
                         type="button"
@@ -247,7 +230,6 @@ export default function ChangeDoctorPasswordPage() {
                         value={adminPasswords[admin._id]?.confirmPassword || ''}
                         onChange={(e) => handlePasswordChange(admin._id, 'confirmPassword', e.target.value, 'admin')}
                         className="w-full rounded border px-2 py-1 bg-white dark:bg-gray-800 text-xs pr-8"
-                        disabled={updating[admin._id]}
                       />
                       <button
                         type="button"
@@ -260,10 +242,9 @@ export default function ChangeDoctorPasswordPage() {
                     <TableCell className="py-1 px-2 text-center">
                       <button
                         onClick={() => handleSubmit(admin._id, 'admin')}
-                        disabled={updating[admin._id]}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded disabled:bg-gray-400 text-xs"
+                        className="bg-blue-600 text-white px-3 py-1 text-xs rounded-md hover:bg-blue-700 transition-colors"
                       >
-                        {updating[admin._id] ? 'Updating...' : 'Submit'}
+                        Update
                       </button>
                     </TableCell>
                   </TableRow>
@@ -299,11 +280,6 @@ export default function ChangeDoctorPasswordPage() {
       </div>
       <div className="h-2 w-full bg-gradient-to-r from-blue-200 via-white to-blue-100 dark:from-blue-900 dark:via-gray-900 dark:to-blue-800 rounded-full mb-8 opacity-60" />
       <div className="relative rounded-xl border border-transparent bg-white/90 dark:bg-gray-900/80 shadow-xl mx-auto w-full backdrop-blur-md overflow-x-auto">
-        {isSearching && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/50 dark:bg-gray-900/50 rounded-xl">
-            <div className="w-12 h-12 border-4 border-t-4 border-gray-200 rounded-full animate-spin border-t-brand-500"></div>
-          </div>
-        )}
         <Table className="min-w-full text-xs font-sans mx-auto relative z-10">
           <TableHeader>
             <TableRow className="sticky top-0 z-20 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90 shadow-lg rounded-t-xl border-b-2 border-blue-200 dark:border-blue-900 backdrop-blur-sm">
@@ -331,7 +307,6 @@ export default function ChangeDoctorPasswordPage() {
                     value={passwords[doctor._id]?.password || ''}
                     onChange={(e) => handlePasswordChange(doctor._id, 'password', e.target.value)}
                     className="w-full rounded border px-2 py-1 bg-white dark:bg-gray-800 text-xs pr-8"
-                    disabled={updating[doctor._id]}
                   />
                   <button
                     type="button"
@@ -347,7 +322,6 @@ export default function ChangeDoctorPasswordPage() {
                     value={passwords[doctor._id]?.confirmPassword || ''}
                     onChange={(e) => handlePasswordChange(doctor._id, 'confirmPassword', e.target.value)}
                     className="w-full rounded border px-2 py-1 bg-white dark:bg-gray-800 text-xs pr-8"
-                    disabled={updating[doctor._id]}
                   />
                   <button
                     type="button"
@@ -360,10 +334,9 @@ export default function ChangeDoctorPasswordPage() {
                 <TableCell className="py-1 px-2 text-center">
                   <button
                     onClick={() => handleSubmit(doctor._id)}
-                    disabled={updating[doctor._id]}
-                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded disabled:bg-gray-400 text-xs"
+                    className="bg-blue-600 text-white px-3 py-1 text-xs rounded-md hover:bg-blue-700 transition-colors"
                   >
-                    {updating[doctor._id] ? 'Updating...' : 'Submit'}
+                    Update
                   </button>
                 </TableCell>
               </TableRow>

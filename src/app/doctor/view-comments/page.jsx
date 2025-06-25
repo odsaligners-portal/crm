@@ -1,36 +1,29 @@
 "use client";
-import AvatarText from "@/components/ui/avatar/AvatarText";
-import Button from "@/components/ui/button/Button";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { setLoading } from '@/store/features/uiSlice';
+import { fetchWithError } from '@/utils/apiErrorHandler';
 
 export default function ViewAllComments() {
   const { token } = useSelector((state) => state.auth);
   const [comments, setComments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useDispatch();
 
   const fetchPatientComments = async () => {
-    setIsLoading(true);
+    dispatch(setLoading(true));
     try {
-      const response = await fetch('/api/doctor/comments', {
+      const data = await fetchWithError('/api/doctor/comments', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch comments");
-      }
-
-      const data = await response.json();
       setComments(data.comments || []);
     } catch (error) {
-      toast.error(error.message || "Failed to fetch data");
+      // fetchWithError already toasts
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -50,16 +43,6 @@ export default function ViewAllComments() {
       minute: '2-digit',
     });
   };
-
-  if (isLoading) {
-    return (
-      <div className="p-5 lg:p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading All Comments...</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="p-5 lg:p-10 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
@@ -111,9 +94,9 @@ export default function ViewAllComments() {
         </Table>
       </div>
 
-      {comments.length === 0 && !isLoading && (
+      {comments.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16">
-          <svg width="120" height="120" fill="none" className="mb-6 opacity-60" viewBox="0 0 120 120"><path d="M60 6.5c-29.7 0-53.5 24.2-53.5 54s23.8 54 53.5 54 53.5-24.2 53.5-54-23.8-54-53.5-54zm0 100c-25.3 0-46-20.7-46-46s20.7-46 46-46 46 20.7 46 46-20.7 46-46 46z" fill="#e0e7ff"/><path d="M72.5 45.5h-25c-1.66 0-3 1.34-3 3s1.34 3 3 3h25c1.66 0 3-1.34 3-3s-1.34-3-3-3zM72.5 60.5h-25c-1.66 0-3 1.34-3 3s1.34 3 3 3h25c1.66 0 3-1.34 3-3s-1.34-3-3-3zM72.5 75.5h-25c-1.66 0-3 1.34-3 3s1.34 3 3 3h25c1.66 0 3-1.34 3-3s-1.34-3-3-3z" fill="#a5b4fc"/><text x="50%" y="90%" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#4338ca" className="font-semibold">No comments found</text></svg>
+          <svg width="120" height="120" fill="none" className="mb-6 opacity-60" viewBox="0 0 120 120"><path d="M60 6.5c-29.7 0-53.5 24.2-53.5 54s23.8 54 53.5 54 53.5-24.2 53.5-54-23.8-54-53.5-54zm0 100c-25.3 0-46-20.7-46-46s20.7-46 46-46 46 20.7 46 46-20.7 46-46 46z" fill="#e0e7ff"/><path d="M72.5 45.5h-25c-1.66 0-3 1.34-3 3s1.34 3 3 3h25c1.66 0 3-1.34 3-3s-1.34-3-3-3zM72.5 60.5h-25c-1.66 0-3 1.34-3 3s1.34 3 3 3h25c1.66 0 3-1.34 3-3s-1.34-3-3-3zM72.5 75.5h-25c-1.66 0-3 1.34-3 3s1.34 3 3 3h25c1.66 0 3-1.34 3-3s-1.34-3-3-3z" fill="#a5b4fc"/><text x="50%" y="90%" dominantBaseline="middle" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="12" fill="#4338ca" className="font-semibold">No comments found</text></svg>
           <div className="text-2xl font-bold text-blue-700 dark:text-blue-200 mb-2">No Comments Found</div>
           <p className="text-gray-500 mb-6">There are no comments associated with your patients yet.</p>
         </div>

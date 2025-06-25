@@ -3,12 +3,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import authReducer from './features/auth/authSlice';
 import patientFormReducer from './features/patientFormSlice';
 import notificationReducer from './features/notificationSlice';
+import uiReducer from './features/uiSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     patientForm: patientFormReducer,
     notification: notificationReducer,
+    ui: uiReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

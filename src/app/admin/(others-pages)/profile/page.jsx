@@ -3,32 +3,21 @@
 import UserAddressCard from "@/components/user-profile/UserAddressCard";
 import UserInfoCard from "@/components/user-profile/UserInfoCard";
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { FaEdit } from "react-icons/fa";
 import Link from "next/link";
+import { setLoading } from "@/store/features/uiSlice";
 
 export default function Profile() {
-  const [userData, setUserData] = useState({
-    id: '',
-    name: '',
-    email: '',
-    mobile: '',
-    gender: '',
-    country: '',
-    state: '',
-    city: '',
-    experience: '',
-    doctorType: '',
-    address: '',
-    profilePicture: { url: '', fileKey: '', uploadedAt: null },
-  });
-  const [isLoading, setIsLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
   const { token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchUserData = async () => {
+      dispatch(setLoading(true));
       try {
         const response = await fetchWithError('/api/user/profile', {
           headers: {
@@ -52,22 +41,19 @@ export default function Profile() {
           });
         }
       } catch (error) {
-        console.error('Failed to fetch user data:', error);
-        toast.error('Failed to load profile data');
+        // fetchWithError handles toast notifications
       } finally {
-        setIsLoading(false);
+        dispatch(setLoading(false));
       }
     };
 
-    fetchUserData();
-  }, [token]);
+    if (token) {
+      fetchUserData();
+    }
+  }, [token, dispatch]);
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-16 h-16 border-4 border-gray-300 border-t-brand-500 rounded-full animate-spin"></div>
-      </div>
-    );
+  if (!userData) {
+    return null; // Render nothing while loading, global loader will be shown
   }
 
   return (

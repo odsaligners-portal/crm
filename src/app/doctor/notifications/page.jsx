@@ -5,29 +5,27 @@ import { Modal } from '@/components/ui/modal';
 import Button from '@/components/ui/button/Button';
 import { XMarkIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/solid';
 import { setNotifications, markAsRead } from '@/store/features/notificationSlice';
+import { fetchWithError } from '@/utils/apiErrorHandler';
+import { setLoading } from '@/store/features/uiSlice';
 
 export default function DoctorNotificationsPage() {
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
   const notifications = useSelector((state) => state.notification.notifications);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [creatorNames, setCreatorNames] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [modalComment, setModalComment] = useState(null);
-  const [modalLoading, setModalLoading] = useState(false);
   const [modalError, setModalError] = useState(null);
 
   useEffect(() => {
     const fetchNotifications = async () => {
-      setLoading(true);
+      dispatch(setLoading(true));
       setError(null);
       try {
-        const res = await fetch("/api/notifications", {
+        const data = await fetchWithError("/api/notifications", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        if (!res.ok) throw new Error("Failed to fetch notifications");
-        const data = await res.json();
         dispatch(setNotifications(data.notifications || []));
         // Fetch creator names for doctor notifications (one by one)
         const doctorIds = Array.from(new Set((data.notifications || [])
@@ -36,15 +34,14 @@ export default function DoctorNotificationsPage() {
         const nameMap = {};
         for (const id of doctorIds) {
           if (!creatorNames[id]) {
-            const userRes = await fetch(`/api/user/profile?id=${id}`, {
-              headers: token ? { Authorization: `Bearer ${token}` } : {},
-            });
-            if (userRes.ok) {
-              const userData = await userRes.json();
+            try {
+              const userData = await fetchWithError(`/api/user/profile?id=${id}`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : {},
+              });
               if (userData.user && userData.user.name) {
                 nameMap[id] = userData.user.name;
               }
-            }
+            } catch (e) {}
           } else {
             nameMap[id] = creatorNames[id];
           }
@@ -53,31 +50,29 @@ export default function DoctorNotificationsPage() {
       } catch (err) {
         setError(err.message || "Failed to fetch notifications");
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     };
     fetchNotifications();
     const interval = setInterval(fetchNotifications, 300000); // 5 minutes
     return () => clearInterval(interval);
-  }, [token]);
+  }, [token, dispatch]);
 
   const handleViewComment = async (patientCommentId, commentId, notificationId) => {
     setModalOpen(true);
-    setModalLoading(true);
     setModalError(null);
     setModalComment(null);
     try {
-      const res = await fetch(`/api/patients/comments?patientCommentId=${patientCommentId}&commentId=${commentId}`, {
+      dispatch(setLoading(true));
+      const data = await fetchWithError(`/api/patients/comments?patientCommentId=${patientCommentId}&commentId=${commentId}`, {
         headers: {
             Authorization: `Bearer ${token}`,
         },
       });
-      if (!res.ok) throw new Error('Failed to fetch comment details');
-      const data = await res.json();
       setModalComment(data.comment);
       // Mark notification as read
       if (notificationId) {
-        await fetch('/api/notifications', {
+        await fetchWithError('/api/notifications', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -90,7 +85,7 @@ export default function DoctorNotificationsPage() {
     } catch (err) {
       setModalError(err.message || 'Failed to fetch comment details');
     } finally {
-      setModalLoading(false);
+      dispatch(setLoading(false));
     }
   };
   function getCreatorLabel(n) {
@@ -102,9 +97,7 @@ export default function DoctorNotificationsPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6">Notifications</h1>
-      {loading ? (
-        <div>Loading...</div>
-      ) : error ? (
+      {error ? (
         <div className="text-red-500">{error}</div>
       ) : notifications.length === 0 ? (
         <div>No notifications found.</div>
@@ -188,9 +181,7 @@ export default function DoctorNotificationsPage() {
           </div>
           {/* Content Body */}
           <div className="p-6 overflow-y-auto flex-grow">
-            {modalLoading ? (
-              <div className="text-center p-8">Loading comments...</div>
-            ) : modalError ? (
+            {modalError ? (
               <div className="text-red-500">{modalError}</div>
             ) : modalComment ? (
               <div className="p-4 mb-4 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 shadow-sm">

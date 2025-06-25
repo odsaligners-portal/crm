@@ -7,7 +7,9 @@ import { GlobeAltIcon, MapIcon, SparklesIcon } from "@heroicons/react/24/solid";
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setLoading } from "@/store/features/uiSlice";
+import { fetchWithError } from "@/utils/apiErrorHandler";
 
 const luxuryBg = `fixed inset-0 z-0 pointer-events-none overflow-hidden flex items-center justify-center bg-white`;
 const glassCard = "relative bg-white/95 backdrop-blur-xl border border-blue-200 rounded-3xl shadow-2xl p-8 mb-12 overflow-hidden";
@@ -36,39 +38,35 @@ export default function ViewPatientDetails() {
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
   const { token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!patientId) {
       setError("No patient ID provided");
-      setLoading(false);
       return;
     }
     const fetchPatient = async () => {
-      setLoading(true);
+      dispatch(setLoading(true));
       try {
-        const response = await fetch(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
+        const result = await fetchWithError(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        if (!response.ok) throw new Error("Failed to fetch patient");
-        const result = await response.json();
         setData(result);
       } catch (e) {
         setError(e.message);
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     };
     fetchPatient();
-  }, [patientId, token]);
+  }, [patientId, token, dispatch]);
 
-  if (loading) return <div className="flex justify-center items-center min-h-[40vh] text-3xl font-bold text-blue-700 animate-pulse">Loading...</div>;
   if (error) return <div className="text-red-500 text-center py-8 text-xl font-semibold">{error}</div>;
-  if (!data) return null;
+  if (!data) return null; // Or a loading skeleton
 
   const { scanFiles = {}, extraction = {}, interproximalReduction = {}, measureOfIPR = {} } = data;
 

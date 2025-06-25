@@ -4,51 +4,47 @@ import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components
 import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import useDebounce from '@/hooks/useDebounce';
+import { fetchWithError } from '@/utils/apiErrorHandler';
+import { useDispatch } from 'react-redux';
+import { setLoading } from '@/store/features/uiSlice';
 
 const STATUS_OPTIONS = ["in-progress", "midway", "completed"];
 
 export default function ManagePatientStatusPage() {
   const [patients, setPatients] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [isSearching, setIsSearching] = useState(false);
   const [error, setError] = useState(null);
-  const [updating, setUpdating] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const { token } = useSelector((state) => state.auth) || {};
+  const dispatch = useDispatch();
 
   useEffect(() => {
     async function fetchPatients() {
-      if (!loading) {
-        setIsSearching(true);
-      }
       setError(null);
       try {
         const url = new URL('/api/doctor/patients/manage-status', window.location.origin);
         if (debouncedSearchTerm) {
           url.searchParams.append('search', debouncedSearchTerm);
         }
-        const res = await fetch(url, {
+        dispatch(setLoading(true));
+        const data = await fetchWithError(url, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.message || "Failed to fetch patients");
         setPatients(data.patients || []);
       } catch (err) {
         setError(err.message || "Failed to fetch patients");
       } finally {
-        setLoading(false);
-        setIsSearching(false);
+        dispatch(setLoading(false));
       }
     }
     if (token) fetchPatients();
-  }, [token, debouncedSearchTerm]);
+  }, [token, debouncedSearchTerm, dispatch]);
   console.log(patients)
   const handleStatusChange = async (patientId, newStatus) => {
-    setUpdating((prev) => ({ ...prev, [patientId]: true }));
     const toastId = toast.loading("Updating status...");
+    dispatch(setLoading(true));
     try {
-      const res = await fetch("/api/doctor/patients/manage-status", {
+      await fetchWithError("/api/doctor/patients/manage-status", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -56,8 +52,6 @@ export default function ManagePatientStatusPage() {
         },
         body: JSON.stringify({ patientId, status: newStatus }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to update status");
       setPatients((prev) =>
         prev.map((p) => (p._id === patientId ? { ...p, progressStatus: newStatus } : p))
       );
@@ -67,15 +61,10 @@ export default function ManagePatientStatusPage() {
       toast.dismiss(toastId);
       toast.error(err.message || "Failed to update status");
     } finally {
-      setUpdating((prev) => ({ ...prev, [patientId]: false }));
+      dispatch(setLoading(false));
     }
   };
 
-  if (loading) return (
-    <div className="p-5 lg:p-6 flex items-center justify-center h-64">
-      <div className="w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full animate-spin border-t-brand-500"></div>
-    </div>
-  );
   if (error) return <div className="text-red-500 p-6">{error}</div>;
 
   return (
@@ -106,11 +95,6 @@ export default function ManagePatientStatusPage() {
       </div>
       <div className="h-2 w-full bg-gradient-to-r from-blue-200 via-white to-blue-100 dark:from-blue-900 dark:via-gray-900 dark:to-blue-800 rounded-full mb-8 opacity-60" />
       <div className="relative rounded-xl border border-transparent bg-white/90 dark:bg-gray-900/80 shadow-xl mx-auto max-w-4xl w-full backdrop-blur-md overflow-x-auto">
-        {isSearching && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-white/50 dark:bg-gray-900/50 rounded-xl">
-            <div className="w-12 h-12 border-4 border-t-4 border-gray-200 rounded-full animate-spin border-t-brand-500"></div>
-          </div>
-        )}
         <Table className="min-w-full text-[10px] font-sans mx-auto relative z-10">
           <TableHeader>
             <TableRow className="sticky top-0 z-20 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90 shadow-lg rounded-t-xl border-b-2 border-blue-200 dark:border-blue-900 backdrop-blur-sm">
@@ -135,7 +119,6 @@ export default function ManagePatientStatusPage() {
                 <TableCell className="p-2 border text-center">
                   <select
                     value={patient.progressStatus || STATUS_OPTIONS[0]}
-                    disabled={updating[patient._id]}
                     onChange={e => handleStatusChange(patient._id, e.target.value)}
                     className="rounded border px-2 py-1 bg-white dark:bg-gray-800"
                   >

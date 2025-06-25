@@ -1,72 +1,64 @@
 'use client';
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { FiCalendar, FiMapPin, FiUser } from 'react-icons/fi';
-import { FaSpinner } from 'react-icons/fa';
-import { toast } from 'react-toastify';
-import { useSelector } from 'react-redux';
-import { PencilIcon, TrashBinIcon } from '@/icons';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
 import { useModal } from '@/hooks/useModal';
+import { PencilIcon, TrashBinIcon } from '@/icons';
+import { setLoading } from '@/store/features/uiSlice';
+import { fetchWithError } from '@/utils/apiErrorHandler';
+import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { FiCalendar, FiUser } from 'react-icons/fi';
 import { MdAdd } from 'react-icons/md';
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
 
 const EventsPage = () => {
     const { token } = useSelector((state) => state.auth);
     const [events, setEvents] = useState([]);
-    const [loading, setLoading] = useState(true);
     const [eventToDelete, setEventToDelete] = useState(null);
     const { isOpen, openModal, closeModal } = useModal();
-    const [modalLoading, setModalLoading] = useState(false);
     const [hasEventUpdateAccess, setHasEventUpdateAccess] = useState(false);
     const router = useRouter();
+    const dispatch = useDispatch();
 
     useEffect(() => {
         const fetchEvents = async () => {
+            dispatch(setLoading(true));
             try {
-                setLoading(true);
-                const response = await fetch('/api/events', { // Use the new admin route
+                const data = await fetchWithError('/api/events', { // Use the new admin route
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setEvents(data);
-                } else if (response.status === 401) {
-                    toast.error("You must be logged in to view events.");
-                } else {
-                    toast.error('Failed to fetch events.');
-                }
+                setEvents(data);
             } catch (error) {
-                toast.error('An error occurred while fetching events.');
-                console.error(error);
+                // fetchWithError will handle toast
             } finally {
-                setLoading(false);
+                dispatch(setLoading(false));
             }
         };
 
         fetchEvents();
-    }, []);
+    }, [dispatch, token]);
 
     useEffect(() => {
         const fetchAccess = async () => {
             if (!token) return;
+            dispatch(setLoading(true));
             try {
-                const res = await fetch('/api/user/profile', {
+                const data = await fetchWithError('/api/user/profile', {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                if (!res.ok) throw new Error('Failed to fetch user profile');
-                const data = await res.json();
                 setHasEventUpdateAccess(!!data.user?.eventUpdateAccess);
             } catch (err) {
                 setHasEventUpdateAccess(false);
+            } finally {
+                dispatch(setLoading(false));
             }
         };
         fetchAccess();
-    }, [token]);
+    }, [token, dispatch]);
 
     // Delete event handler
     const handleDeleteEvent = (eventId) => {
@@ -76,38 +68,24 @@ const EventsPage = () => {
 
     const confirmDelete = async () => {
         if (!eventToDelete) return;
-        setModalLoading(true);
+        dispatch(setLoading(true));
         try {
-            const response = await fetch(`/api/admin/events?id=${eventToDelete}`, {
+            await fetchWithError(`/api/admin/events?id=${eventToDelete}`, {
                 method: 'DELETE',
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
             });
-            if (response.ok) {
-                setEvents((prev) => prev.filter((e) => e._id !== eventToDelete));
-                toast.success('Event deleted successfully.');
-            } else {
-                const data = await response.json();
-                toast.error(data.message || 'Failed to delete event.');
-            }
+            setEvents((prev) => prev.filter((e) => e._id !== eventToDelete));
+            toast.success('Event deleted successfully.');
         } catch (error) {
-            toast.error('An error occurred while deleting the event.');
+            // fetchWithError will handle toast
         } finally {
-            setModalLoading(false);
+            dispatch(setLoading(false));
             setEventToDelete(null);
             closeModal();
         }
     };
-
-    if (loading) {
-        return (
-            <div className="flex flex-col justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
-                <FaSpinner className="animate-spin text-4xl text-indigo-500" />
-                <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">Loading Events...</p>
-            </div>
-        );
-    }
 
     const featuredEvent = events[0];
     const otherEvents = events.slice(1);
@@ -199,14 +177,12 @@ const EventsPage = () => {
             </div>
             <ConfirmationModal
                 isOpen={isOpen}
-                onClose={() => { if (!modalLoading) { setEventToDelete(null); closeModal(); } }}
+                onClose={closeModal}
                 onConfirm={confirmDelete}
                 title="Delete Event"
                 message="Are you sure you want to permanently delete this event? This action cannot be undone and all event data will be lost."
-                confirmButtonText={modalLoading ? 'Deleting...' : 'Delete'}
+                confirmButtonText="Delete"
                 cancelButtonText="Cancel"
-                confirmButtonProps={{ disabled: modalLoading }}
-                cancelButtonProps={{ disabled: modalLoading }}
             />
         </div>
     );

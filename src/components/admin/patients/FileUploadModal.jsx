@@ -4,12 +4,14 @@ import { Modal } from "@/components/ui/modal";
 import { useDropzone } from "react-dropzone";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
+import { useDispatch } from 'react-redux';
+import { setLoading } from '@/store/features/uiSlice';
 
 const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
   const [fileName, setFileName] = useState("");
   const [fileType, setFileType] = useState("image");
   const [file, setFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (isOpen) {
@@ -38,7 +40,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!file || !fileName || !fileType || !patient?._id) return;
-    setUploading(true);
+    dispatch(setLoading(true));
     try {
       // 1. Upload file to Firebase Storage
       const { storage } = await import('@/utils/firebase');
@@ -73,13 +75,13 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
         throw new Error(result.message || 'Failed to upload file');
       }
       // Success
-      setUploading(false);
       toast.success("File Uploaded Successfully")
       onClose();
     } catch (error) {
-      setUploading(false);
       toast.error("Upload failed")
       alert(error.message || 'Upload failed');
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
@@ -148,10 +150,10 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
               </Button>
               <Button
                 type="submit"
-                disabled={uploading || !fileName || !file}
+                disabled={!fileName || !file}
                 className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
               >
-                {uploading ? 'Uploading...' : 'Upload'}
+                Upload
               </Button>
             </div>
           </form>
@@ -163,12 +165,12 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
 
 export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
   const [files, setFiles] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (isOpen && patient?._id) {
-      setLoading(true);
+      dispatch(setLoading(true));
       setError("");
       fetch(`/api/patients/files?patientId=${patient._id}`, {
         headers: { 'Authorization': `Bearer ${token}` },
@@ -176,15 +178,21 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
         .then(res => res.json())
         .then(data => {
           if (data.success) setFiles(data.files);
-          else setError(data.message || "Failed to fetch files");
+          else {
+            setError(data.message || "Failed to fetch files");
+            toast.error(data.message || "Failed to fetch files");
+          }
         })
-        .catch(() => setError("Failed to fetch files"))
-        .finally(() => setLoading(false));
+        .catch(() => {
+          setError("Failed to fetch files");
+          toast.error("Failed to fetch files");
+        })
+        .finally(() => dispatch(setLoading(false)));
     } else {
       setFiles([]);
       setError("");
     }
-  }, [isOpen, patient, token]);
+  }, [isOpen, patient, token, dispatch]);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl w-full p-1" showCloseButton={false}>
@@ -198,9 +206,7 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
               </p>
             )}
           </div>
-          {loading ? (
-            <div className="text-center py-8">Loading...</div>
-          ) : error ? (
+          {error ? (
             <div className="text-center text-red-500 py-8">{error}</div>
           ) : files.length === 0 ? (
             <div className="text-center text-gray-500 py-8">No files uploaded for this patient.</div>

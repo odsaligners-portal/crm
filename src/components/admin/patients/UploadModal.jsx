@@ -5,11 +5,12 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { UserIcon, PencilSquareIcon, PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/solid";
 import { Editor } from '@tinymce/tinymce-react';
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setLoading } from '@/store/features/uiSlice';
 
 const UploadModal = ({ isOpen, onClose, patient }) => {
   const [description, setDescription] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useDispatch();
   const [editorKey, setEditorKey] = useState(0); // Key to force re-render
   const { token } = useSelector((state) => state.auth);
 
@@ -26,8 +27,7 @@ const UploadModal = ({ isOpen, onClose, patient }) => {
       toast.error("Comment cannot be empty.");
       return;
     }
-    setIsSubmitting(true);
-    
+    dispatch(setLoading(true));
     try {
         const response = await fetch(`/api/patients/comments?patientId=${patient._id}`, {
             method: 'POST',
@@ -49,7 +49,7 @@ const UploadModal = ({ isOpen, onClose, patient }) => {
         console.error('Error submitting comment:', error);
         toast.error('An error occurred while submitting the comment.');
     } finally {
-        setIsSubmitting(false);
+        dispatch(setLoading(false));
     }
   };
 
@@ -134,11 +134,11 @@ const UploadModal = ({ isOpen, onClose, patient }) => {
                 </Button>
                 <Button 
                   type="submit" 
-                  disabled={isSubmitting || !description.trim()}
+                  disabled={!description.trim()}
                   className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
                 >
                   <PaperAirplaneIcon className="h-5 w-5" />
-                  {isSubmitting ? 'Submitting...' : 'Submit'}
+                  Submit
                 </Button>
               </div>
             </form>

@@ -5,10 +5,11 @@ import QuickActions from '@/components/admin/dashboard/QuickActions';
 import RecentActivity from '@/components/admin/dashboard/RecentActivity';
 import RecentPatients from '@/components/admin/dashboard/RecentPatients';
 import UserMap from '@/components/admin/dashboard/UserMap';
+import { setLoading } from '@/store/features/uiSlice';
+import { fetchWithError } from '@/utils/apiErrorHandler';
 import { useEffect, useMemo, useState } from 'react';
 import { MdLocalHospital, MdPeople, MdPersonAdd } from 'react-icons/md';
-import { useSelector } from 'react-redux';
-import { toast } from 'react-toastify';
+import { useDispatch, useSelector } from 'react-redux';
 
 export default function AdminDashboard() {
   const { token } = useSelector((state) => state.auth);
@@ -16,45 +17,35 @@ export default function AdminDashboard() {
   const [activities, setActivities] = useState([]);
   const [locations, setLocations] = useState([]);
   const [caseData, setCaseData] = useState({ series: [], labels: [] });
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchData = async () => {
+      dispatch(setLoading(true));
       try {
         const [statsRes, activityRes, locationsRes, caseDataRes] = await Promise.all([
-          fetch('/api/admin/dashboard/stats', { headers: { Authorization: `Bearer ${token}` } }),
-          fetch('/api/admin/dashboard/recent-activity', { headers: { Authorization: `Bearer ${token}` } }),
-          fetch('/api/admin/dashboard/user-locations', { headers: { Authorization: `Bearer ${token}` } }),
-          fetch('/api/admin/dashboard/case-categories-distribution', { headers: { Authorization: `Bearer ${token}` } }),
+          fetchWithError('/api/admin/dashboard/stats', { headers: { Authorization: `Bearer ${token}` } }),
+          fetchWithError('/api/admin/dashboard/recent-activity', { headers: { Authorization: `Bearer ${token}` } }),
+          fetchWithError('/api/admin/dashboard/user-locations', { headers: { Authorization: `Bearer ${token}` } }),
+          fetchWithError('/api/admin/dashboard/case-categories-distribution', { headers: { Authorization: `Bearer ${token}` } }),
         ]);
 
-        const statsResult = await statsRes.json();
-        if (statsRes.ok) setStats(statsResult.data);
-        else toast.error(statsResult.message || 'Failed to fetch stats.');
-
-        const activityResult = await activityRes.json();
-        if (activityRes.ok) setActivities(activityResult.data);
-        else toast.error(activityResult.message || 'Failed to fetch activities.');
-
-        const locationsResult = await locationsRes.json();
-        if (locationsRes.ok) setLocations(locationsResult.data);
-        else toast.error(locationsResult.message || 'Failed to fetch locations.');
-
-        const caseDataResult = await caseDataRes.json();
-        if (caseDataRes.ok) setCaseData(caseDataResult.data);
-        else toast.error(caseDataResult.message || 'Failed to fetch case distribution.');
+        setStats(statsRes.data);
+        setActivities(activityRes.data);
+        setLocations(locationsRes.data);
+        setCaseData(caseDataRes.data);
 
       } catch (error) {
-        toast.error(error.message || 'Failed to fetch dashboard data.');
+        // fetchWithError handles all toasts
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     };
 
     if (token) {
       fetchData();
     }
-  }, [token]);
+  }, [token, dispatch]);
 
   const mapMarkers = useMemo(() => {
     return locations.map(loc => {
@@ -67,15 +58,6 @@ export default function AdminDashboard() {
       };
     });
   }, [locations]);
-
-  if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mb-4"></div>
-        <span className="text-lg text-gray-700 dark:text-gray-200 font-semibold">Loading dashboard...</span>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">

@@ -7,8 +7,10 @@ import { countriesData } from '@/utils/countries';
 import { CalendarIcon, GlobeAltIcon, MapIcon, MapPinIcon, UserIcon } from "@heroicons/react/24/outline";
 import { useRouter, useSearchParams } from "next/navigation";
 import React from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { setLoading } from "@/store/features/uiSlice";
+import { fetchWithError } from "@/utils/apiErrorHandler";
 
 const countries = Object.keys(countriesData);
 
@@ -17,8 +19,7 @@ export default function Step1() {
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
   const { token } = useSelector((state) => state.auth);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isDataLoading, setIsDataLoading] = React.useState(false);
+  const dispatch = useDispatch();
   const [patientDatails, setPatientDatails] = React.useState(null);
   const [formData, setFormData] = React.useState({
     patientName: '',
@@ -38,111 +39,97 @@ export default function Step1() {
     declarationAccepted: false,
   });
   const [doctors, setDoctors] = React.useState([]);
-  const [doctorsLoading, setDoctorsLoading] = React.useState(false);
 
   // Fetch patient data when component mounts and patientId exists
   React.useEffect(() => {
     const fetchPatientData = async () => {
       if (!patientId) return;
       
-      setIsDataLoading(true);
+      dispatch(setLoading(true));
       try {
-        const response = await fetch(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
+        const patientData = await fetchWithError(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        if (response.ok) {
-          const patientData = await response.json();
-          setPatientDatails(patientData);
-          // Update form with fetched data
-          if (patientData.patientName) {
-            setFormData(prev => ({ ...prev, patientName: patientData.patientName }));
-          }
-          if (patientData.age) {
-            setFormData(prev => ({ ...prev, age: patientData.age }));
-          }
-          if (patientData.gender) {
-            setFormData(prev => ({ ...prev, gender: patientData.gender }));
-          }
-          if (patientData.pastMedicalHistory) {
-            setFormData(prev => ({ ...prev, pastMedicalHistory: patientData.pastMedicalHistory }));
-          }
-          if (patientData.pastDentalHistory) {
-            setFormData(prev => ({ ...prev, pastDentalHistory: patientData.pastDentalHistory }));
-          }
-          if (patientData.treatmentFor) {
-            setFormData(prev => ({ ...prev, treatmentFor: patientData.treatmentFor }));
-          }
-          if (patientData.country) {
-            setFormData(prev => ({ ...prev, country: patientData.country }));
-          }
-          if (patientData.state) {
-            setFormData(prev => ({ ...prev, state: patientData.state }));
-          }
-          if (patientData.city) {
-            setFormData(prev => ({ ...prev, city: patientData.city }));
-          }
-          if (patientData.primaryAddress) {
-            setFormData(prev => ({ ...prev, primaryAddress: patientData.primaryAddress }));
-          }
-          if (patientData.shippingAddress) {
-            setFormData(prev => ({ ...prev, shippingAddress: patientData.shippingAddress }));
-          }
-          if (patientData.shippingAddressType) {
-            setFormData(prev => ({ ...prev, shippingAddressType: patientData.shippingAddressType }));
-          }
-          if (patientData.billingAddress) {
-            setFormData(prev => ({ ...prev, billingAddress: patientData.billingAddress }));
-          }
-          if (patientData.privacyAccepted !== undefined) {
-            setFormData(prev => ({ ...prev, privacyAccepted: patientData.privacyAccepted }));
-          }
-          if (patientData.declarationAccepted !== undefined) {
-            setFormData(prev => ({ ...prev, declarationAccepted: patientData.declarationAccepted }));
-          }
-          if (patientData.userId) {
-            setFormData(prev => ({ ...prev, userId: patientData.userId._id ? patientData.userId._id : patientData.userId }));
-          }
-        } else if (response.status === 404) {
-          toast.error('Patient not found or you do not have permission to view this record');
-        } else if (response.status === 401) {
-          toast.error('Unauthorized access. Please log in again.');
+        setPatientDatails(patientData);
+        // Update form with fetched data
+        if (patientData.patientName) {
+          setFormData(prev => ({ ...prev, patientName: patientData.patientName }));
+        }
+        if (patientData.age) {
+          setFormData(prev => ({ ...prev, age: patientData.age }));
+        }
+        if (patientData.gender) {
+          setFormData(prev => ({ ...prev, gender: patientData.gender }));
+        }
+        if (patientData.pastMedicalHistory) {
+          setFormData(prev => ({ ...prev, pastMedicalHistory: patientData.pastMedicalHistory }));
+        }
+        if (patientData.pastDentalHistory) {
+          setFormData(prev => ({ ...prev, pastDentalHistory: patientData.pastDentalHistory }));
+        }
+        if (patientData.treatmentFor) {
+          setFormData(prev => ({ ...prev, treatmentFor: patientData.treatmentFor }));
+        }
+        if (patientData.country) {
+          setFormData(prev => ({ ...prev, country: patientData.country }));
+        }
+        if (patientData.state) {
+          setFormData(prev => ({ ...prev, state: patientData.state }));
+        }
+        if (patientData.city) {
+          setFormData(prev => ({ ...prev, city: patientData.city }));
+        }
+        if (patientData.primaryAddress) {
+          setFormData(prev => ({ ...prev, primaryAddress: patientData.primaryAddress }));
+        }
+        if (patientData.shippingAddress) {
+          setFormData(prev => ({ ...prev, shippingAddress: patientData.shippingAddress }));
+        }
+        if (patientData.shippingAddressType) {
+          setFormData(prev => ({ ...prev, shippingAddressType: patientData.shippingAddressType }));
+        }
+        if (patientData.billingAddress) {
+          setFormData(prev => ({ ...prev, billingAddress: patientData.billingAddress }));
+        }
+        if (patientData.privacyAccepted !== undefined) {
+          setFormData(prev => ({ ...prev, privacyAccepted: patientData.privacyAccepted }));
+        }
+        if (patientData.declarationAccepted !== undefined) {
+          setFormData(prev => ({ ...prev, declarationAccepted: patientData.declarationAccepted }));
+        }
+        if (patientData.userId) {
+          setFormData(prev => ({ ...prev, userId: patientData.userId._id ? patientData.userId._id : patientData.userId }));
         }
       } catch (error) {
-        console.error('Error fetching patient data:', error);
-        toast.error('Failed to load patient data. Please try again.');
+        // fetchWithError handles toast
       } finally {
-        setIsDataLoading(false);
+        dispatch(setLoading(false));
       }
     };
 
     fetchPatientData();
-  }, [patientId, token]);
+  }, [patientId, token, dispatch]);
 
   // Fetch doctors for dropdown
   React.useEffect(() => {
     const fetchDoctors = async () => {
-      setDoctorsLoading(true);
+      dispatch(setLoading(true));
       try {
-        const response = await fetch('/api/user/profile?role=doctor', {
+        const data = await fetchWithError('/api/user/profile?role=doctor', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (response.ok) {
-          const data = await response.json();
-          setDoctors(data.doctors || []);
-        } else {
-          setDoctors([]);
-        }
+        setDoctors(data.doctors || []);
       } catch (error) {
         setDoctors([]);
       } finally {
-        setDoctorsLoading(false);
+        dispatch(setLoading(false));
       }
     };
     fetchDoctors();
-  }, [token]);
+  }, [token, dispatch]);
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
@@ -163,80 +150,59 @@ export default function Step1() {
       toast.error("Please accept both privacy policy and declaration to continue");
       return;
     }
-    setIsLoading(true);
+    dispatch(setLoading(true));
     try {
       let response;
+      const body = {
+        patientName: formData.patientName,
+        age: formData.age,
+        gender: formData.gender,
+        pastMedicalHistory: formData.pastMedicalHistory,
+        pastDentalHistory: formData.pastDentalHistory,
+        treatmentFor: formData.treatmentFor,
+        country: formData.country,
+        state: formData.state,
+        city: formData.city,
+        primaryAddress: formData.primaryAddress,
+        shippingAddress: formData.shippingAddress,
+        shippingAddressType: formData.shippingAddressType,
+        billingAddress: formData.billingAddress,
+        privacyAccepted: formData.privacyAccepted,
+        declarationAccepted: formData.declarationAccepted,
+        userId: formData.userId
+      };
+
       if (patientId) {
-        response = await fetch(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
+        response = await fetchWithError(`/api/admin/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            patientName: formData.patientName,
-            age: formData.age,
-            gender: formData.gender,
-            pastMedicalHistory: formData.pastMedicalHistory,
-            pastDentalHistory: formData.pastDentalHistory,
-            treatmentFor: formData.treatmentFor,
-            country: formData.country,
-            state: formData.state,
-            city: formData.city,
-            primaryAddress: formData.primaryAddress,
-            shippingAddress: formData.shippingAddress,
-            shippingAddressType: formData.shippingAddressType,
-            billingAddress: formData.billingAddress,
-            privacyAccepted: formData.privacyAccepted,
-            declarationAccepted: formData.declarationAccepted,
-            userId: formData.userId
-          }),
+          body: JSON.stringify(body),
         });
       } else {
         // Create new patient
-        response = await fetch("/api/admin/patients", {
+        response = await fetchWithError("/api/admin/patients", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            patientName: formData.patientName,
-            age: formData.age,
-            gender: formData.gender,
-            pastMedicalHistory: formData.pastMedicalHistory,
-            pastDentalHistory: formData.pastDentalHistory,
-            treatmentFor: formData.treatmentFor,
-            country: formData.country,
-            state: formData.state,
-            city: formData.city,
-            primaryAddress: formData.primaryAddress,
-            shippingAddress: formData.shippingAddress,
-            shippingAddressType: formData.shippingAddressType,
-            billingAddress: formData.billingAddress,
-            privacyAccepted: formData.privacyAccepted,
-            declarationAccepted: formData.declarationAccepted,
-            userId: formData.userId
-          }),
+          body: JSON.stringify(body),
         });
       }
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to save patient record");
-      }
-      
-      const data = await response.json();
-      const currentPatientId = patientId || data._id;
+      const currentPatientId = patientId || response._id;
       
       if (!currentPatientId) throw new Error("No patient ID returned from server");
       
       toast.success(patientId ? "Basic details updated successfully" : "Basic details saved successfully");
       router.push(`/admin/patients/create-patient-record/step-2?id=${currentPatientId}`);
     } catch (error) {
-      toast.error(error.message || "Failed to save patient record");
+      // fetchWithError handles toast
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -264,18 +230,6 @@ export default function Step1() {
         <h1 className="text-3xl font-bold text-blue-700 dark:text-white mb-1 tracking-tight">Step 1: Basic Details</h1>
         <p className="text-gray-500 dark:text-gray-300 mb-8 text-sm">Let's start with the patient's basic information. Please fill out all required fields to continue.</p>
         
-        {isDataLoading && (
-          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <div className="flex items-center gap-3">
-              <svg className="animate-spin h-5 w-5 text-blue-500" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span className="text-blue-700 dark:text-blue-300 font-medium">Loading patient data...</span>
-            </div>
-          </div>
-        )}
-        
         <form onSubmit={handleSubmit} className="space-y-8">
           <div className="space-y-6">
             {/* Doctor Dropdown */}
@@ -289,13 +243,9 @@ export default function Step1() {
                 className="w-full border rounded px-3 py-2"
               >
                 <option value="">Select Doctor</option>
-                {doctorsLoading ? (
-                  <option disabled>Loading doctors...</option>
-                ) : (
-                  doctors.map((doc) => (
-                    <option key={doc._id} value={doc._id}>{doc.name}</option>
-                  ))
-                )}
+                {doctors.map((doc) => (
+                  <option key={doc._id} value={doc._id}>{doc.name}</option>
+                ))}
               </select>
             </div>
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
@@ -571,17 +521,12 @@ export default function Step1() {
               </div>
             </div>
           </div>
-          <div className="flex justify-end pt-6">
+          <div className="flex justify-end pt-8">
             <Button
               type="submit"
-              disabled={isLoading}
-              className="px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 flex items-center gap-2 text-base font-semibold"
+              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-lg transition-transform transform hover:scale-105"
             >
-              {isLoading ? (
-                <span className="flex items-center gap-2"><span className="animate-spin">⏳</span> Saving...</span>
-              ) : (
-                <span className="flex items-center gap-2">Next <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L21 12m0 0l-3.75 5.25M21 12H3" /></svg></span>
-              )}
+              Save &amp; Continue
             </Button>
           </div>
         </form>

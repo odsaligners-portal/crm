@@ -21,10 +21,12 @@ import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import ReactSelect from "react-select";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
+import { fetchWithError } from '@/utils/apiErrorHandler';
+import { setLoading } from '@/store/features/uiSlice';
 
 const sectionClass = "mb-8 p-6 rounded-2xl shadow bg-white/80 dark:bg-gray-900/80 border border-blue-100 dark:border-gray-800";
 
@@ -35,14 +37,11 @@ export default function EditPatientDetails() {
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
   const { token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
   const [form, setForm] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [saving, setSaving] = useState(false);
-
   const [caseCategories, setCaseCategories] = useState([]);
-  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
 
   const [fileKeys, setFileKeys] = useState(Array(13).fill(undefined));
   const [imageUrls, setImageUrls] = useState(Array(13).fill(undefined));
@@ -54,37 +53,31 @@ export default function EditPatientDetails() {
   useEffect(() => {
     const fetchCaseCategories = async () => {
       if (!token) return;
-      setIsCategoriesLoading(true);
+      dispatch(setLoading(true));
       try {
-        const response = await fetch('/api/case-categories?active=true', {
+        const result = await fetchWithError('/api/case-categories?active=true', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!response.ok) throw new Error('Failed to fetch case categories');
-        const result = await response.json();
         setCaseCategories(result.data);
       } catch (err) {
-        toast.error(err.message);
+        // fetchWithError already toasts
       } finally {
-        setIsCategoriesLoading(false);
+        dispatch(setLoading(false));
       }
     };
     fetchCaseCategories();
-  }, [token]);
+  }, [token, dispatch]);
 
   useEffect(() => {
     if (!patientId) {
       setError("No patient ID provided");
-      setLoading(false);
       return;
     }
     const fetchPatient = async () => {
-      setLoading(true);
+      dispatch(setLoading(true));
       try {
-        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, { headers: { 'Authorization': `Bearer ${token}` } });
-        if (!response.ok) throw new Error("Failed to fetch patient");
-        const result = await response.json();
+        const result = await fetchWithError(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, { headers: { 'Authorization': `Bearer ${token}` } });
         setForm(result);
-        
         const loadedUrls = Array(13).fill(undefined);
         const loadedKeys = Array(13).fill(undefined);
         if (result.scanFiles) {
@@ -99,11 +92,11 @@ export default function EditPatientDetails() {
         }
         setImageUrls(loadedUrls);
         setFileKeys(loadedKeys);
-      } catch (e) { setError(e.message); } 
-      finally { setLoading(false); }
+      } catch (e) { setError(e.message); }
+      finally { dispatch(setLoading(false)); }
     };
     fetchPatient();
-  }, [patientId, token]);
+  }, [patientId, token, dispatch]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -129,7 +122,7 @@ export default function EditPatientDetails() {
   };
 
   // Firebase file upload logic
-  const handleFileUpload = (file, idx) => {
+  const handleFileUpload = async (file, idx) => {
     if (!patientId) return;
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
     const isImageSlot = idx < 11;
@@ -142,17 +135,20 @@ export default function EditPatientDetails() {
     const storagePath = `patients/${patientId}/${uniqueFileName}`;
     const storageRef = ref(storage, storagePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
+    dispatch(setLoading(true));
     uploadTask.on("state_changed",
       (snapshot) => setProgresses(p => { const n = [...p]; n[idx] = (snapshot.bytesTransferred / snapshot.totalBytes) * 100; return n; }),
       (error) => {
         toast.error(`Upload failed: ${error.message}`);
         setProgresses(p => { const n = [...p]; n[idx] = 0; return n; });
+        dispatch(setLoading(false));
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
           setImageUrls(p => { const n = [...p]; n[idx] = downloadURL; return n; });
           setFileKeys(p => { const n = [...p]; n[idx] = storagePath; return n; });
           toast.success("File uploaded successfully");
+          dispatch(setLoading(false));
         });
       }
     );
@@ -161,7 +157,7 @@ export default function EditPatientDetails() {
   const handleDeleteFile = async (idx) => {
     const fileKey = fileKeys[idx];
     if (!fileKey) return;
-    setSaving(true);
+    dispatch(setLoading(true));
     const fileRef = ref(storage, fileKey);
     try {
       await deleteObject(fileRef);
@@ -169,14 +165,14 @@ export default function EditPatientDetails() {
       setFileKeys(p => { const n = [...p]; n[idx] = undefined; return n; });
       setProgresses(p => { const n = [...p]; n[idx] = 0; return n; });
       toast.success("File deleted successfully");
-    } catch (error) { toast.error(`Failed to delete file: ${error.message}`); } 
-    finally { setSaving(false); }
+    } catch (error) { toast.error(`Failed to delete file: ${error.message}`); }
+    finally { dispatch(setLoading(false)); }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form) return;
-    setSaving(true);
+    dispatch(setLoading(true));
     const scanFiles = {};
     imageUrls.forEach((url, idx) => {
       if (url && fileKeys[idx]) {
@@ -186,16 +182,15 @@ export default function EditPatientDetails() {
     });
     const updatedForm = { ...form, scanFiles };
     try {
-      const response = await fetch(`/api/patients/update-details?id=${patientId}`, {
+      await fetchWithError(`/api/patients/update-details?id=${patientId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify(updatedForm),
       });
-      if (!response.ok) throw new Error("Failed to save changes");
       toast.success("Changes saved successfully!");
       router.push('/doctor/patients');
-    } catch (error) { toast.error(`Error saving: ${error.message}`); } 
-    finally { setSaving(false); }
+    } catch (error) { /* fetchWithError already toasts */ }
+    finally { dispatch(setLoading(false)); }
   };
 
   const getFileNameFromUrl = (url) => {
@@ -253,7 +248,6 @@ export default function EditPatientDetails() {
     return acc;
   }, {});
 
-  if (loading || isCategoriesLoading) return <div className="flex justify-center items-center min-h-[40vh]">Loading...</div>;
   if (error) return <div className="text-red-500 text-center py-8">{error}</div>;
   if (!form) return null;
 
@@ -491,7 +485,6 @@ export default function EditPatientDetails() {
                       options={priceOptions[form.caseCategory] || []}
                       value={(priceOptions[form.caseCategory] || []).find(opt => opt.value === form.selectedPrice) || null}
                       onChange={(opt) => setForm((prev) => ({ ...prev, selectedPrice: opt?.value }))}
-                      isLoading={isCategoriesLoading}
                     />
                   </div>
                 )}
@@ -642,7 +635,7 @@ export default function EditPatientDetails() {
           </motion.div>
           <div className="flex justify-end gap-4 py-8">
             <Button type="button" onClick={() => router.back()} variant="outline" className="transition-transform hover:scale-105">Cancel</Button>
-            <Button type="submit" disabled={saving} className="transition-transform hover:scale-105">{saving ? "Saving..." : "Save"}</Button>
+            <Button type="submit" className="transition-transform hover:scale-105">Save</Button>
           </div>
         </form>
       </div>

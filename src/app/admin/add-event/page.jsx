@@ -4,9 +4,11 @@ import { useRouter } from 'next/navigation';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 import { app } from '@/utils/firebase';
 import { useDropzone } from 'react-dropzone';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 import { v4 as uuidv4 } from 'uuid';
+import { setLoading } from '@/store/features/uiSlice';
+import { fetchWithError } from '@/utils/apiErrorHandler';
 
 import DatePicker from '@/components/form/date-picker';
 import InputField from '@/components/form/input/InputField';
@@ -16,11 +18,11 @@ import Label from '@/components/form/Label';
 const AddEventPage = () => {
   const { token } = useSelector((state) => state.auth);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [eventDate, setEventDate] = useState(new Date());
-  const [isSubmitting, setIsSubmitting] = useState(false);
   
   // State for the single file upload
   const [imageUrl, setImageUrl] = useState(null);
@@ -49,11 +51,13 @@ const AddEventPage = () => {
     const storageRef = ref(getStorage(app), storagePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
 
+    dispatch(setLoading(true));
     uploadTask.on("state_changed",
       (snapshot) => setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
       (error) => {
         toast.error(`Upload failed: ${error.message}`);
         setProgress(0);
+        dispatch(setLoading(false));
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
@@ -62,6 +66,7 @@ const AddEventPage = () => {
           setFileType(type);
           toast.success("File uploaded successfully");
           setProgress(100);
+          dispatch(setLoading(false));
         });
       }
     );
@@ -70,6 +75,7 @@ const AddEventPage = () => {
   const handleDeleteFile = async () => {
     if (!fileKey) return;
     const fileRef = ref(getStorage(app), fileKey);
+    dispatch(setLoading(true));
     try {
       await deleteObject(fileRef);
       setImageUrl(null);
@@ -78,48 +84,44 @@ const AddEventPage = () => {
       toast.success("Image deleted successfully");
     } catch (error) {
       toast.error(`Failed to delete image: ${error.message}`);
+    } finally {
+      dispatch(setLoading(false));
     }
   };
   
   const handleFinalSubmit = async (e) => {
     e.preventDefault();
-    console.log(name,
-      description,
-      eventDate,
-       imageUrl,fileKey )
     if (!name || !description || !eventDate || !imageUrl) {
       toast.error("Please fill all fields and upload an image or video.");
       return;
     }
-    setIsSubmitting(true);
+    dispatch(setLoading(true));
     try {
-      const response = await fetch('/api/admin/events', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          eventDate,
-          image: { fileUrl: imageUrl, fileKey: fileKey, fileType: fileType },
-        }),
-      });
-
-      if (!response.ok) {
+      try {
+        await fetchWithError('/api/admin/events', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            name,
+            description,
+            eventDate,
+            image: { fileUrl: imageUrl, fileKey: fileKey, fileType: fileType },
+          }),
+        });
+        toast.success("Event added successfully!");
+        router.push('/admin/events');
+      } catch (error) {
         // If server returns error, delete the uploaded image
         await handleDeleteFile();
-        throw new Error((await response.json()).message || "Failed to create event");
+        throw error;
       }
-      
-      toast.success("Event added successfully!");
-      router.push('/admin/events');
-
     } catch (error) {
-      toast.error(error.message || "An error occurred.");
+      // fetchWithError will toast
     } finally {
-      setIsSubmitting(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -199,8 +201,8 @@ const AddEventPage = () => {
         </div>
         <UploadComponent />
         <div className="flex justify-end pt-4 border-t">
-          <Button type="submit" disabled={isSubmitting || (progress > 0 && progress < 100)}>
-            {isSubmitting ? 'Submitting...' : 'Submit Event'}
+          <Button type="submit" disabled={(progress > 0 && progress < 100)}>
+            Submit Event
           </Button>
         </div>
       </form>

@@ -1,41 +1,46 @@
 "use client";
 import GridShape from "@/components/common/GridShape";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import { setLoading } from "@/store/features/uiSlice";
 
 export default function NotFound() {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { role, token } = useSelector((state) => state.auth);
-  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
-    // Wait for auth state to be hydrated from localStorage
-    toast.error("We can't seem to find the page you are looking for!")
-    setTimeout(()=>{
-      if (typeof token !== "undefined") {
-        if (token && role) {
-          const redirectPath =
-            role === "doctor"
-              ? "/doctor"
-              : role === "admin"
-              ? "/admin"
-              : role === "super-admin" ? "/super-admin" : '/'
-          router.push(redirectPath);
-        } else {
-          // No user logged in, so show the 404 page
-          setIsReady(true);
-        }
-      }
-    },[2000])
-  }, [token, role, router]);
+    dispatch(setLoading(true)); // Start with the loader
 
-  if (!isReady) {
-    return (
-      <div className="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden z-1">
+    const timer = setTimeout(() => {
+      // After a short delay to allow for auth state hydration
+      if (token && role) {
+        const redirectPath =
+          role === "doctor"
+            ? "/doctor"
+            : role === "admin"
+            ? "/admin"
+            : role === "super-admin" ? "/super-admin" : '/';
+        
+        toast.info("Page not found, redirecting to your dashboard.");
+        router.push(redirectPath);
+        // Loader will remain active until the new page loads
+      } else {
+        // No user logged in, show the 404 page
+        dispatch(setLoading(false));
+        toast.error("We can't seem to find the page you are looking for!");
+      }
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timer);
+
+  }, [token, role, router, dispatch]);
+
+  return (
+    <div className="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden z-1">
       <GridShape />
       <div className="mx-auto w-full max-w-[242px] text-center sm:max-w-[472px]">
         <h1 className="mb-8 font-bold text-gray-800 text-title-md dark:text-white/90 xl:text-title-2xl">
@@ -66,8 +71,5 @@ export default function NotFound() {
         &copy; {new Date().getFullYear()} - ODS Aligners
       </p>
     </div>
-    );
-  }
-
-  return null;
+  );
 }

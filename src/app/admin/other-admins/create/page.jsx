@@ -6,25 +6,23 @@ import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState, useMemo } from "react";
 import { useRouter } from 'next/navigation';
-import { useAppDispatch } from '@/store/store';
-import { setCredentials } from '@/store/features/auth/authSlice';
+import { useDispatch, useSelector } from "react-redux";
+import { setLoading } from '@/store/features/uiSlice';
 import { toast } from 'react-toastify';
 import { fetchWithError } from '@/utils/apiErrorHandler';
 import Select from 'react-select';
 import { Country, State } from 'country-state-city';
 import { useDropzone } from 'react-dropzone';
-import { storage } from '@/utils/firebase';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { useSelector } from "react-redux";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { app as firebaseApp } from '@/utils/firebase';
 
 export default function CreateAdminPage() {
   const heading = "Create New Admin";
   const description = "Enter details to create a new admin account";
   const router = useRouter();
-  const dispatch = useAppDispatch();
+  const dispatch = useDispatch();
   const [showPassword, setShowPassword] = useState(false);
   const { token } = useSelector((state) => state.auth) || {};
-  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -42,7 +40,6 @@ export default function CreateAdminPage() {
   const [photoUrl, setPhotoUrl] = useState('');
   const [photoFileKey, setPhotoFileKey] = useState('');
   const [photoUploadedAt, setPhotoUploadedAt] = useState(null);
-  const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
 
   const countryOptions = useMemo(() => Country.getAllCountries().map(country => ({
@@ -79,8 +76,10 @@ export default function CreateAdminPage() {
   const onDrop = async (acceptedFiles) => {
     if (!acceptedFiles.length) return;
     const file = acceptedFiles[0];
-    setUploading(true);
+    dispatch(setLoading(true));
+    setUploadProgress(0);
     const fileKey = `users/${file.name}-${Date.now()}`;
+    const storage = getStorage(firebaseApp);
     const storageRef = ref(storage, fileKey);
     const uploadTask = uploadBytesResumable(storageRef, file);
     uploadTask.on('state_changed',
@@ -88,15 +87,16 @@ export default function CreateAdminPage() {
         setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
       },
       (error) => {
-        setUploading(false);
-        alert('Upload failed: ' + error.message);
+        dispatch(setLoading(false));
+        toast.error('Upload failed: ' + error.message);
       },
       async () => {
         const url = await getDownloadURL(uploadTask.snapshot.ref);
         setPhotoUrl(url);
         setPhotoFileKey(fileKey);
         setPhotoUploadedAt(new Date().toISOString());
-        setUploading(false);
+        dispatch(setLoading(false));
+        toast.success('Profile picture uploaded successfully.');
       }
     );
   };
@@ -110,7 +110,7 @@ export default function CreateAdminPage() {
       return;
     }
     
-    setIsLoading(true);
+    dispatch(setLoading(true));
     
     try {
       const payload = {
@@ -140,9 +140,9 @@ export default function CreateAdminPage() {
       toast.success('Admin created successfully!');
       router.push('/admin/other-admins');
     } catch (error) {
-      console.error('Admin creation error:', error);
+      // fetchWithError will handle toast
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -168,9 +168,12 @@ export default function CreateAdminPage() {
                   {photoUrl ? (
                     <img src={photoUrl} alt="Profile Preview" className="w-24 h-24 rounded-full object-cover mb-2" />
                   ) : (
-                    <span className="text-gray-500 dark:text-gray-400">Drop an image here, or click to select</span>
+                    uploadProgress > 0 && uploadProgress < 100 ? (
+                      <div className="text-xs text-blue-600 mt-2">Uploading... {Math.round(uploadProgress)}%</div>
+                    ) : (
+                      <span className="text-gray-500 dark:text-gray-400">Drop an image here, or click to select</span>
+                    )
                   )}
-                  {uploading && <div className="text-xs text-blue-600 mt-2">Uploading... {Math.round(uploadProgress)}%</div>}
                 </div>
               </div>
               {/* <!-- Name --> */}
@@ -358,13 +361,14 @@ export default function CreateAdminPage() {
               </div>
               {/* <!-- Button --> */}
               <div className="md:col-span-3">
-                <button 
-                  type="submit"
-                  disabled={isLoading}
-                  className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoading ? 'Creating Account...' : 'Create Account'}
-                </button>
+                <div className="flex items-center justify-end">
+                  <button
+                    type="submit"
+                    className="flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2.5 font-medium text-white-default-500 transition-colors duration-300 hover:bg-blue-700"
+                  >
+                    Create Admin
+                  </button>
+                </div>
               </div>
             </div>
           </form>

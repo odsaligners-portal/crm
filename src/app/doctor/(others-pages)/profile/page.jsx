@@ -3,11 +3,12 @@
 import UserAddressCard from "@/components/user-profile/UserAddressCard";
 import UserInfoCard from "@/components/user-profile/UserInfoCard";
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import Link from "next/link";
 import { FaEdit } from "react-icons/fa";
+import { setLoading } from '@/store/features/uiSlice';
 
 export default function Profile() {
   const [userData, setUserData] = useState({
@@ -24,11 +25,12 @@ export default function Profile() {
     address: '',
     profilePicture: { url: '', fileKey: '', uploadedAt: null },
   });
-  const [isLoading, setIsLoading] = useState(true);
   const { token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchUserData = async () => {
+      dispatch(setLoading(true));
       try {
         const response = await fetchWithError('/api/user/profile', {
           headers: {
@@ -55,20 +57,12 @@ export default function Profile() {
         console.error('Failed to fetch user data:', error);
         toast.error('Failed to load profile data');
       } finally {
-        setIsLoading(false);
+        dispatch(setLoading(false));
       }
     };
 
     fetchUserData();
-  }, [token]);
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-16 h-16 border-4 border-gray-300 border-t-brand-500 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  }, [token, dispatch]);
 
   return (
     <div>

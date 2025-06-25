@@ -1,20 +1,21 @@
 "use client"
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import ProfileEditForm from "@/components/user-profile/ProfileEditForm";
 import { fetchWithError } from "@/utils/apiErrorHandler";
+import { setLoading } from '@/store/features/uiSlice';
 
 export default function ProfileEditPage() {
   const router = useRouter();
   const { token } = useSelector((state) => state.auth);
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (!token) return;
     const fetchUser = async () => {
-      setLoading(true);
+      dispatch(setLoading(true));
       try {
         const res = await fetchWithError('/api/user/profile', {
           headers: { 'Authorization': `Bearer ${token}` }
@@ -23,19 +24,11 @@ export default function ProfileEditPage() {
       } catch (e) {
         setUserData(null);
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     };
     fetchUser();
-  }, [token]);
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="w-16 h-16 border-4 border-gray-300 border-t-brand-500 rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  }, [token, dispatch]);
 
   if (!userData) {
     return <div className="text-center text-red-500 mt-10">User not found.</div>;

@@ -9,14 +9,10 @@ export async function POST(req) {
     await connectDB();
     
     const { 
-      name, email, password, mobile, gender, country, 
-      state, city, experience, doctorType, address, profilePicture
+      name, email, password, profilePicture
     } = await req.json();
 
-    if (
-      !name || !email || !password || !mobile || !gender || !country || 
-      !state || !city || !experience || !doctorType || !address
-    ) {
+    if ( !name || !email || !password ) {
       throw new AppError('Please provide all required fields', 400);
     }
 
@@ -31,14 +27,6 @@ export async function POST(req) {
       name,
       email,
       password,
-      mobile,
-      gender,
-      country,
-      state,
-      city,
-      experience,
-      doctorType,
-      address,
       ...(profilePicture ? { profilePicture } : {}),
     });
 
@@ -55,14 +43,6 @@ export async function POST(req) {
       name: user.name,
       email: user.email,
       role: user.role,
-      mobile: user.mobile,
-      gender: user.gender,
-      country: user.country,
-      state: user.state,
-      city: user.city,
-      experience: user.experience,
-      doctorType: user.doctorType,
-      address: user.address,
       profilePicture: user.profilePicture,
     };
 

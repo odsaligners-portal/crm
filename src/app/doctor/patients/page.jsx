@@ -10,12 +10,14 @@ import { EyeIcon, PencilIcon, PlusIcon } from "@/icons";
 import { countriesData } from "@/utils/countries";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import * as XLSX from 'xlsx';
 import UploadModal from "@/components/admin/patients/UploadModal";
 import ViewCommentsModal from "@/components/admin/patients/ViewCommentsModal";
 import FileUploadModal, { ViewFilesModal } from '@/components/admin/patients/FileUploadModal';
+import { setLoading } from '@/store/features/uiSlice';
+import { fetchWithError } from '@/utils/apiErrorHandler';
 
 const countries = Object.keys(countriesData);
 
@@ -23,7 +25,6 @@ export default function ViewPatientRecords() {
   const router = useRouter();
   const { token, role } = useSelector((state) => state.auth);
   const [patients, setPatients] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalPatients, setTotalPatients] = useState(0);
@@ -37,6 +38,7 @@ export default function ViewPatientRecords() {
   const [fileUploadPatient, setFileUploadPatient] = useState(null);
   const [showViewFilesModal, setShowViewFilesModal] = useState(false);
   const [viewFilesPatient, setViewFilesPatient] = useState(null);
+  const dispatch = useDispatch();
 
   // Filter state
   const [filters, setFilters] = useState({
@@ -53,9 +55,9 @@ export default function ViewPatientRecords() {
   });
 
   const [caseCategories, setCaseCategories] = useState([]);
-  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
 
   const fetchPatients = async () => {
+    dispatch(setLoading(true));
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -64,25 +66,18 @@ export default function ViewPatientRecords() {
         search: searchTerm,
         ...filters,
       });
-
-      const response = await fetch(`/api/patients?${params}`, {
+      const data = await fetchWithError(`/api/patients?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch patients");
-      }
-
-      const data = await response.json();
       setPatients(data.patients);
       setTotalPages(data.pagination.totalPages);
       setTotalPatients(data.pagination.totalPatients);
     } catch (error) {
-      toast.error(error.message || "Failed to fetch patients");
+      // fetchWithError already toasts
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -92,18 +87,16 @@ export default function ViewPatientRecords() {
 
   useEffect(() => {
     const fetchCaseCategories = async () => {
-      setIsCategoriesLoading(true);
+      dispatch(setLoading(true));
       try {
-        const response = await fetch('/api/case-categories?active=true', {
+        const result = await fetchWithError('/api/case-categories?active=true', {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         });
-        if (!response.ok) throw new Error('Failed to fetch case categories');
-        const result = await response.json();
         setCaseCategories(result.data || []);
       } catch (err) {
-        toast.error(err.message);
+        // fetchWithError already toasts
       } finally {
-        setIsCategoriesLoading(false);
+        dispatch(setLoading(false));
       }
     };
     fetchCaseCategories();
@@ -239,16 +232,6 @@ export default function ViewPatientRecords() {
     setPatientForComments(null);
     setIsViewCommentsModalOpen(false);
   };
-
-  if (isLoading) {
-    return (
-      <div className="p-5 lg:p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading patients...</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="p-5 lg:p-10 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
@@ -572,7 +555,7 @@ export default function ViewPatientRecords() {
         </div>
       )}
 
-      {patients.length === 0 && !isLoading && (
+      {patients.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16">
           <svg width="120" height="120" fill="none" className="mb-6 opacity-60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" stroke="#3b82f6" strokeWidth="4" fill="#e0e7ff" /><path d="M40 80c0-11 9-20 20-20s20 9 20 20" stroke="#6366f1" strokeWidth="4" strokeLinecap="round" /><circle cx="60" cy="54" r="10" fill="#6366f1" /></svg>
           <div className="text-2xl font-bold text-blue-700 dark:text-blue-200 mb-2">No patients found</div>

@@ -9,10 +9,13 @@ import { storage } from "@/utils/firebase";
 import { ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
 import { toast } from "react-toastify";
 import { fetchWithError } from "@/utils/apiErrorHandler";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setLoading } from "@/store/features/uiSlice";
 
 export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
   const { token } = useSelector((state) => state.auth);
+  const { isLoading: isSubmitting } = useSelector((state) => state.ui);
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     name: initialValues.name || '',
     email: initialValues.email || '',
@@ -28,9 +31,6 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
   const [photoUrl, setPhotoUrl] = useState(initialValues.profilePicture?.url || '');
   const [photoFileKey, setPhotoFileKey] = useState(initialValues.profilePicture?.fileKey || '');
   const [photoUploadedAt, setPhotoUploadedAt] = useState(initialValues.profilePicture?.uploadedAt || null);
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const countryOptions = useMemo(() => Country.getAllCountries().map(country => ({
     value: country.isoCode,
@@ -66,48 +66,55 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
   const onDrop = async (acceptedFiles) => {
     if (!acceptedFiles.length) return;
     const file = acceptedFiles[0];
-    setUploading(true);
+    dispatch(setLoading(true));
     const fileKey = `users/${file.name}-${Date.now()}`;
     const storageRef = ref(storage, fileKey);
     const uploadTask = uploadBytesResumable(storageRef, file);
     uploadTask.on('state_changed',
       (snapshot) => {
-        setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        // can be used for progress bar
       },
       (error) => {
-        setUploading(false);
+        dispatch(setLoading(false));
         alert('Upload failed: ' + error.message);
       },
       async () => {
-        const url = await getDownloadURL(uploadTask.snapshot.ref);
-        setPhotoUrl(url);
-        setPhotoFileKey(fileKey);
-        setPhotoUploadedAt(new Date().toISOString());
-        setUploading(false);
+        try {
+          const url = await getDownloadURL(uploadTask.snapshot.ref);
+          setPhotoUrl(url);
+          setPhotoFileKey(fileKey);
+          setPhotoUploadedAt(new Date().toISOString());
+        } catch(e) {
+            toast.error("Failed to upload image")
+        } finally {
+            dispatch(setLoading(false));
+        }
       }
     );
   };
 
   const handleRemovePhoto = async () => {
     if (photoFileKey) {
+        dispatch(setLoading(true));
       try {
         const imageRef = ref(storage, photoFileKey);
         await deleteObject(imageRef);
         toast.success('Profile image deleted from storage.');
+        setPhotoUrl('');
+        setPhotoFileKey('');
+        setPhotoUploadedAt(null);
       } catch (err) {
         toast.error('Failed to delete image from storage.');
+      } finally {
+        dispatch(setLoading(false));
       }
     }
-    setPhotoUrl('');
-    setPhotoFileKey('');
-    setPhotoUploadedAt(null);
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] }, multiple: false });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
     try {
       const payload = {
         ...formData,
@@ -136,8 +143,6 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
       } else {
         toast.error('Failed to update profile. Please try again.');
       }
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -158,7 +163,7 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
                     onClick={handleRemovePhoto}
                     className="absolute top-0 right-0 bg-white bg-opacity-80 rounded-full p-1 shadow hover:bg-red-100"
                     style={{ transform: 'translate(40%, -40%)' }}
-                    disabled={uploading || isSubmitting}
+                    disabled={isSubmitting}
                     aria-label="Remove profile image"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -170,7 +175,6 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
             ) : (
               <span className="text-gray-500 dark:text-gray-400">Drop an image here, or click to select</span>
             )}
-            {uploading && <div className="text-xs text-blue-600 mt-2">Uploading... {Math.round(uploadProgress)}%</div>}
           </div>
         </div>
         {/* Name */}
@@ -307,12 +311,6 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
           className={`px-8 py-2 rounded-lg font-semibold shadow transition text-lg flex items-center gap-2 text-white ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'}`}
           disabled={isSubmitting}
         >
-          {isSubmitting && (
-            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
-            </svg>
-          )}
           {isSubmitting ? 'Submitting...' : 'Save Changes'}
         </button>
       </div>

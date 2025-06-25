@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { TagIcon, CircleStackIcon, SparklesIcon, PencilIcon, TrashIcon, PlusIcon } from "@heroicons/react/24/outline";
 import EditCaseCategoryModal from "@/components/admin/case-categories/EditModal";
@@ -8,12 +8,14 @@ import AddCaseCategoryModal from "@/components/admin/case-categories/AddModal";
 import Button from "@/components/ui/button/Button";
 import ConfirmationModal from "@/components/common/ConfirmationModal";
 import { useRouter } from 'next/navigation';
+import { setLoading } from '@/store/features/uiSlice';
+import { fetchWithError } from '@/utils/apiErrorHandler';
 
 
 const CaseCategoriesPage = () => {
   const [categories, setCategories] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const { token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -36,24 +38,16 @@ const CaseCategoriesPage = () => {
   };
 
   const fetchCaseCategories = async () => {
-    // setIsLoading(true); // Keep loading true only on initial fetch
+    dispatch(setLoading(true));
     try {
-      const response = await fetch('/api/case-categories', {
+      const result = await fetchWithError('/api/case-categories', {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {},
       });
-      if (!response.ok) {
-        throw new Error('Failed to fetch case categories');
-      }
-      const result = await response.json();
-      if (result.success) {
-        setCategories(result.data || []);
-      } else {
-        throw new Error(result.message || 'An unknown error occurred');
-      }
+      setCategories(result.data || []);
     } catch (err) {
-      toast.error(err.message);
+      // fetchWithError handles toast
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
   
@@ -68,27 +62,22 @@ const CaseCategoriesPage = () => {
   const handleDeleteCategory = async (categoryId) => {
     if (!categoryId) return;
 
+    dispatch(setLoading(true));
     try {
-      const response = await fetch(`/api/case-categories?id=${categoryId}`, {
+      await fetchWithError(`/api/case-categories?id=${categoryId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
       });
-
-      const result = await response.json();
-
-      if (response.ok && result.success) {
-        toast.success(result.message);
-        fetchCaseCategories(); // Refresh the list
-      } else {
-        throw new Error(result.message || 'Failed to delete case category');
-      }
+      toast.success("Category deleted successfully.");
+      fetchCaseCategories(); // Refresh the list
     } catch (err) {
-      toast.error(err.message);
+      // fetchWithError handles toast
     } finally {
       setIsConfirmModalOpen(false);
       setCategoryToDelete(null);
+      dispatch(setLoading(false));
     }
   };
 
@@ -103,20 +92,22 @@ const CaseCategoriesPage = () => {
       fetchCaseCategories();
       // Fetch access rights
       const fetchAccess = async () => {
+        dispatch(setLoading(true));
         try {
-          const res = await fetch('/api/user/profile', {
+          const data = await fetchWithError('/api/user/profile', {
             headers: { Authorization: `Bearer ${token}` },
           });
-          if (!res.ok) throw new Error('Failed to fetch user profile');
-          const data = await res.json();
           setHasCaseCategoryUpdateAccess(!!data.user?.caseCategoryUpdateAccess);
         } catch (err) {
+          // fetchWithError handles toast
           setHasCaseCategoryUpdateAccess(false);
+        } finally {
+          dispatch(setLoading(false));
         }
       };
       fetchAccess();
     }
-  }, [token]);
+  }, [token, dispatch]);
 
   return (
     <>
@@ -160,12 +151,7 @@ const CaseCategoriesPage = () => {
             )}
         </div>
 
-        {isLoading ? (
-          <div className="text-center py-16">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-            <p className="mt-4 text-gray-500">Loading Categories...</p>
-          </div>
-        ) : categories.length > 0 ? (
+        {categories.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {categories.map((category, index) => (
               <div 

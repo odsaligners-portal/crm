@@ -1,48 +1,42 @@
 "use client";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
-import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
-import { Editor } from '@tinymce/tinymce-react';
-import { XMarkIcon, PaperAirplaneIcon } from '@heroicons/react/24/solid';
 import Button from '@/components/ui/button/Button';
 import { Modal } from '@/components/ui/modal';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { setLoading } from "@/store/features/uiSlice";
+import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import { PaperAirplaneIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import { Editor } from '@tinymce/tinymce-react';
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
+import { fetchWithError } from "@/utils/apiErrorHandler";
 
 export default function ViewAllCommentsAdmin() {
   const { token } = useSelector((state) => state.auth);
   const [comments, setComments] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [hasCommentUpdateAccess, setHasCommentUpdateAccess] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [commentToDelete, setCommentToDelete] = useState(null);
-  const [deleteLoading, setDeleteLoading] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [commentToEdit, setCommentToEdit] = useState(null);
   const [editDescription, setEditDescription] = useState('');
-  const [editLoading, setEditLoading] = useState(false);
   const [editorKey, setEditorKey] = useState(0);
+  const dispatch = useDispatch();
 
   const fetchAllComments = async () => {
-    setIsLoading(true);
+    dispatch(setLoading(true));
     try {
-      const response = await fetch('/api/admin/comments', { // Use the new admin route
+      const data = await fetchWithError('/api/admin/comments', { // Use the new admin route
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch comments");
-      }
-
-      const data = await response.json();
       setComments(data.comments || []);
     } catch (error) {
-      toast.error(error.message || "Failed to fetch data");
+      // fetchWithError handles toast
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -51,20 +45,22 @@ export default function ViewAllCommentsAdmin() {
       fetchAllComments();
       // Fetch access rights
       const fetchAccess = async () => {
+        dispatch(setLoading(true));
         try {
-          const res = await fetch('/api/user/profile', {
+          const data = await fetchWithError('/api/user/profile', {
             headers: { Authorization: `Bearer ${token}` },
           });
-          if (!res.ok) throw new Error('Failed to fetch user profile');
-          const data = await res.json();
           setHasCommentUpdateAccess(!!data.user?.commentUpdateAccess);
         } catch (err) {
           setHasCommentUpdateAccess(false);
+          // fetchWithError will handle toast
+        } finally {
+          dispatch(setLoading(false));
         }
       };
       fetchAccess();
     }
-  }, [token]);
+  }, [token, dispatch]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -83,26 +79,21 @@ export default function ViewAllCommentsAdmin() {
   };
 
   const confirmDeleteComment = async () => {
-    setDeleteLoading(true);
     if (!commentToDelete) return;
+    dispatch(setLoading(true));
     try {
-      const response = await fetch(`/api/admin/comments?id=${commentToDelete}`, {
+      await fetchWithError(`/api/admin/comments?id=${commentToDelete}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
-      const result = await response.json();
-      if (response.ok) {
-        setComments((prev) => prev.filter((c) => c._id !== commentToDelete));
-        toast.success('Comment deleted successfully.');
-      } else {
-        toast.error(result.message || 'Failed to delete comment.');
-      }
+      setComments((prev) => prev.filter((c) => c._id !== commentToDelete));
+      toast.success('Comment deleted successfully.');
     } catch (error) {
-      toast.error(error.message || 'Failed to delete comment.');
+      // fetchWithError handles toast
     } finally {
       setIsDeleteModalOpen(false);
       setCommentToDelete(null);
-      setDeleteLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -119,9 +110,9 @@ export default function ViewAllCommentsAdmin() {
       toast.error('Comment cannot be empty.');
       return;
     }
-    setEditLoading(true);
+    dispatch(setLoading(true));
     try {
-      const response = await fetch('/api/admin/comments', {
+      const result = await fetchWithError('/api/admin/comments', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -129,32 +120,17 @@ export default function ViewAllCommentsAdmin() {
         },
         body: JSON.stringify({ id: commentToEdit._id, comment: editDescription })
       });
-      const result = await response.json();
-      if (response.ok) {
-        setComments((prev) => prev.map(c => c._id === commentToEdit._id ? { ...c, comment: result.data.comment } : c));
-        toast.success('Comment updated successfully.');
-        setEditModalOpen(false);
-        setCommentToEdit(null);
-        setEditDescription('');
-      } else {
-        toast.error(result.message || 'Failed to update comment.');
-      }
+      setComments((prev) => prev.map(c => c._id === commentToEdit._id ? { ...c, comment: result.data.comment } : c));
+      toast.success('Comment updated successfully.');
+      setEditModalOpen(false);
+      setCommentToEdit(null);
+      setEditDescription('');
     } catch (error) {
-      toast.error(error.message || 'Failed to update comment.');
+      // fetchWithError handles toast
     } finally {
-      setEditLoading(false);
+      dispatch(setLoading(false));
     }
   };
-
-  if (isLoading) {
-    return (
-      <div className="p-5 lg:p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg">Loading All Comments...</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="p-5 lg:p-10 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
@@ -221,7 +197,7 @@ export default function ViewAllCommentsAdmin() {
         </Table>
       </div>
 
-      {comments.length === 0 && !isLoading && (
+      {comments.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16">
           <svg width="120" height="120" fill="none" className="mb-6 opacity-60" viewBox="0 0 120 120"><path d="M60 6.5c-29.7 0-53.5 24.2-53.5 54s23.8 54 53.5 54 53.5-24.2 53.5-54-23.8-54-53.5-54zm0 100c-25.3 0-46-20.7-46-46s20.7-46 46-46 46 20.7 46 46-20.7 46-46 46z" fill="#e0e7ff"/><path d="M72.5 45.5h-25c-1.66 0-3 1.34-3 3s1.34 3 3 3h25c1.66 0 3-1.34 3-3s-1.34-3-3-3zM72.5 60.5h-25c-1.66 0-3 1.34-3 3s1.34 3 3 3h25c1.66 0 3-1.34 3-3s-1.34-3-3-3zM72.5 75.5h-25c-1.66 0-3 1.34-3 3s1.34 3 3 3h25c1.66 0 3-1.34 3-3s-1.34-3-3-3z" fill="#a5b4fc"/><text x="50%" y="90%" dominant-baseline="middle" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" fill="#4338ca" className="font-semibold">No comments found</text></svg>
           <div className="text-2xl font-bold text-blue-700 dark:text-blue-200 mb-2">No Comments Found</div>
@@ -235,10 +211,8 @@ export default function ViewAllCommentsAdmin() {
         onConfirm={confirmDeleteComment}
         title="Delete Comment"
         message="Are you sure you want to permanently delete this comment? This action cannot be undone."
-        confirmButtonText={deleteLoading ? 'Deleting...' : 'Delete'}
+        confirmButtonText="Delete"
         cancelButtonText="Cancel"
-        confirmButtonProps={{ disabled: deleteLoading }}
-        cancelButtonProps={{ disabled: deleteLoading }}
       />
 
       {editModalOpen && (
@@ -286,18 +260,17 @@ export default function ViewAllCommentsAdmin() {
                     onClick={() => setEditModalOpen(false)}
                     variant="secondary"
                     className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-md bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105"
-                    disabled={editLoading}
                   >
                     <XMarkIcon className="h-5 w-5" />
                     Cancel
                   </Button>
                   <Button
                     type="submit"
-                    disabled={editLoading || !editDescription.trim()}
+                    disabled={!editDescription.trim()}
                     className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
                   >
                     <PaperAirplaneIcon className="h-5 w-5" />
-                    {editLoading ? 'Saving...' : 'Save'}
+                    Save
                   </Button>
                 </div>
               </form>

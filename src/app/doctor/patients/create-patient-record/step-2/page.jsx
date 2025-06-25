@@ -12,15 +12,18 @@ import {
 } from "@heroicons/react/24/outline";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import ReactSelect from "react-select";
 import { toast } from "react-toastify";
+import { setLoading } from '@/store/features/uiSlice';
+import { fetchWithError } from '@/utils/apiErrorHandler';
 
 export default function Step2Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
   const { token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const [formData, setFormData] = React.useState({
     chiefComplaint: '',
     caseType: '',
@@ -34,12 +37,8 @@ export default function Step2Page() {
     treatmentPlan: '',
     additionalComments: '',
   });
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isDataLoading, setIsDataLoading] = React.useState(false);
   const [patientDatails, setPatientDatails] = React.useState(null);
-  const [saving, setSaving] = useState(false);
   const [caseCategories, setCaseCategories] = useState([]);
-  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
 
   // Fetch patient data when component mounts and patientId exists
   React.useEffect(() => {
@@ -53,18 +52,16 @@ export default function Step2Page() {
   React.useEffect(() => {
     const fetchCaseCategories = async () => {
       if (!token) return;
-      setIsCategoriesLoading(true);
+      dispatch(setLoading(true));
       try {
-        const response = await fetch('/api/case-categories?active=true', {
+        const result = await fetchWithError('/api/case-categories?active=true', {
           headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!response.ok) throw new Error('Failed to fetch case categories');
-        const result = await response.json();
         setCaseCategories(result.data);
       } catch (err) {
-        toast.error(err.message);
+        // fetchWithError already toasts
       } finally {
-        setIsCategoriesLoading(false);
+        dispatch(setLoading(false));
       }
     };
     fetchCaseCategories();
@@ -73,41 +70,33 @@ export default function Step2Page() {
   React.useEffect(() => {
     const fetchPatientData = async () => {
       if (!patientId || !token) return;
-      setIsDataLoading(true);
+      dispatch(setLoading(true));
       try {
-        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
+        const patientData = await fetchWithError(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
-        if (response.ok) {
-          const patientData = await response.json();
-          setPatientDatails(patientData);
-          // Pre-fill local form state with fetched data
-          setFormData(prev => ({
-            ...prev,
-            chiefComplaint: patientData.chiefComplaint || '',
-            caseType: patientData.caseType || '',
-            singleArchType: (patientData.caseType === 'Single Upper Arch' || patientData.caseType === 'Single Lower Arch') ? patientData.caseType : '',
-            caseCategory: patientData.caseCategory || '',
-            selectedPrice: patientData.selectedPrice || '',
-            caseCategoryDetails: patientData.caseCategoryDetails || '',
-            treatmentPlan: patientData.treatmentPlan || '',
-            extraction: patientData.extraction || { required: false, comments: '' },
-            interproximalReduction: patientData.interproximalReduction || { detail1: '', detail2: '', detail3: '', detail4: '' },
-            measureOfIPR: patientData.measureOfIPR || { detailA: '', detailB: '', detailC: '' },
-            additionalComments: patientData.additionalComments || '',
-          }));
-        } else if (response.status === 404) {
-          toast.error('Patient not found or you do not have permission to view this record');
-        } else if (response.status === 401) {
-          toast.error('Unauthorized access. Please log in again.');
-        }
+        setPatientDatails(patientData);
+        // Pre-fill local form state with fetched data
+        setFormData(prev => ({
+          ...prev,
+          chiefComplaint: patientData.chiefComplaint || '',
+          caseType: patientData.caseType || '',
+          singleArchType: (patientData.caseType === 'Single Upper Arch' || patientData.caseType === 'Single Lower Arch') ? patientData.caseType : '',
+          caseCategory: patientData.caseCategory || '',
+          selectedPrice: patientData.selectedPrice || '',
+          caseCategoryDetails: patientData.caseCategoryDetails || '',
+          treatmentPlan: patientData.treatmentPlan || '',
+          extraction: patientData.extraction || { required: false, comments: '' },
+          interproximalReduction: patientData.interproximalReduction || { detail1: '', detail2: '', detail3: '', detail4: '' },
+          measureOfIPR: patientData.measureOfIPR || { detailA: '', detailB: '', detailC: '' },
+          additionalComments: patientData.additionalComments || '',
+        }));
       } catch (error) {
-        console.error('Error fetching patient data:', error);
-        toast.error('Failed to load patient data. Please try again.');
+        // fetchWithError already toasts
       } finally {
-        setIsDataLoading(false);
+        dispatch(setLoading(false));
       }
     };
     fetchPatientData();
@@ -163,7 +152,7 @@ export default function Step2Page() {
       toast.error("Package is required.");
       return;
     }
-    setSaving(true);
+    dispatch(setLoading(true));
     try {
       const payload = {
         chiefComplaint: formData.chiefComplaint,
@@ -178,7 +167,7 @@ export default function Step2Page() {
         measureOfIPR: formData.measureOfIPR,
         additionalComments: formData.additionalComments,
       };
-      const response = await fetch(`/api/patients/update-details?id=${patientId}`, {
+      await fetchWithError(`/api/patients/update-details?id=${patientId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -186,15 +175,12 @@ export default function Step2Page() {
         },
         body: JSON.stringify(payload)
       });
-      if (!response.ok) {
-        throw new Error("Failed to save data");
-      }
       toast.success("Data saved successfully!");
       router.push(`/doctor/patients/create-patient-record/step-3?id=${patientId}`);
     } catch (error) {
       toast.error(error.message || "An error occurred while saving.");
     } finally {
-      setSaving(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -221,18 +207,6 @@ export default function Step2Page() {
         {/* Heading & Description */}
         <h1 className="text-3xl font-bold text-blue-700 dark:text-white mb-1 tracking-tight">Step 2: Chief Complaint & Case</h1>
         <p className="text-gray-500 dark:text-gray-300 mb-8 text-sm">Tell us about the patient's chief complaint and case details. This helps us understand the treatment needs better.</p>
-        
-        {isDataLoading && (
-          <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <div className="flex items-center gap-3">
-              <svg className="animate-spin h-5 w-5 text-blue-500" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span className="text-blue-700 dark:text-blue-300 font-medium">Loading patient data...</span>
-            </div>
-          </div>
-        )}
         
         <form className="space-y-8" onSubmit={handleNext}>
           <div className="space-y-6">
@@ -300,7 +274,6 @@ export default function Step2Page() {
                   options={caseCategoryOptions}
                   value={caseCategoryOptions.find(opt => opt.value === formData.caseCategory) || null}
                   onChange={(opt) => handleChange({ target: { name: 'caseCategory', value: opt?.value } })}
-                  isLoading={isCategoriesLoading}
                 />
               </div>
 
@@ -314,7 +287,6 @@ export default function Step2Page() {
                       options={priceOptions[formData.caseCategory] || []}
                       value={(priceOptions[formData.caseCategory] || []).find(opt => opt.value === formData.selectedPrice) || null}
                       onChange={(opt) => handleChange({ target: { name: 'selectedPrice', value: opt?.value } })}
-                      isLoading={isCategoriesLoading}
                       styles={{
                         control: (base) => ({
                           ...base,
@@ -470,19 +442,8 @@ export default function Step2Page() {
               type="submit"
               variant="primary"
               className="flex items-center gap-2"
-              disabled={saving}
             >
-              {saving ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Saving...
-                </>
-              ) : (
-                'Next'
-              )}
+              Next
             </Button>
           </div>
         </form>

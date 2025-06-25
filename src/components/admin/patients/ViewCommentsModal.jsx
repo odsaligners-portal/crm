@@ -4,18 +4,19 @@ import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { XMarkIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/solid";
 import Button from "@/components/ui/button/Button";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setLoading } from '@/store/features/uiSlice';
 
 const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
   const [comments, setComments] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const { token } = useSelector((state) => state.auth);
   const [caseId, setCaseId] = useState('');
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (isOpen && patient?._id) {
       const fetchComments = async () => {
-        setIsLoading(true);
+        dispatch(setLoading(true));
         try {
           const response = await fetch(`/api/patients/comments?patientId=${patient._id}`, {
             headers: {
@@ -35,7 +36,7 @@ const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
           console.error("Error fetching comments:", error);
           toast.error("An error occurred while fetching comments.");
         } finally {
-          setIsLoading(false);
+          dispatch(setLoading(false));
         }
       };
       fetchComments();
@@ -72,17 +73,12 @@ const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
         
         {/* Content Body */}
         <div className="p-6 overflow-y-auto flex-grow">
-          {isLoading ? (
-              <div className="text-center p-8">Loading comments...</div>
-          ) : comments?.length > 0 ? (
+          {comments?.length > 0 ? (
               comments.map((comment) => (
                   <div key={comment._id} className="p-4 mb-4 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 shadow-sm">
                       <div className="flex justify-between items-baseline mb-2">
                           <p className="font-bold text-gray-800 dark:text-white">
                               Commented By: {comment.commentedBy.name}
-                              {/* <span className={`ml-2 text-xs font-medium px-2 py-0.5 rounded-full ${comment.commentedBy.userType === 'admin' ? 'bg-purple-200 text-purple-800' : 'bg-blue-200 text-blue-800'}`}>
-                                  {comment.commentedBy.userType}
-                              </span> */}
                           </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">
                               {new Date(comment.datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}

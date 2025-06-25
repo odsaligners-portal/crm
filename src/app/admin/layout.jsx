@@ -15,7 +15,7 @@ export default function AdminLayout({
   const { user, role } = useAppSelector(state => state.auth);
   
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
     if (!user || !role) {
@@ -23,33 +23,23 @@ export default function AdminLayout({
       return;
     }
 
-    if (role !== 'admin') {
-      if(role === 'doctor'){
-        router.push('/doctor');
-      }else if(role === 'super-admin'){
-        router.push('/super-admin');
-      }else{
-        router.push('/signin');
-      }
-      return;
+    if (role === 'admin') {
+      setIsAuthorized(true);
+    } else if (role === 'doctor') {
+      router.push('/doctor');
+    } else if (role === 'super-admin') {
+      router.push('/super-admin');
+    } else {
+      router.push('/signin');
     }
-
-    // If user is authorized, stop loading
-    setIsLoading(false);
   }, [user, role, router]);
 
-  // Show loading spinner while checking authentication or redirecting
-  if (isLoading || !user || role !== 'admin') {
-    return (
-      <div className="flex justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-brand-500 mx-auto mb-4"></div>
-          <div className="text-lg font-medium text-gray-700 dark:text-gray-300">
-          </div>
-        </div>
-      </div>
-    );
+  // Return null to allow the global loader to be visible
+  // while authorization is being checked.
+  if (!isAuthorized) {
+    return null;
   }
+
   // Dynamic class for main content margin based on sidebar state
   const mainContentMargin = isMobileOpen
     ? "ml-0"

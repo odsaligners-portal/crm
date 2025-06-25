@@ -1,24 +1,27 @@
 'use client'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import { setLoading } from '@/store/features/uiSlice';
 
 const MainPage = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const { token, role, user } = useSelector((state) => state.auth);
 
   useEffect(() => {
+    dispatch(setLoading(true));
     if (!token || !role || !user) {
       router.push('/signin');
-    }
-    if(token && role === 'admin'){
+    } else if (role === 'admin') {
       router.push('/admin');
-    }else if(token && role === 'doctor'){
+    } else if (role === 'doctor') {
       router.push('/doctor');
-    }else if(token && role === 'super-admin'){
+    } else if (role === 'super-admin') {
       router.push('/super-admin');
     }
-  }, [token, router]);
+  }, [token, role, user, router, dispatch]);
+  
   return null
 }
 

@@ -1,17 +1,19 @@
 "use client";
-import { useState, useEffect } from 'react';
-import { Modal } from '@/components/ui/modal';
-import Button from '@/components/ui/button/Button';
 import Input from '@/components/form/input/InputField';
 import Label from '@/components/form/Label';
+import Button from '@/components/ui/button/Button';
+import { Modal } from '@/components/ui/modal';
+import { setLoading } from '@/store/features/uiSlice';
+import { PlusIcon, TrashIcon } from '@heroicons/react/24/solid';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
-import { XMarkIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/solid';
-import { useSelector } from 'react-redux';
 
 const EditCaseCategoryModal = ({ isOpen, onClose, category, onCategoryUpdated }) => {
   const [formData, setFormData] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
+  const { isLoading: isSubmitting } = useSelector((state) => state.ui);
 
   useEffect(() => {
     if (category) {
@@ -52,7 +54,7 @@ const EditCaseCategoryModal = ({ isOpen, onClose, category, onCategoryUpdated })
         toast.error("Please fill in all category and package fields.");
         return;
     }
-    setIsSubmitting(true);
+    dispatch(setLoading(true));
     try {
       const response = await fetch('/api/case-categories', {
         method: 'PUT',
@@ -79,7 +81,7 @@ const EditCaseCategoryModal = ({ isOpen, onClose, category, onCategoryUpdated })
     } catch (error) {
       toast.error(error.message);
     } finally {
-      setIsSubmitting(false);
+      dispatch(setLoading(false));
     }
   };
 

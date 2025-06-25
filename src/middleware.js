@@ -69,6 +69,6 @@ export const config = {
      * - favicon.ico (favicon file)
      * - materials (static PDFs)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|materials|logo.png|fav.png).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|images|materials|logo.png|fav.png).*)',
   ],
 }; 

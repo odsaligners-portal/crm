@@ -1,6 +1,8 @@
 "use client"
 import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchWithError } from "@/utils/apiErrorHandler";
+import { setLoading } from "@/store/features/uiSlice";
 import { FaPhone, FaCity, FaEnvelope, FaEye } from "react-icons/fa";
 import { useModal } from "@/hooks/useModal";
 import { Modal } from "@/components/ui/modal";
@@ -16,39 +18,33 @@ function getInitials(name) {
 export default function AdminDoctorsPage() {
   const { token } = useSelector((state) => state.auth);
   const [doctors, setDoctors] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const { isOpen, openModal, closeModal } = useModal();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     const fetchDoctors = async () => {
-      setLoading(true);
+      dispatch(setLoading(true));
       setError(null);
       try {
-        const response = await fetch("/api/user/profile?role=doctor", {
+        const data = await fetchWithError("/api/user/profile?role=doctor", {
           headers: token ? { Authorization: `Bearer ${token}` } : {},
         });
-        if (!response.ok) throw new Error("Failed to fetch doctors");
-        const data = await response.json();
         setDoctors(data.doctors || []);
       } catch (err) {
         setError(err.message || "Failed to fetch doctors");
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     };
     fetchDoctors();
-  }, [token]);
+  }, [token, dispatch]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-white-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 py-10 px-4">
       <h1 className="text-4xl font-extrabold text-blue-700 dark:text-white mb-12 text-center tracking-tight drop-shadow-lg">All Doctors</h1>
-      {loading ? (
-        <div className="flex justify-center items-center h-40">
-          <span className="text-blue-600 text-lg font-semibold">Loading doctors...</span>
-        </div>
-      ) : error ? (
+      {error ? (
         <div className="flex justify-center items-center h-40">
           <span className="text-red-600 text-lg font-semibold">{error}</span>
         </div>

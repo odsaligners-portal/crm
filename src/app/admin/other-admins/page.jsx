@@ -1,101 +1,96 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table";
-import { useSelector } from "react-redux";
-import { toast } from "react-toastify";
-import { FaTrash } from 'react-icons/fa';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { setLoading } from "@/store/features/uiSlice";
+import { fetchWithError } from "@/utils/apiErrorHandler";
 import { useRouter } from "next/navigation";
-import { MdAdd, MdPlusOne } from "react-icons/md";
+import { useEffect, useState } from "react";
+import { FaTrash } from 'react-icons/fa';
+import { MdAdd } from "react-icons/md";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "react-toastify";
 
 export default function OtherAdminsPage() {
   const [admins, setAdmins] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [updating, setUpdating] = useState({});
   const { user, token } = useSelector((state) => state.auth) || {};
   const [currentUserId, setCurrentUserId] = useState(user?.id || null);
   const [superAdminId, setSuperAdminId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState(null);
   const router = useRouter();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     async function fetchAdmins() {
+      dispatch(setLoading(true));
       try {
-        const res = await fetch("/api/user/profile?otherAdmins=true");
-        const data = await res.json();
+        const data = await fetchWithError("/api/user/profile?otherAdmins=true");
         setAdmins(data.admins || []);
       } catch (err) {
         setError("Failed to fetch admins");
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     }
     fetchAdmins();
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     // Try to get current user id and super admin id
     async function fetchCurrentUser() {
+      dispatch(setLoading(true));
       if (!currentUserId) {
         try {
-          const res = await fetch("/api/user/profile", {
+          const data = await fetchWithError("/api/user/profile", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
-          const data = await res.json();
           setCurrentUserId(data.user?.id);
-        } catch {}
+        } catch {
+          // ignore error
+        }
       }
       // Get super admin id from env (exposed via a public env variable or hardcode for now)
       setSuperAdminId(process.env.NEXT_PUBLIC_SUPER_ADMIN_ID || "");
+      dispatch(setLoading(false));
     }
     fetchCurrentUser();
-  }, [user, currentUserId]);
+  }, [user, currentUserId, token, dispatch]);
 
   const isSuperAdmin = currentUserId && superAdminId && currentUserId === superAdminId;
 
   const handleAccessChange = async (adminId, field, value) => {
-    const originalAdmins = [...admins];
-    setUpdating((prev) => ({ ...prev, [adminId + field]: true }));
-    const toastId = toast.loading("Updating access...");
+    dispatch(setLoading(true));
     try {
-      const res = await fetch("/api/admin/other-admins/update-access", {
+      await fetchWithError("/api/admin/other-admins/update-access", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           targetAdminId: adminId,
           [field]: value === "Yes",
         }),
       });
-      const data = await res.json();
-      if (!res.ok || !data.user) {
-        throw new Error(data.message || "Failed to update access");
-      }
       setAdmins((prev) =>
         prev.map((a) =>
           a._id === adminId || a.id === adminId ? { ...a, [field]: value === "Yes" } : a
         )
       );
-      toast.dismiss(toastId);
       toast.success(`${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} updated to ${value}`);
-    } catch (err) {
-      setAdmins(originalAdmins); // revert to original
-      toast.dismiss(toastId);
-      toast.error(err.message || "Failed to update access");
     } finally {
-      setUpdating((prev) => ({ ...prev, [adminId + field]: false }));
+      dispatch(setLoading(false));
     }
   };
 
   const handleDeleteAdmin = async () => {
     if (!adminToDelete) return;
+    dispatch(setLoading(true));
     try {
-      const res = await fetch(`/api/admin/other-admins/delete`, {
+      await fetchWithError(`/api/admin/other-admins/delete`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -103,27 +98,18 @@ export default function OtherAdminsPage() {
         },
         body: JSON.stringify({ targetAdminId: adminToDelete._id || adminToDelete.id }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || 'Failed to delete admin');
       toast.success('Admin deleted successfully!');
       setAdmins((prev) => prev.filter((a) => a._id !== (adminToDelete._id || adminToDelete.id) && a.id !== (adminToDelete._id || adminToDelete.id)));
       setShowDeleteModal(false);
       setAdminToDelete(null);
-    } catch (err) {
-      toast.error(err.message || 'Failed to delete admin');
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
-  if (loading) return (
-    <div className="p-5 lg:p-6">
-      <div className="flex items-center justify-center h-64">
-        <div className="w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full animate-spin border-t-brand-500"></div>
-      </div>
-    </div>
-  );
   if (error) return <div>{error}</div>;
 
-  if (!loading && !isSuperAdmin) {
+  if (!isSuperAdmin && admins.length > 0) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-xl text-center">
@@ -185,7 +171,7 @@ export default function OtherAdminsPage() {
                     <TableCell className="p-2 border text-center">
                       <select
                         value={admin.userDeleteAccess ? "Yes" : "No"}
-                        disabled={!isSuperAdmin || updating[(admin._id || admin.id) + "userDeleteAccess"]}
+                        disabled={!isSuperAdmin}
                         onChange={e => handleAccessChange(admin._id || admin.id, "userDeleteAccess", e.target.value)}
                         className="rounded border px-2 py-1 bg-white dark:bg-gray-800"
                       >
@@ -196,7 +182,7 @@ export default function OtherAdminsPage() {
                     <TableCell className="p-2 border text-center">
                       <select
                         value={admin.eventUpdateAccess ? "Yes" : "No"}
-                        disabled={!isSuperAdmin || updating[(admin._id || admin.id) + "eventUpdateAccess"]}
+                        disabled={!isSuperAdmin}
                         onChange={e => handleAccessChange(admin._id || admin.id, "eventUpdateAccess", e.target.value)}
                         className="rounded border px-2 py-1 bg-white dark:bg-gray-800"
                       >
@@ -207,7 +193,7 @@ export default function OtherAdminsPage() {
                     <TableCell className="p-2 border text-center">
                       <select
                         value={admin.commentUpdateAccess ? "Yes" : "No"}
-                        disabled={!isSuperAdmin || updating[(admin._id || admin.id) + "commentUpdateAccess"]}
+                        disabled={!isSuperAdmin}
                         onChange={e => handleAccessChange(admin._id || admin.id, "commentUpdateAccess", e.target.value)}
                         className="rounded border px-2 py-1 bg-white dark:bg-gray-800"
                       >
@@ -218,7 +204,7 @@ export default function OtherAdminsPage() {
                     <TableCell className="p-2 border text-center">
                       <select
                         value={admin.caseCategoryUpdateAccess ? "Yes" : "No"}
-                        disabled={!isSuperAdmin || updating[(admin._id || admin.id) + "caseCategoryUpdateAccess"]}
+                        disabled={!isSuperAdmin}
                         onChange={e => handleAccessChange(admin._id || admin.id, "caseCategoryUpdateAccess", e.target.value)}
                         className="rounded border px-2 py-1 bg-white dark:bg-gray-800"
                       >
@@ -229,7 +215,7 @@ export default function OtherAdminsPage() {
                     <TableCell className="p-2 border text-center">
                       <select
                         value={admin.changeDoctorPasswordAccess ? "Yes" : "No"}
-                        disabled={!isSuperAdmin || updating[(admin._id || admin.id) + "changeDoctorPasswordAccess"]}
+                        disabled={!isSuperAdmin}
                         onChange={e => handleAccessChange(admin._id || admin.id, "changeDoctorPasswordAccess", e.target.value)}
                         className="rounded border px-2 py-1 bg-white dark:bg-gray-800"
                       >
@@ -257,7 +243,7 @@ export default function OtherAdminsPage() {
             </>
           )}
         </Table>
-        {admins.length === 0 && !loading && (
+        {admins.length === 0 && !isSuperAdmin && (
           <div className="flex flex-col items-center justify-center py-16">
             <svg width="120" height="120" fill="none" className="mb-6 opacity-60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" stroke="#3b82f6" strokeWidth="4" fill="#e0e7ff" /><path d="M40 80c0-11 9-20 20-20s20 9 20 20" stroke="#6366f1" strokeWidth="4" strokeLinecap="round" /><circle cx="60" cy="54" r="10" fill="#6366f1" /></svg>
             <div className="text-2xl font-bold text-blue-700 dark:text-blue-200 mb-2">No admins found</div>

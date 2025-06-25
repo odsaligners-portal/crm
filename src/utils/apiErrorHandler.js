@@ -1,4 +1,6 @@
 import { toast } from 'react-toastify';
+import { store } from '@/store/store';
+import { setLoading } from '@/store/features/uiSlice';
 
 export class FetchError extends Error {
   constructor(message, status, data) {
@@ -36,12 +38,15 @@ export const handleFetchError = (error) => {
 };
 
 export const fetchWithError = async (url, options) => {
+  store.dispatch(setLoading(true));
   try {
     const response = await fetch(url, options);
-    return await handleApiError(response);
+    return await handleApiError(response); // Corrected line
   } catch (error) {
     const errorMessage = handleFetchError(error);
     toast.error(errorMessage);
     throw error;
+  } finally {
+    store.dispatch(setLoading(false));
   }
-}; 
+};

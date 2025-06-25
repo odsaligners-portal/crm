@@ -7,16 +7,18 @@ import { deleteObject, getDownloadURL, ref, uploadBytesResumable } from "firebas
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useEffect } from "react";
 import { useDropzone } from "react-dropzone";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
+import { fetchWithError } from '@/utils/apiErrorHandler';
+import { setLoading } from '@/store/features/uiSlice';
 
 export default function Step4Page() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const patientId = searchParams.get("id");
   const { token } = useSelector((state) => state.auth);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const dispatch = useDispatch();
   const [fileKeys, setFileKeys] = React.useState(Array(13).fill(undefined));
   const [imageUrls, setImageUrls] = React.useState(Array(13).fill(undefined));
   const [progresses, setProgresses] = React.useState(Array(13).fill(0));
@@ -34,23 +36,27 @@ export default function Step4Page() {
   }, [patientId, router]);
   
   React.useEffect(() => {
-    const fetchData = async ()=>{
+    const fetchData = async () => {
       if (patientId) {
-        const response = await fetch(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (response.ok) {
-          const patientData = await response.json();
+        dispatch(setLoading(true));
+        try {
+          const patientData = await fetchWithError(`/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`, {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
           setFormData(prev => ({ ...prev, ...patientData }));
+        } catch (error) {
+          // fetchWithError already toasts
+        } finally {
+          dispatch(setLoading(false));
         }
       }
-    }
+    };
     fetchData();
-  }, [patientId, token]);
+  }, [patientId, token, dispatch]);
 
-  const handleFileUpload = (file, idx) => {
+  const handleFileUpload = async (file, idx) => {
     if (!patientId) return;
     const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
     const isImageSlot = idx < 11;
@@ -65,18 +71,21 @@ export default function Step4Page() {
     const storagePath = `patients/${patientId}/${uniqueFileName}`;
     const storageRef = ref(storage, storagePath);
     const uploadTask = uploadBytesResumable(storageRef, file);
+    dispatch(setLoading(true));
 
     uploadTask.on("state_changed",
       (snapshot) => setProgresses(p => { const n = [...p]; n[idx] = (snapshot.bytesTransferred / snapshot.totalBytes) * 100; return n; }),
       (error) => {
         toast.error(`Upload failed: ${error.message}`);
         setProgresses(p => { const n = [...p]; n[idx] = 0; return n; });
+        dispatch(setLoading(false));
       },
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
           setImageUrls(p => { const n = [...p]; n[idx] = downloadURL; return n; });
           setFileKeys(p => { const n = [...p]; n[idx] = storagePath; return n; });
           toast.success("File uploaded successfully");
+          dispatch(setLoading(false));
         });
       }
     );
@@ -85,8 +94,8 @@ export default function Step4Page() {
   const handleDeleteFile = async (idx) => {
     const fileKey = fileKeys[idx];
     if (!fileKey) return;
-    setIsLoading(true);
     const fileRef = ref(storage, fileKey);
+    dispatch(setLoading(true));
     try {
       await deleteObject(fileRef);
       setImageUrls(p => { const n = [...p]; n[idx] = undefined; return n; });
@@ -96,7 +105,7 @@ export default function Step4Page() {
     } catch (error) {
       toast.error(`Failed to delete file: ${error.message}`);
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -104,7 +113,7 @@ export default function Step4Page() {
   
   const handleFinalSubmit = async () => {
     if (!patientId) return toast.error("No patient ID found");
-    setIsLoading(true);
+    dispatch(setLoading(true));
     try {
       const scanFiles = {};
       imageUrls.forEach((url, idx) => {
@@ -113,18 +122,17 @@ export default function Step4Page() {
           scanFiles[fieldName] = [{ fileUrl: url, fileKey: fileKeys[idx], uploadedAt: new Date().toISOString() }];
         }
       });
-      const response = await fetch(`/api/patients/update-details?id=${patientId}`, {
+      await fetchWithError(`/api/patients/update-details?id=${patientId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
         body: JSON.stringify({ scanFiles }),
       });
-      if (!response.ok) throw new Error((await response.json()).error || "Failed to save file details");
       toast.success("Patient record updated successfully");
       router.push("/doctor/patients");
     } catch (error) {
-      toast.error(error.message || "Failed to save file details");
+      // fetchWithError already toasts
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -204,7 +212,7 @@ export default function Step4Page() {
           </div>
           <div className="flex justify-between items-center gap-4 pt-8 border-t">
             <Button onClick={prevStep} type="button" variant="outline">Previous</Button>
-            <Button onClick={handleFinalSubmit} disabled={isLoading || !imageUrls.some(url => !!url)} type="submit">{isLoading ? "Submitting..." : "Submit"}</Button>
+            <Button onClick={handleFinalSubmit} disabled={!imageUrls.some(url => !!url)} type="submit">Submit</Button>
           </div>
         </form>
       </div>

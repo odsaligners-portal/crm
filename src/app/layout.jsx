@@ -6,6 +6,7 @@ import { SidebarProvider } from '@/context/SidebarContext';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { Providers } from './providers';
 import { ToastContainer } from 'react-toastify';
+import GlobalLoader from '@/components/common/GlobalLoader';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -23,6 +24,7 @@ export default function RootLayout({
         <Providers>
           <ThemeProvider>
             <SidebarProvider>
+              <GlobalLoader />
               {children}
               <ToastContainer
                 position="bottom-right"

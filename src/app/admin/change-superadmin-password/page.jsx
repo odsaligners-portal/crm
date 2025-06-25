@@ -4,13 +4,16 @@ import { useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import { fetchWithError } from "@/utils/apiErrorHandler";
+import { setLoading } from "@/store/features/uiSlice";
 
 export default function ChangeSuperAdminPasswordPage() {
   const { user, token } = useSelector((state) => state.auth) || {};
   const [form, setForm] = useState({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [show, setShow] = useState({ current: false, new: false, confirm: false });
-  const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const dispatch = useDispatch();
   const superAdminId = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID;
 
   if (!user || user.id !== superAdminId) {
@@ -43,9 +46,9 @@ export default function ChangeSuperAdminPasswordPage() {
     if (form.newPassword !== form.confirmPassword) {
       return toast.error("New passwords do not match.");
     }
-    setLoading(true);
+    dispatch(setLoading(true));
     try {
-      const res = await fetch("/api/admin/superadmin/change-password", {
+      await fetchWithError("/api/admin/superadmin/change-password", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -53,14 +56,10 @@ export default function ChangeSuperAdminPasswordPage() {
         },
         body: JSON.stringify({ currentPassword: form.currentPassword, newPassword: form.newPassword }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Failed to update password");
       toast.success("Password updated successfully");
       setForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
-    } catch (err) {
-      toast.error(err.message || "Failed to update password");
     } finally {
-      setLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -124,10 +123,9 @@ export default function ChangeSuperAdminPasswordPage() {
         </div>
         <button
           type="submit"
-          disabled={loading}
-          className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-150 disabled:bg-gray-400 text-lg tracking-wide relative z-10"
+          className="w-full bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all duration-150 text-lg tracking-wide relative z-10"
         >
-          {loading ? "Updating..." : "Update Password"}
+          Update Password
         </button>
       </form>
     </div>

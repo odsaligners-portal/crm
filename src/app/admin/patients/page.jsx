@@ -11,18 +11,21 @@ import { EyeIcon, PencilIcon, PlusIcon, TrashBinIcon } from "@/icons";
 import { countriesData } from "@/utils/countries";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import * as XLSX from 'xlsx';
 import FileUploadModal, { ViewFilesModal } from '@/components/admin/patients/FileUploadModal';
 import ConfirmationModal from '@/components/common/ConfirmationModal';
+import { setLoading } from "@/store/features/uiSlice";
+import { fetchWithError } from "@/utils/apiErrorHandler";
+
 const countries = Object.keys(countriesData);
 
 export default function ViewPatientRecords() {
   const router = useRouter();
   const { token, user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const [patients, setPatients] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalPatients, setTotalPatients] = useState(0);
@@ -39,7 +42,6 @@ export default function ViewPatientRecords() {
   const [showViewFilesModal, setShowViewFilesModal] = useState(false);
   const [viewFilesPatient, setViewFilesPatient] = useState(null);
   const [hasUserDeleteAccess, setHasUserDeleteAccess] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleOpenUploadModal = (patient) => {
     setSelectedPatient(patient);
@@ -76,9 +78,9 @@ export default function ViewPatientRecords() {
   });
 
   const [caseCategories, setCaseCategories] = useState([]);
-  const [isCategoriesLoading, setIsCategoriesLoading] = useState(true);
 
   const fetchPatients = async () => {
+    dispatch(setLoading(true));
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
@@ -88,24 +90,19 @@ export default function ViewPatientRecords() {
         ...filters,
       });
 
-      const response = await fetch(`/api/admin/patients?${params}`, {
+      const data = await fetchWithError(`/api/admin/patients?${params}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      if (!response.ok) {
-        throw new Error("Failed to fetch patients");
-      }
-
-      const data = await response.json();
       setPatients(data.patients);
       setTotalPages(data.pagination.totalPages);
       setTotalPatients(data.pagination.totalPatients);
     } catch (error) {
-      toast.error(error.message || "Failed to fetch patients");
+      // fetchWithError handles toast
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
@@ -115,39 +112,38 @@ export default function ViewPatientRecords() {
 
   useEffect(() => {
     const fetchCaseCategories = async () => {
-      setIsCategoriesLoading(true);
+      dispatch(setLoading(true));
       try {
-        const response = await fetch('/api/case-categories?active=true', {
+        const result = await fetchWithError('/api/case-categories?active=true', {
           headers: token ? { 'Authorization': `Bearer ${token}` } : {},
         });
-        if (!response.ok) throw new Error('Failed to fetch case categories');
-        const result = await response.json();
         setCaseCategories(result.data || []);
       } catch (err) {
-        toast.error(err.message);
+        // fetchWithError handles toast
       } finally {
-        setIsCategoriesLoading(false);
+        dispatch(setLoading(false));
       }
     };
     fetchCaseCategories();
-  }, [token]);
+  }, [token, dispatch]);
 
   useEffect(() => {
     const fetchAccess = async () => {
       if (!token) return;
+      dispatch(setLoading(true));
       try {
-        const res = await fetch('/api/user/profile', {
+        const data = await fetchWithError('/api/user/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) throw new Error('Failed to fetch user profile');
-        const data = await res.json();
         setHasUserDeleteAccess(!!data.user?.userDeleteAccess);
       } catch (err) {
         setHasUserDeleteAccess(false);
+      } finally {
+        dispatch(setLoading(false));
       }
     };
     fetchAccess();
-  }, [token]);
+  }, [token, dispatch]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -267,35 +263,37 @@ export default function ViewPatientRecords() {
 
   const handleDeletePatient = async () => {
     if (!patientToDelete) return;
-    setIsDeleting(true);
+    dispatch(setLoading(true));
     try {
-      const response = await fetch(`/api/admin/patients/update-details?id=${patientToDelete._id}`, {
+      await fetchWithError(`/api/admin/patients/update-details?id=${patientToDelete._id}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Failed to delete patient');
-      }
       toast.success('Patient deleted successfully');
       setPatients((prev) => prev.filter((p) => p._id !== patientToDelete._id));
       setShowDeleteModal(false);
       setPatientToDelete(null);
     } catch (error) {
-      toast.error(error.message || 'Failed to delete patient');
+      // fetchWithError handles toast
     } finally {
-      setIsDeleting(false);
+      dispatch(setLoading(false));
     }
   };
 
-  if (isLoading) {
+  if (patients.length === 0) {
     return (
-      <div className="p-5 lg:p-6">
-        <div className="flex items-center justify-center h-64">
-          <div className="w-16 h-16 border-4 border-t-4 border-gray-200 rounded-full animate-spin border-t-brand-500"></div>
-        </div>
+      <div className="flex flex-col items-center justify-center py-16">
+        <svg width="120" height="120" fill="none" className="mb-6 opacity-60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" stroke="#3b82f6" strokeWidth="4" fill="#e0e7ff" /><path d="M40 80c0-11 9-20 20-20s20 9 20 20" stroke="#6366f1" strokeWidth="4" strokeLinecap="round" /><circle cx="60" cy="54" r="10" fill="#6366f1" /></svg>
+        <div className="text-2xl font-bold text-blue-700 dark:text-blue-200 mb-2">No patients found</div>
+        <div className="text-gray-500 mb-6">Try adjusting your filters or add a new patient record.</div>
+        <Button
+          onClick={() => router.push("/admin/patients/create-patient-record/step-1")}
+          className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:scale-105 transition-transform"
+        >
+          Add your first patient
+        </Button>
       </div>
     );
   }
@@ -641,33 +639,16 @@ export default function ViewPatientRecords() {
           </div>
         )}
 
-        {patients.length === 0 && !isLoading && (
-          <div className="flex flex-col items-center justify-center py-16">
-            <svg width="120" height="120" fill="none" className="mb-6 opacity-60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" stroke="#3b82f6" strokeWidth="4" fill="#e0e7ff" /><path d="M40 80c0-11 9-20 20-20s20 9 20 20" stroke="#6366f1" strokeWidth="4" strokeLinecap="round" /><circle cx="60" cy="54" r="10" fill="#6366f1" /></svg>
-            <div className="text-2xl font-bold text-blue-700 dark:text-blue-200 mb-2">No patients found</div>
-            <div className="text-gray-500 mb-6">Try adjusting your filters or add a new patient record.</div>
-            <Button
-              onClick={() => router.push("/admin/patients/create-patient-record/step-1")}
-              className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:scale-105 transition-transform"
-            >
-              Add your first patient
-            </Button>
-          </div>
-        )}
-
         <ConfirmationModal
           isOpen={showDeleteModal && !!patientToDelete}
           onClose={() => {
-            if (!isDeleting) {
-                    setShowDeleteModal(false);
-                    setPatientToDelete(null);
-            }
+            setShowDeleteModal(false);
+            setPatientToDelete(null);
           }}
           onConfirm={handleDeletePatient}
           title="Delete Patient"
           message={patientToDelete ? `Are you sure you want to delete patient '${patientToDelete.patientName}'? This action cannot be undone.` : ''}
-          confirmButtonText={isDeleting ? "Deleting..." : "Delete"}
-          confirmButtonProps={{ disabled: isDeleting }}
+          confirmButtonText="Delete"
           cancelButtonText="Cancel"
         />
 

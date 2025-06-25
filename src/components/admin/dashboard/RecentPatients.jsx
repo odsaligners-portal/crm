@@ -14,21 +14,22 @@ import { toast } from 'react-toastify';
 import AvatarText from "@/components/ui/avatar/AvatarText";
 import Button from "@/components/ui/button/Button";
 import { PlusIcon } from "@/icons";
+import { useDispatch } from "react-redux";
+import { setLoading } from "@/store/features/uiSlice";
 
 export default function RecentPatients() {
   const router = useRouter();
   const { token } = useAppSelector(state => state.auth);
   const [patients, setPatients] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (!token) {
-      setIsLoading(false);
       return;
     }
 
     const fetchRecentPatients = async () => {
-      setIsLoading(true);
+      dispatch(setLoading(true));
       try {
         const response = await fetch(`/api/admin/patients?page=1&limit=5&sort=latest`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -43,35 +44,18 @@ export default function RecentPatients() {
       } catch (error) {
         toast.error(error.message || "Failed to fetch data");
       } finally {
-        setIsLoading(false);
+        dispatch(setLoading(false));
       }
     };
 
     fetchRecentPatients();
     
-  }, [token]);
+  }, [token, dispatch]);
 
   const handleClick = () => {
     router.push('/admin/patients');
   };
   
-  if (isLoading) {
-    return (
-      <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
-        <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-              Recent Patients
-            </h3>
-          </div>
-        </div>
-        <div className="flex justify-center items-center h-32">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pb-3 pt-4 dark:border-gray-800 dark:bg-white/[0.03] sm:px-6">
       <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">

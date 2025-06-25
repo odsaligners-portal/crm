@@ -1,53 +1,35 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { setLoading } from '@/store/features/uiSlice';
+import { fetchWithError } from '@/utils/apiErrorHandler';
 import Image from 'next/image';
-import { FiCalendar, FiMapPin, FiUser } from 'react-icons/fi';
-import { FaSpinner } from 'react-icons/fa';
-import { toast } from 'react-toastify';
-import { useSelector } from 'react-redux';
+import { useEffect, useState } from 'react';
+import { FiCalendar, FiUser } from 'react-icons/fi';
+import { useDispatch, useSelector } from 'react-redux';
 
 const EventsPage = () => {
     const { token } = useSelector((state) => state.auth);
     const [events, setEvents] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const dispatch = useDispatch();
 
     useEffect(() => {
         const fetchEvents = async () => {
+            dispatch(setLoading(true));
             try {
-                setLoading(true);
-                const response = await fetch('/api/events', { // Use the new admin route
+                const data = await fetchWithError('/api/events', {
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
-
-                if (response.ok) {
-                    const data = await response.json();
-                    setEvents(data);
-                } else if (response.status === 401) {
-                    toast.error("You must be logged in to view events.");
-                } else {
-                    toast.error('Failed to fetch events.');
-                }
+                setEvents(data);
             } catch (error) {
-                toast.error('An error occurred while fetching events.');
-                console.error(error);
+                // fetchWithError already toasts
             } finally {
-                setLoading(false);
+                dispatch(setLoading(false));
             }
         };
 
         fetchEvents();
-    }, []);
-
-    if (loading) {
-        return (
-            <div className="flex flex-col justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
-                <FaSpinner className="animate-spin text-4xl text-indigo-500" />
-                <p className="mt-4 text-lg text-gray-600 dark:text-gray-300">Loading Events...</p>
-            </div>
-        );
-    }
+    }, [token, dispatch]);
 
     // Combine featured and other events for grid
     const allEvents = events;
