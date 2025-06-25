@@ -1,7 +1,7 @@
 import SignInForm from "@/components/auth/SignInForm";
 
 export const metadata = {
-  title: "Sign In | Next.js CRM",
+  title: "Sign In | ODS CRM",
   description: "Sign in to your account",
 };
 

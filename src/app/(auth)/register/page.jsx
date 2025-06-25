@@ -2,7 +2,7 @@ import SignUpForm from "@/components/auth/SignUpForm";
 import { Metadata } from "next";
 
 export const metadata = {
-  title: "Sign Up | Next.js CRM",
+  title: "Registrations | ODS CRM",
   description: "Create a new account",
 };
 
