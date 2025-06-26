@@ -87,6 +87,14 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  priceUpdateAccess: {
+    type: Boolean,
+    default: false,
+  },
+  addSalesPersonAccess: {
+    type: Boolean,
+    default: false,
+  },
 }, {
   timestamps: true
 });

@@ -194,6 +194,18 @@ const patientSchema = new mongoose.Schema(
       enum: ['in-progress', 'midway', 'completed'],
       default: 'in-progress',
     },
+    caseApproval: {
+      type: Boolean,
+      default: false,
+    },
+    MRP: {
+      type: String,
+      default: '',
+    },
+    actualPrice: {
+      type: String,
+      default: '',
+    },
   },
   {
     timestamps: true,

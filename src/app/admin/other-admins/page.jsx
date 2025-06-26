@@ -155,6 +155,8 @@ export default function OtherAdminsPage() {
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Comment Update Access</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Case Category Update Access</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Change Doctor Password Access</TableCell>
+                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Price Update Access</TableCell>
+                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Sales & A/C Team Access</TableCell>
                   <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Actions</TableCell>
                 </TableRow>
               </TableHeader>
@@ -217,6 +219,28 @@ export default function OtherAdminsPage() {
                         value={admin.changeDoctorPasswordAccess ? "Yes" : "No"}
                         disabled={!isSuperAdmin}
                         onChange={e => handleAccessChange(admin._id || admin.id, "changeDoctorPasswordAccess", e.target.value)}
+                        className="rounded border px-2 py-1 bg-white dark:bg-gray-800"
+                      >
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    </TableCell>
+                    <TableCell className="p-2 border text-center">
+                      <select
+                        value={admin.priceUpdateAccess ? "Yes" : "No"}
+                        disabled={!isSuperAdmin}
+                        onChange={e => handleAccessChange(admin._id || admin.id, "priceUpdateAccess", e.target.value)}
+                        className="rounded border px-2 py-1 bg-white dark:bg-gray-800"
+                      >
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    </TableCell>
+                    <TableCell className="p-2 border text-center">
+                      <select
+                        value={admin.addSalesPersonAccess ? "Yes" : "No"}
+                        disabled={!isSuperAdmin}
+                        onChange={e => handleAccessChange(admin._id || admin.id, "addSalesPersonAccess", e.target.value)}
                         className="rounded border px-2 py-1 bg-white dark:bg-gray-800"
                       >
                         <option value="Yes">Yes</option>

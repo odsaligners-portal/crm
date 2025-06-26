@@ -10,20 +10,27 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-export const sendEmail = async ({ to, subject, html }) => {
+/**
+ * Send an email to a single recipient or multiple recipients.
+ * @param {Object} options
+ * @param {string|string[]} options.to - Email address or array of addresses
+ * @param {string} options.subject - Email subject
+ * @param {string} options.html - Email HTML content
+ */
+export const sendMail = async ({ to, subject, html }) => {
   try {
+    // Accepts string or array for 'to'
+    const recipients = Array.isArray(to) ? to.join(',') : to;
     const mailOptions = {
       from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_ADDRESS}>`,
-      to,
+      to: recipients,
       subject,
       html,
     };
-
     await transporter.sendMail(mailOptions);
     console.log('Email sent successfully');
   } catch (error) {
     console.error('Error sending email:', error);
-    // In a real app, you might want to throw the error or handle it more gracefully
-    // For now, we'll just log it to avoid crashing the server on email failure
+    // Optionally rethrow or handle error
   }
 }; 

@@ -233,6 +233,25 @@ export default function ViewPatientRecords() {
     setIsViewCommentsModalOpen(false);
   };
 
+  const handleApprove = async (patientId) => {
+    try {
+      const res = await fetch(`/api/patients/update-details?id=${patientId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ caseApproval: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to approve case');
+      toast.success('Case approved successfully!');
+      fetchPatients();
+    } catch (err) {
+      toast.error(err.message || 'Failed to approve case');
+    }
+  };
+
   return (
     <div className="p-5 lg:p-10 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -506,14 +525,19 @@ export default function ViewPatientRecords() {
                         >
                           <EyeIcon className="w-3 h-3" /> View
                         </Button>
-                        <Button
-                          onClick={() => router.push(`/doctor/patients/edit-patient-details?id=${patient._id}`)}
-                          size="xs"
-                          variant="outline"
-                          className="border-green-400 text-green-600 hover:bg-green-100/60 dark:hover:bg-green-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
-                        >
-                          <PencilIcon className="w-3 h-3" /> Edit
-                        </Button>
+                        {!patient.caseApproval && (
+                          <Button
+                            onClick={() => handleApprove(patient._id)}
+                            size="xs"
+                            variant="outline"
+                            className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          >
+                            Approve
+                          </Button>
+                        )}
+                        {patient.caseApproval && (
+                          <Badge color="success" className="ml-2 text-sm">Approved</Badge>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

@@ -34,6 +34,8 @@ export async function POST(req) {
       'commentUpdateAccess',
       'caseCategoryUpdateAccess',
       'changeDoctorPasswordAccess',
+      'priceUpdateAccess',
+      'addSalesPersonAccess',
     ];
     const updateData = {};
     accessFields.forEach(field => {
@@ -41,11 +43,16 @@ export async function POST(req) {
         updateData[field] = body[field];
       }
     });
+    // // If the UI sends a combined field for sales & a/c team access, update both
+    // if (body.salesAndAccountsTeamAccess !== undefined) {
+    //   updateData.priceUpdateAccess = body.salesAndAccountsTeamAccess;
+    //   updateData.addSalesPersonAccess = body.salesAndAccountsTeamAccess;
+    // }
     const user = await User.findByIdAndUpdate(
       body.targetAdminId,
       { $set: updateData },
       { new: true, runValidators: true }
-    ).select('id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess changeDoctorPasswordAccess');
+    ).select('id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess changeDoctorPasswordAccess priceUpdateAccess addSalesPersonAccess');
     if (!user) {
       throw new AppError('Admin not found', 404);
     }
@@ -59,6 +66,8 @@ export async function POST(req) {
         commentUpdateAccess: user.commentUpdateAccess,
         caseCategoryUpdateAccess: user.caseCategoryUpdateAccess,
         changeDoctorPasswordAccess: user.changeDoctorPasswordAccess,
+        priceUpdateAccess: user.priceUpdateAccess,
+        addSalesPersonAccess: user.addSalesPersonAccess,
       }
     });
   } catch (error) {

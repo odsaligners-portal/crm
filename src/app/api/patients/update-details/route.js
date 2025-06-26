@@ -62,6 +62,32 @@ export async function PUT(req) {
 
     const body = await req.json();
 
+    // If only caseApproval is being updated, allow admin or doctor
+    if (
+      Object.keys(body).length === 1 &&
+      Object.prototype.hasOwnProperty.call(body, 'caseApproval') &&
+      typeof body.caseApproval === 'boolean'
+    ) {
+      // Allow admin or doctor
+      if (['admin', 'doctor'].includes(authResult.user.role)) {
+        const updatedPatient = await Patient.findByIdAndUpdate(
+          id,
+          { $set: { caseApproval: body.caseApproval } },
+          { new: true, runValidators: true }
+        );
+        if (!updatedPatient) {
+          return NextResponse.json(
+            { error: 'Patient not found' },
+            { status: 404 }
+          );
+        }
+        return NextResponse.json(updatedPatient);
+      } else {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
+    // Otherwise, update only if user owns the patient
     const fieldsToUpdate = Object.fromEntries(
       Object.entries({
         // Step-1 fields

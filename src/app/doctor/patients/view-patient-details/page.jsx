@@ -417,23 +417,6 @@ export default function ViewPatientDetails() {
           </div>
         </div>
       </div>
-      {/* Sticky footer with Back and Edit buttons */}
-      <div className="w-full max-w-4xl mx-auto flex flex-col sm:flex-row gap-4 justify-end items-center py-8 px-2 sticky bottom-0 bg-white z-20 border-t border-blue-100 mt-8">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="px-6 py-3 rounded-lg bg-blue-50 text-blue-700 font-semibold shadow hover:bg-blue-100 transition"
-        >
-          Back
-        </button>
-        <button
-          type="button"
-          onClick={() => router.push(`/doctor/patients/edit-patient-details?id=${data._id}`)}
-          className="px-6 py-3 rounded-lg bg-blue-600 text-white font-semibold shadow hover:bg-blue-700 transition"
-        >
-          Edit
-        </button>
-      </div>
     </div>
   );
 }

@@ -4,7 +4,7 @@ import Patient from '@/app/api/models/Patient';
 import PatientComment from '@/app/api/models/PatientComment';
 import User from '@/app/api/models/User';
 import { verifyAuth } from '@/app/api/middleware/authMiddleware';
-import { sendEmail } from '@/app/api/utils/mailer';
+import { sendMail } from '@/app/api/utils/mailer';
 import Notification from '@/app/api/models/Notification';
 
 
@@ -160,7 +160,7 @@ export async function POST(request) {
       if (commenter.role === 'admin') {
         // Admin commented, notify the doctor
         if (patient.userId && patient.userId.email) {
-          await sendEmail({
+          await sendMail({
             to: patient.userId.email,
             subject: `New Comment on Patient: ${patient.patientName}`,
             html: `
@@ -176,10 +176,9 @@ export async function POST(request) {
         // Doctor commented, notify the admin(s)
         const admins = await User.find({ role: 'admin' });
         const adminEmails = admins.map(admin => admin.email).filter(Boolean);
-        
         if (adminEmails.length > 0) {
-          await sendEmail({
-            to: adminEmails.join(','),
+          await sendMail({
+            to: adminEmails,
             subject: `New Doctor Comment on Patient: ${patient.patientName}`,
             html: `
               <p>Hello Admin,</p>

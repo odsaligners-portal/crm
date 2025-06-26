@@ -71,6 +71,7 @@ export async function GET(req) {
         commentUpdateAccess: user.commentUpdateAccess,
         caseCategoryUpdateAccess: user.caseCategoryUpdateAccess,
         changeDoctorPasswordAccess: user.changeDoctorPasswordAccess,
+        priceUpdateAccess: user.priceUpdateAccess,
         mobile: user.mobile,
         gender: user.gender,
         country: user.country,
