@@ -75,7 +75,7 @@ export default function NotificationDropdown() {
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="absolute -right-[240px] mt-[17px] flex h-[480px] w-[350px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:w-[361px] lg:right-0"
+        className="fixed inset-x-0 mt-[17px] flex max-h-[480px] w-screen flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:absolute sm:right-0 sm:left-auto sm:w-[400px] sm:mx-0 sm:inset-x-auto md:w-[450px] lg:w-[500px] sm:border-2 sm:border-blue-500 dark:sm:border-blue-400"
       >
         <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-700">
           <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
@@ -103,7 +103,7 @@ export default function NotificationDropdown() {
         </div>
         <ul className="flex flex-col h-auto overflow-y-auto custom-scrollbar">
           {sortedNotifications.length === 0 ? (
-            <li className="text-center text-gray-400 py-6">No notifications</li>
+            <li className="text-center text-gray-400 py-6">No notifications found<br/>Please go to notification page to check.</li>
           ) : (
             sortedNotifications.map((n) => (
               <li key={n._id}>
