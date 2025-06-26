@@ -34,7 +34,7 @@ export default function AdminDashboard() {
         setActivities(activityRes.data);
         setLocations(locationsRes.data);
         setCaseData(caseDataRes.data);
-
+        
       } catch (error) {
         // fetchWithError handles all toasts
       } finally {

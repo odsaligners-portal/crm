@@ -14,6 +14,7 @@ const UserMap = ({ markers = [] }) => {
         <h3 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Global User Distribution</h3>
         <div style={{ height: 400 }}>
             <VectorMap
+                key={JSON.stringify(markers)}
                 map={worldMill}
                 backgroundColor="transparent"
                 markerStyle={{
@@ -32,7 +33,6 @@ const UserMap = ({ markers = [] }) => {
                     }
                 }}
                 markers={markers}
-                zoomOnScroll={false}
                 zoomAnimate={true}
                 regionStyle={{
                     initial: {
