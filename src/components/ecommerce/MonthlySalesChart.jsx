@@ -15,7 +15,7 @@ export default function MonthlySalesChart() {
   const options = {
     colors: ["#465fff"],
     chart: {
-      fontFamily: "Outfit, sans-serif",
+      fontFamily: "Poppins, sans-serif",
       type: "bar",
       height: 180,
       toolbar: {
@@ -64,7 +64,7 @@ export default function MonthlySalesChart() {
       show: true,
       position: "top",
       horizontalAlign: "left",
-      fontFamily: "Outfit",
+      fontFamily: "Poppins",
     },
     yaxis: {
       title: {

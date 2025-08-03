@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -17,20 +17,26 @@ const transporter = nodemailer.createTransport({
  * @param {string} options.subject - Email subject
  * @param {string} options.html - Email HTML content
  */
-export const sendMail = async ({ to, subject, html }) => {
+export const sendEmail = async ({ to, cc, subject, html }) => {
   try {
-    // Accepts string or array for 'to'
-    const recipients = Array.isArray(to) ? to.join(',') : to;
+    const recipients = Array.isArray(to) ? to.join(",") : to;
+    const ccRecipients = cc
+      ? Array.isArray(cc)
+        ? cc.join(",")
+        : cc
+      : undefined;
+
     const mailOptions = {
       from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_ADDRESS}>`,
       to: recipients,
+      cc: ccRecipients, // <-- Add CC here
       subject,
       html,
     };
+
     await transporter.sendMail(mailOptions);
-    console.log('Email sent successfully');
+    console.log("Email sent successfully");
   } catch (error) {
-    console.error('Error sending email:', error);
-    // Optionally rethrow or handle error
+    console.error("Error sending email:", error);
   }
-}; 
+};

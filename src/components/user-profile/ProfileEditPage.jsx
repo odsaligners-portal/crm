@@ -33,11 +33,12 @@ export default function ProfileEditPage() {
   if (!userData) {
     return <div className="text-center text-red-500 mt-10">User not found.</div>;
   }
-
   // Determine redirect path based on user role
   const getProfilePath = () => {
     if (userData.role === 'admin') return '/admin/profile';
     if (userData.role === 'doctor') return '/doctor/profile';
+    if (userData.role === 'planner') return '/planner/profile';
+    if (userData.role === "distributer") return "/distributer/profile";
     return '/';
   };
 

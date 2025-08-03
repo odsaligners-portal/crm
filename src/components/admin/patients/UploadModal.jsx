@@ -8,16 +8,20 @@ import { Editor } from '@tinymce/tinymce-react';
 import { useSelector, useDispatch } from "react-redux";
 import { setLoading } from '@/store/features/uiSlice';
 
-const UploadModal = ({ isOpen, onClose, patient }) => {
+const UploadModal = ({ isOpen, onClose, patient, isModification = false }) => {
   const [description, setDescription] = useState("");
   const dispatch = useDispatch();
   const [editorKey, setEditorKey] = useState(0); // Key to force re-render
   const { token } = useSelector((state) => state.auth);
+  const [commentSubmitted, setCommentSubmitted] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+
 
   useEffect(() => {
     if (isOpen) {
       setDescription("");
       setEditorKey(prevKey => prevKey + 1); // Change key to re-mount the editor
+      setCommentSubmitted(false);
     }
   }, [isOpen, patient]);
 
@@ -27,29 +31,67 @@ const UploadModal = ({ isOpen, onClose, patient }) => {
       toast.error("Comment cannot be empty.");
       return;
     }
+    setFormLoading(true);
     dispatch(setLoading(true));
     try {
-        const response = await fetch(`/api/patients/comments?patientId=${patient._id}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-            },
-            body: JSON.stringify({ comment: description }),
+      if (isModification) {
+        await fetch(`/api/patients/comments?patientId=${patient._id}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            comment: description,
+            modification: isModification,
+          }),
         });
-
+        const response = await fetch(
+          `/api/patients/update-details?id=${patient._id}`,
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({
+              modification: { commentSubmitted: true },
+              caseStatus: "setup pending",
+            }),
+          },
+        );
         if (response.ok) {
-            toast.success('Comment added successfully!');
-            onClose();
+          toast.success('Modification comment submitted!');
+          setCommentSubmitted(true);
+          onClose();
         } else {
-            const errorData = await response.json();
-            toast.error(errorData.message || 'Failed to add comment.');
+          const errorData = await response.json();
+          toast.error(errorData.message || 'Failed to submit modification comment.');
         }
+      } else {
+        // Normal comment
+        const response = await fetch(`/api/patients/comments?patientId=${patient._id}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ comment: description }),
+        });
+        if (response.ok) {
+          toast.success('Comment added successfully!');
+          onClose();
+        } else {
+          const errorData = await response.json();
+          toast.error(errorData.message || 'Failed to add comment.');
+        }
+      }
     } catch (error) {
-        console.error('Error submitting comment:', error);
-        toast.error('An error occurred while submitting the comment.');
+      console.error('Error submitting comment:', error);
+      toast.error('An error occurred while submitting the comment.');
     } finally {
-        dispatch(setLoading(false));
+      dispatch(setLoading(false));
+      setFormLoading(false);
     }
   };
 
@@ -57,20 +99,41 @@ const UploadModal = ({ isOpen, onClose, patient }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-2xl w-full p-1"
+      className="w-full max-w-2xl p-1"
       showCloseButton={false}
     >
-      <div className="relative rounded-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/50 shadow-2xl backdrop-blur-lg border border-white/20">
+      <div className="relative rounded-2xl border border-white/20 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-2xl backdrop-blur-lg dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/50">
         {/* Subtle SVG pattern background */}
-        <svg className="absolute inset-0 w-full h-full opacity-[0.03] pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none"><defs><pattern id="modal-dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#3b82f6" /></pattern></defs><rect width="100%" height="100%" fill="url(#modal-dots)" /></svg>
-        
-        <div className="p-8 relative z-10">
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-extrabold text-blue-800 dark:text-white/90 tracking-tight drop-shadow-lg">
+        <svg
+          className="pointer-events-none absolute inset-0 h-full w-full opacity-[0.03]"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+        >
+          <defs>
+            <pattern
+              id="modal-dots"
+              x="0"
+              y="0"
+              width="20"
+              height="20"
+              patternUnits="userSpaceOnUse"
+            >
+              <circle cx="1" cy="1" r="1" fill="#3b82f6" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#modal-dots)" />
+        </svg>
+
+        <div className="relative z-10 p-8">
+          <div className="mb-6 text-center">
+            <h2 className="text-3xl font-extrabold tracking-tight text-blue-800 drop-shadow-lg dark:text-white/90">
               Add Comment
             </h2>
-            <p className="mt-2 text-base text-gray-500 dark:text-gray-400 font-medium">
-              For patient: <span className="font-bold text-purple-600 dark:text-purple-400">{patient?.patientName}</span>
+            <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
+              For patient:{" "}
+              <span className="font-bold text-purple-600 dark:text-purple-400">
+                {patient?.patientName}
+              </span>
             </p>
           </div>
 
@@ -81,12 +144,12 @@ const UploadModal = ({ isOpen, onClose, patient }) => {
                   Patient Name
                 </label>
                 <div className="relative">
-                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <UserIcon className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     value={patient.patientName}
                     disabled
-                    className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 py-3 pl-11 pr-4 text-gray-500 dark:text-gray-400 cursor-not-allowed shadow-inner"
+                    className="w-full cursor-not-allowed rounded-lg border border-gray-200 bg-gray-100 py-3 pr-4 pl-11 text-gray-500 shadow-inner dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400"
                   />
                 </div>
               </div>
@@ -96,7 +159,7 @@ const UploadModal = ({ isOpen, onClose, patient }) => {
                   Description
                 </label>
                 <div className="relative">
-                   <PencilSquareIcon className="absolute left-4 top-5 h-5 w-5 text-gray-400" />
+                  <PencilSquareIcon className="absolute top-5 left-4 h-5 w-5 text-gray-400" />
                   <Editor
                     key={editorKey}
                     apiKey={process.env.NEXT_PUBLIC_TINY_EDITOR_API_KEY} // Replace with your free API key from tiny.cloud
@@ -105,40 +168,92 @@ const UploadModal = ({ isOpen, onClose, patient }) => {
                       height: 250,
                       menubar: false,
                       plugins: [
-                        'advlist', 'autolink', 'lists', 'link', 'image', 'charmap', 'preview',
-                        'anchor', 'searchreplace', 'visualblocks', 'code', 'fullscreen',
-                        'insertdatetime', 'media', 'table', 'help', 'wordcount'
+                        "advlist",
+                        "autolink",
+                        "lists",
+                        "link",
+                        "image",
+                        "charmap",
+                        "preview",
+                        "anchor",
+                        "searchreplace",
+                        "visualblocks",
+                        "code",
+                        "fullscreen",
+                        "insertdatetime",
+                        "media",
+                        "table",
+                        "help",
+                        "wordcount",
                       ],
-                      toolbar: 'undo redo | blocks | ' +
-                        'bold italic forecolor | alignleft aligncenter ' +
-                        'alignright alignjustify | bullist numlist outdent indent | ' +
-                        'removeformat | help',
-                      content_style: 'body { font-family:Inter,sans-serif; font-size:14px }',
-                      skin: (document.documentElement.classList.contains('dark') ? "oxide-dark" : "oxide"),
-                      content_css: (document.documentElement.classList.contains('dark') ? "dark" : "default"),
+                      toolbar:
+                        "undo redo | blocks | " +
+                        "bold italic forecolor | alignleft aligncenter " +
+                        "alignright alignjustify | bullist numlist outdent indent | " +
+                        "removeformat | help",
+                      content_style:
+                        "body {font-size:14px }",
+                      skin: document.documentElement.classList.contains("dark")
+                        ? "oxide-dark"
+                        : "oxide",
+                      content_css: document.documentElement.classList.contains(
+                        "dark",
+                      )
+                        ? "dark"
+                        : "default",
                     }}
-                    onEditorChange={(content, editor) => setDescription(content)}
+                    onEditorChange={(content, editor) =>
+                      setDescription(content)
+                    }
                   />
                 </div>
               </div>
-              
+
               <div className="mt-8 flex justify-end gap-4">
                 <Button
                   type="button"
                   onClick={onClose}
                   variant="secondary"
-                  className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-md bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105"
+                  className="flex transform items-center gap-2 rounded-lg bg-gray-200 px-6 py-3 text-gray-800 shadow-md transition-all duration-300 hover:scale-105 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
                 >
                   <XMarkIcon className="h-5 w-5" />
                   Cancel
                 </Button>
-                <Button 
-                  type="submit" 
-                  disabled={!description.trim()}
-                  className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+                <Button
+                  type="submit"
+                  disabled={formLoading}
+                  className="flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <PaperAirplaneIcon className="h-5 w-5" />
-                  Submit
+                  {formLoading ? (
+                    <>
+                      <svg
+                        className="h-5 w-5 animate-spin text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        />
+                      </svg>
+                      {isModification ? "Submiting Modification" : "Submiting"}
+                    </>
+                  ) : (
+                    <>
+                      <PaperAirplaneIcon className="h-5 w-5" />
+                      {isModification ? "Submit Modification" : "Submit"}
+                    </>
+                  )}
                 </Button>
               </div>
             </form>

@@ -1,9 +1,8 @@
+import { verifyAuth } from '@/app/api/middleware/authMiddleware';
 import { NextResponse } from 'next/server';
-import { handleError, AppError } from '../../../utils/errorHandler';
 import connectDB from '../../../config/db';
 import User from '../../../models/User';
-import jwt from 'jsonwebtoken';
-import { verifyAuth } from '@/app/api/middleware/authMiddleware';
+import { AppError, handleError } from '../../../utils/errorHandler';
 
 export async function POST(req) {
   try {
@@ -29,13 +28,15 @@ export async function POST(req) {
     }
     // Only allow updating access fields
     const accessFields = [
-      'userDeleteAccess',
-      'eventUpdateAccess',
-      'commentUpdateAccess',
-      'caseCategoryUpdateAccess',
-      'changeDoctorPasswordAccess',
-      'priceUpdateAccess',
-      'addSalesPersonAccess',
+      "userDeleteAccess",
+      "eventUpdateAccess",
+      "commentUpdateAccess",
+      "caseCategoryUpdateAccess",
+      "changeDoctorPasswordAccess",
+      "priceUpdateAccess",
+      "addSalesPersonAccess",
+      "distributerAccess",
+      "plannerAccess",
     ];
     const updateData = {};
     accessFields.forEach(field => {
@@ -51,8 +52,10 @@ export async function POST(req) {
     const user = await User.findByIdAndUpdate(
       body.targetAdminId,
       { $set: updateData },
-      { new: true, runValidators: true }
-    ).select('id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess changeDoctorPasswordAccess priceUpdateAccess addSalesPersonAccess');
+      { new: true, runValidators: true },
+    ).select(
+      "id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess changeDoctorPasswordAccess priceUpdateAccess addSalesPersonAccess distributerAccess plannerAccess",
+    );
     if (!user) {
       throw new AppError('Admin not found', 404);
     }
@@ -68,7 +71,9 @@ export async function POST(req) {
         changeDoctorPasswordAccess: user.changeDoctorPasswordAccess,
         priceUpdateAccess: user.priceUpdateAccess,
         addSalesPersonAccess: user.addSalesPersonAccess,
-      }
+        distributerAccess: user.distributerAccess,
+        plannerAccess: user.plannerAccess,
+      },
     });
   } catch (error) {
     return handleError(error);

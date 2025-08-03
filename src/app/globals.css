@@ -4,8 +4,6 @@
 
 @theme {
   --font-*: initial;
-  --font-outfit: Outfit, sans-serif;
-
   --breakpoint-*: initial;
   --breakpoint-2xsm: 375px;
   --breakpoint-xsm: 425px;
@@ -188,8 +186,19 @@
     cursor: pointer;
   }
   body {
-    @apply relative font-normal font-outfit z-1 bg-gray-50;
+    @apply relative font-normal z-1 bg-gray-50;
   }
+}
+
+/* @font-face {
+  font-family: 'Righteous';
+  src: url('/fonts/Righteous-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+} */
+
+body {
+  font-family: 'Righteous', sans-serif;
 }
 
 @utility menu-item {
@@ -803,5 +812,7 @@ span.flatpickr-weekday,
 .pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
 }
+
+
 
 

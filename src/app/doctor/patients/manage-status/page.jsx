@@ -39,7 +39,7 @@ export default function ManagePatientStatusPage() {
     }
     if (token) fetchPatients();
   }, [token, debouncedSearchTerm, dispatch]);
-  console.log(patients)
+
   const handleStatusChange = async (patientId, newStatus) => {
     const toastId = toast.loading("Updating status...");
     dispatch(setLoading(true));

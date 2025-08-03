@@ -28,7 +28,11 @@ export default function DoctorLayout({
       if(role === 'admin'){
         router.push('/admin');
       }else if(role === 'super-admin'){
-        router.push('/super-admin');
+        router.push('/admin');
+      } else if (role === 'planner') {
+        router.push('/planner');
+      } else if(role === 'distributer'){
+        router.push('/distributer');
       }else{
         router.push('/signin');
       }

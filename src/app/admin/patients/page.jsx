@@ -543,17 +543,7 @@ export default function ViewPatientRecords() {
                       </TableCell>
                       <TableCell className="text-center py-1 px-2">
                         <div className="flex gap-1 justify-center">
-                          <Button
-                            onClick={() => {
-                              setFileUploadPatient(patient);
-                              setShowFileUploadModal(true);
-                            }}
-                            size="xs"
-                            variant="outline"
-                            className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
-                          >
-                            Upload
-                          </Button>
+                          
                           <Button
                             onClick={() => {
                               setViewFilesPatient(patient);

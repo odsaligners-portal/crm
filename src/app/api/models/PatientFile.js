@@ -13,7 +13,6 @@ const patientFileSchema = new mongoose.Schema({
   },
   fileType: {
     type: String,
-    enum: ['image', 'pdf', 'video'],
     required: true,
   },
   fileUrl: {
@@ -25,8 +24,8 @@ const patientFileSchema = new mongoose.Schema({
     required: true,
   },
   uploadedBy: {
-    type: String,
-    enum: ['Admin', 'Doctor'],
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
     required: true,
   },
   uploadedAt: {

@@ -1,4 +1,4 @@
-import { Outfit } from 'next/font/google';
+
 import './globals.css';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -8,10 +8,6 @@ import { Providers } from './providers';
 import { ToastContainer } from 'react-toastify';
 import GlobalLoader from '@/components/common/GlobalLoader';
 
-const outfit = Outfit({
-  subsets: ["latin"],
-});
-
 export default function RootLayout({
   children,
 }) {
@@ -19,8 +15,9 @@ export default function RootLayout({
     <html lang="en">
       <head>  
         <link rel="shortcut icon" type="image/x-icon" href="/fav.png" />
+        <link href="https://fonts.googleapis.com/css2?family=Righteous&amp;display=swap" rel="stylesheet"></link>
       </head>
-      <body className={`${outfit.className} dark:bg-gray-900`}>
+      <body className={`dark:bg-gray-900`}>
         <Providers>
           <ThemeProvider>
             <SidebarProvider>

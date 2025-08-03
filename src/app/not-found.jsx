@@ -23,7 +23,13 @@ export default function NotFound() {
             ? "/doctor"
             : role === "admin"
             ? "/admin"
-            : role === "super-admin" ? "/super-admin" : '/';
+            : role === "super-admin"
+            ? "/admin"
+            : role === "planner"
+            ? "/planner"
+            : role === "distributer"
+            ? "/distributer"
+            : "/";
         
         toast.info("Page not found, redirecting to your dashboard.");
         router.push(redirectPath);

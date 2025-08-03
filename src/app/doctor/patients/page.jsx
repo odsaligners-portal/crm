@@ -18,6 +18,7 @@ import ViewCommentsModal from "@/components/admin/patients/ViewCommentsModal";
 import FileUploadModal, { ViewFilesModal } from '@/components/admin/patients/FileUploadModal';
 import { setLoading } from '@/store/features/uiSlice';
 import { fetchWithError } from '@/utils/apiErrorHandler';
+import { useRef } from "react";
 
 const countries = Object.keys(countriesData);
 
@@ -38,6 +39,7 @@ export default function ViewPatientRecords() {
   const [fileUploadPatient, setFileUploadPatient] = useState(null);
   const [showViewFilesModal, setShowViewFilesModal] = useState(false);
   const [viewFilesPatient, setViewFilesPatient] = useState(null);
+  const [modificationModalPatient, setModificationModalPatient] = useState(null);
   const dispatch = useDispatch();
 
   // Filter state
@@ -52,6 +54,7 @@ export default function ViewPatientRecords() {
     selectedPrice: "",
     startDate: "",
     endDate: "",
+    caseStatus: "",
   });
 
   const [caseCategories, setCaseCategories] = useState([]);
@@ -132,6 +135,7 @@ export default function ViewPatientRecords() {
       treatmentFor: "",
       startDate: "",
       endDate: "",
+      caseStatus: "",
     });
     setCurrentPage(1);
   };
@@ -144,6 +148,7 @@ export default function ViewPatientRecords() {
     if (filters.caseCategory) count++;
     if (filters.caseType) count++;
     if (filters.startDate || filters.endDate) count++;
+    if (filters.caseStatus) count++;
     return count;
   };
 
@@ -211,6 +216,7 @@ export default function ViewPatientRecords() {
     treatmentFor: 'Treatment For',
     startDate: 'Start Date',
     endDate: 'End Date',
+    caseStatus: 'Case Status',
   };
 
   const handleOpenUploadModal = (patient) => {
@@ -249,6 +255,29 @@ export default function ViewPatientRecords() {
       fetchPatients();
     } catch (err) {
       toast.error(err.message || 'Failed to approve case');
+    }
+  };
+
+  const handleStatusChange = async (patient, newStatus) => {
+    if (newStatus === 'modify') {
+      setModificationModalPatient(patient);
+      return;
+    }
+    try {
+      const res = await fetch(`/api/patients/change-status?id=${patient._id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ caseStatus: newStatus }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update status');
+      toast.success('Status updated successfully!');
+      fetchPatients();
+    } catch (err) {
+      toast.error(err.message || 'Failed to update status');
     }
   };
 
@@ -375,6 +404,18 @@ export default function ViewPatientRecords() {
               label="Case Type"
               className="w-full"
             />
+            <Select
+              value={filters.caseStatus}
+              onChange={(e) => handleFilterChange("caseStatus", e.target.value)}
+              options={[
+                { label: 'Setup Pending', value: 'setup pending' },
+                { label: 'Approval Pending', value: 'approval pending' },
+                { label: 'Approved', value: 'approved' },
+                { label: 'Rejected', value: 'rejected' },
+              ]}
+              label="Case Status"
+              className="w-full"
+            />
 
             <div className="flex flex-col gap-1 w-full col-span-2">
               <label className="text-xs font-medium text-gray-600">Created Date</label>
@@ -493,17 +534,6 @@ export default function ViewPatientRecords() {
                       <div className="flex gap-1 justify-center">
                         <Button
                           onClick={() => {
-                            setFileUploadPatient(patient);
-                            setShowFileUploadModal(true);
-                          }}
-                          size="xs"
-                          variant="outline"
-                          className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
-                        >
-                          Upload
-                        </Button>
-                        <Button
-                          onClick={() => {
                             setViewFilesPatient(patient);
                             setShowViewFilesModal(true);
                           }}
@@ -515,7 +545,7 @@ export default function ViewPatientRecords() {
                         </Button>
                       </div>
                     </TableCell>
-                    <TableCell className="text-center py-1 px-2">
+                    <TableCell className="text-center py-1 px-2 gap-1">
                       <div className="flex gap-1 justify-center">
                         <Button
                           onClick={() => router.push(`/doctor/patients/view-patient-details?id=${patient._id}`)}
@@ -525,19 +555,46 @@ export default function ViewPatientRecords() {
                         >
                           <EyeIcon className="w-3 h-3" /> View
                         </Button>
-                        {!patient.caseApproval && (
-                          <Button
-                            onClick={() => handleApprove(patient._id)}
-                            size="xs"
-                            variant="outline"
-                            className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
-                          >
-                            Approve
-                          </Button>
-                        )}
-                        {patient.caseApproval && (
-                          <Badge color="success" className="ml-2 text-sm">Approved</Badge>
-                        )}
+                        {/* Status Dropdown */}
+                        <div className="text-center items-center justify-center flex">
+                          {patient.caseStatus === 'setup pending' && (
+                            <span disabled className="bg-gray-100 text-gray-500 rounded px-2 py-1 text-xs">
+                              Setup Pending
+                            </span>
+                          )}
+                          {patient.caseStatus === 'approval pending' && (
+                            <select
+                              className="bg-blue-100 text-blue-700 rounded px-2 py-1 text-xs border border-blue-300"
+                              value="approval pending"
+                              onChange={e => handleStatusChange(patient, e.target.value)}
+                            >
+                              <option value="approval pending">Approval Pending</option>
+                              <option value="approved">Approve</option>
+                              <option value="rejected">Reject</option>
+                              <option value="modify">Modify</option>
+                            </select>
+                          )}
+                          {patient.caseStatus === 'approved' && (
+                            <span disabled className="bg-green-100 text-green-700 rounded px-2 py-1 text-xs">
+                              Approved
+                            </span>
+                          )}
+                          {patient.caseStatus === 'rejected' && (
+                            <span disabled className="bg-red-100 text-red-700 rounded px-2 py-1 text-xs">
+                              Rejected
+                            </span>
+                          )}
+                          {patient.caseStatus === 'modify' && (
+                            <Button
+                              size="xs"
+                              variant="outline"
+                              className="border-yellow-400 text-yellow-700 bg-yellow-50 hover:bg-yellow-100 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                              onClick={() => setModificationModalPatient(patient)}
+                            >
+                              Submit Modification
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </TableCell>
                   </TableRow>
@@ -632,6 +689,18 @@ export default function ViewPatientRecords() {
         patient={viewFilesPatient}
         token={token}
       />
+      {/* Modification Modal */}
+      {modificationModalPatient && (
+        <UploadModal
+          isOpen={!!modificationModalPatient}
+          onClose={() => {
+            setModificationModalPatient(null);
+            fetchPatients();
+          }}
+          patient={modificationModalPatient}
+          isModification={true}
+        />
+      )}
     </div>
   );
 }

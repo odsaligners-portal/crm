@@ -3,14 +3,17 @@ import Checkbox from "@/components/form/input/Checkbox";
 import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import { EyeCloseIcon, EyeIcon } from "@/icons";
-import { setCredentials } from '@/store/features/auth/authSlice';
-import { setNotifications } from '@/store/features/notificationSlice';
-import { setLoading } from '@/store/features/uiSlice';
-import { useAppDispatch } from '@/store/store';
+import { setCredentials } from "@/store/features/auth/authSlice";
+import {
+  setNotifications,
+  setNotificationUserId,
+} from "@/store/features/notificationSlice";
+import { setLoading } from "@/store/features/uiSlice";
+import { useAppDispatch } from "@/store/store";
 import Link from "next/link";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { toast } from 'react-toastify';
+import { toast } from "react-toastify";
 
 export default function SignInForm() {
   const router = useRouter();
@@ -18,15 +21,16 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
+    distributer: isChecked ? true : false,
   });
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
@@ -35,10 +39,10 @@ export default function SignInForm() {
     dispatch(setLoading(true));
     try {
       const payload = { ...formData };
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(payload),
       });
@@ -46,44 +50,61 @@ export default function SignInForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.message || 'Login failed');
+        toast.error(data.message || "Login failed");
         return;
       }
-      
+
       // Update Redux store with user data
-      dispatch(setCredentials({
-        user: data.user,
-        token: data.token,
-        role: data.user.role
-      }));
+      dispatch(
+        setCredentials({
+          user: data.user,
+          token: data.token,
+          role: data.user.role,
+        }),
+      );
 
       // Fetch notifications and set in Redux
       try {
-        const notifRes = await fetch('/api/notifications', {
+        const notifRes = await fetch("/api/notifications", {
           headers: { Authorization: `Bearer ${data.token}` },
         });
+
         if (notifRes.ok) {
           const notifData = await notifRes.json();
+
+          const userId = data.user?.id;
+          localStorage.setItem("userId", userId || "");
+
+          if (userId) {
+            dispatch(setNotificationUserId(userId));
+          }
+
           dispatch(setNotifications(notifData.notifications || []));
         }
-      } catch (e) { /* ignore */ }
+      } catch (e) {
+        console.error("Failed to fetch notifications:", e);
+      }
 
-      toast.success('Successfully logged in!');
-      
+      toast.success("Successfully logged in!");
+
       // Role-based redirection
       const userRole = data.user.role;
-      if (userRole === 'admin') {
-        router.push('/admin');
-      } else if (userRole === 'doctor') {
-        router.push('/doctor');
+      if (userRole === "admin") {
+        router.push("/admin");
+      } else if (userRole === "doctor") {
+        router.push("/doctor");
+      } else if (userRole === "planner") {
+        router.push("/planner");
+      } else if (userRole === "distributer") {
+        router.push("/distributer");
       } else {
-        toast.error('Invalid User Role');
-        router.push('/signin'); // Default redirect
+        toast.error("Invalid User Role");
+        router.push("/signin"); // Default redirect
       }
     } catch (error) {
       // Error is already handled by fetchWithError
-      console.error('Login error:', error);
-      toast.error('An error occurred during login.');
+      console.error("Login error:", error);
+      toast.error("An error occurred during login.");
     } finally {
       dispatch(setLoading(false));
     }
@@ -91,13 +112,16 @@ export default function SignInForm() {
 
   return (
     <>
-      <div className="min-h-screen w-full flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: 'url(/materials/bg-signin.jpg)' }}>
-        <div className="w-full max-w-md mx-auto p-8 rounded-2xl shadow-2xl backdrop-blur-xs bg-white/60 dark:bg-gray-900/60">
+      <div
+        className="flex min-h-screen w-full items-center justify-center bg-cover bg-center"
+        style={{ backgroundImage: "url(/materials/bg-signin.jpg)" }}
+      >
+        <div className="mx-auto w-full max-w-md rounded-2xl bg-white/60 p-8 shadow-2xl backdrop-blur-xs dark:bg-gray-900/60">
           <div className="mb-5 sm:mb-8">
-            <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md text-center">
+            <h1 className="text-title-sm sm:text-title-md mb-2 text-center font-semibold text-gray-800 dark:text-white/90">
               Sign In
             </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400">
               Enter your email and password to sign in!
             </p>
           </div>
@@ -134,7 +158,7 @@ export default function SignInForm() {
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
+                    className="absolute top-1/2 right-4 z-30 -translate-y-1/2 cursor-pointer"
                   >
                     {showPassword ? (
                       <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
@@ -148,20 +172,26 @@ export default function SignInForm() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Checkbox
-                    className="w-5 h-5"
+                    className="h-5 w-5"
                     checked={isChecked}
-                    onChange={setIsChecked}
+                    onChange={(checked) => {
+                      setIsChecked(checked);
+                      setFormData((prev) => ({
+                        ...prev,
+                        distributer: checked,
+                      }));
+                    }}
                   />
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Remember me
+                    Sign in as a Distributer
                   </p>
                 </div>
               </div>
               {/* <!-- Button --> */}
               <div>
-                <button 
+                <button
                   type="submit"
-                  className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-brand-500 shadow-theme-xs hover:bg-brand-600 flex w-full items-center justify-center rounded-lg px-4 py-3 text-sm font-medium text-white transition disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Sign In
                 </button>
@@ -169,7 +199,7 @@ export default function SignInForm() {
             </div>
           </form>
           <div className="mt-5">
-            <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
+            <p className="text-center text-sm font-normal text-gray-700 sm:text-start dark:text-gray-400">
               Don't have an account?{" "}
               <Link
                 href="/register"

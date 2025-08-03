@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 const commentSchema = new mongoose.Schema({
   comment: {
@@ -8,12 +8,13 @@ const commentSchema = new mongoose.Schema({
   commentedBy: {
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User',
       required: true,
+      refPath: "commentedBy.userType",
     },
     userType: {
       type: String,
       required: true,
+      enum: ["User", "Distributer"], // Ensure only valid models
     },
     name: {
       type: String,
@@ -26,22 +27,27 @@ const commentSchema = new mongoose.Schema({
   },
 });
 
-const patientCommentSchema = new mongoose.Schema({
-  patientId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Patient',
-    required: true,
-    unique: true,
+const patientCommentSchema = new mongoose.Schema(
+  {
+    patientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Patient",
+      required: true,
+      unique: true,
+    },
+    patientName: {
+      type: String,
+      required: true,
+    },
+    comments: [commentSchema],
   },
-  patientName: {
-    type: String,
-    required: true,
+  {
+    timestamps: true,
   },
-  comments: [commentSchema],
-}, {
-  timestamps: true,
-});
+);
 
-const PatientComment = mongoose.models.PatientComment || mongoose.model('PatientComment', patientCommentSchema);
+const PatientComment =
+  mongoose.models.PatientComment ||
+  mongoose.model("PatientComment", patientCommentSchema);
 
-export default PatientComment; 
+export default PatientComment;

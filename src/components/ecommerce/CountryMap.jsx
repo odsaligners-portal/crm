@@ -70,7 +70,6 @@ const CountryMap = ({ mapColor }) => {
         initial: {
           fill: mapColor || "#D0D5DD",
           fillOpacity: 1,
-          fontFamily: "Outfit",
           stroke: "none",
           strokeWidth: 0,
           strokeOpacity: 0,

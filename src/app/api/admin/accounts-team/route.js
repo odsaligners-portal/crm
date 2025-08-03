@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import connectDB from '@/app/api/config/db';
 import AccountsTeam from '@/app/api/models/AccountsTeam';
 import { verifyAuth } from '@/app/api/middleware/authMiddleware';
+import User from '../../models/User';
 
 export async function GET(req) {
   await connectDB();
@@ -9,10 +10,24 @@ export async function GET(req) {
   if (!authResult.success || !authResult.user) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
-  const superAdminId = process.env.SUPER_ADMIN_ID;
-  if (authResult.user.id !== superAdminId) {
-    return NextResponse.json({ message: 'Only super admin can access this resource' }, { status: 403 });
+  
+  const userData = await User.findById(authResult.user.id);
+
+  const isAdmin = userData.role === 'admin';
+
+  if (!isAdmin) {
+    return NextResponse.json({ message: 'Only admin can access this resource' }, { status: 403 });
   }
+
+  const hasAccess = userData.addSalesPersonAccess;
+
+  if (!hasAccess) {
+    return NextResponse.json(
+      { message: "You don't have permission to access this resource" },
+      { status: 403 },
+    );
+  }
+
   const accountsTeam = await AccountsTeam.find();
   return NextResponse.json({ accountsTeam });
 }
@@ -23,10 +38,26 @@ export async function POST(req) {
   if (!authResult.success || !authResult.user) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
-  const superAdminId = process.env.SUPER_ADMIN_ID;
-  if (authResult.user.id !== superAdminId) {
-    return NextResponse.json({ message: 'Only super admin can access this resource' }, { status: 403 });
+  const userData = await User.findById(authResult.user.id);
+
+  const isAdmin = userData.role === "admin";
+
+  if (!isAdmin) {
+    return NextResponse.json(
+      { message: "Only admin can access this resource" },
+      { status: 403 },
+    );
   }
+
+  const hasAccess = userData.addSalesPersonAccess;
+
+  if (!hasAccess) {
+    return NextResponse.json(
+      { message: "You don't have permission to access this resource" },
+      { status: 403 },
+    );
+  }
+
   try {
     const body = await req.json();
     const { name, mobile, email } = body;
@@ -52,10 +83,26 @@ export async function DELETE(req) {
   if (!authResult.success || !authResult.user) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
   }
-  const superAdminId = process.env.SUPER_ADMIN_ID;
-  if (authResult.user.id !== superAdminId) {
-    return NextResponse.json({ message: 'Only super admin can access this resource' }, { status: 403 });
+  const userData = await User.findById(authResult.user.id);
+
+  const isAdmin = userData.role === "admin";
+
+  if (!isAdmin) {
+    return NextResponse.json(
+      { message: "Only admin can access this resource" },
+      { status: 403 },
+    );
   }
+
+  const hasAccess = userData.addSalesPersonAccess;
+
+  if (!hasAccess) {
+    return NextResponse.json(
+      { message: "You don't have permission to access this resource" },
+      { status: 403 },
+    );
+  }
+  
   try {
     const body = await req.json();
     const { id } = body;

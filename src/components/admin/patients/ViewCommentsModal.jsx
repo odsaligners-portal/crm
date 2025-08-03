@@ -73,23 +73,46 @@ const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
         
         {/* Content Body */}
         <div className="p-6 overflow-y-auto flex-grow">
-          {comments?.length > 0 ? (
-              comments.map((comment) => (
-                  <div key={comment._id} className="p-4 mb-4 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 shadow-sm">
-                      <div className="flex justify-between items-baseline mb-2">
-                          <p className="font-bold text-gray-800 dark:text-white">
-                              Commented By: {comment.commentedBy.name}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                              {new Date(comment.datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
-                          </p>
-                      </div>
-                      <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: comment.comment }}></div>
+          {(() => {
+            if (!comments?.length) {
+              return <div className="text-center p-8 text-gray-500">No comments found for this patient.</div>;
+            }
+            let modComment = null;
+            let otherComments = comments;
+            if (patient.modification && patient.modification.commentSubmitted && comments.length > 0) {
+              modComment = comments[comments.length - 1];
+              otherComments = comments.slice(0, -1);
+            }
+            return <>
+              {modComment && (
+                <div key={modComment._id} className="p-4 mb-4 rounded-lg border border-green-300 bg-green-50 dark:bg-green-900/30 dark:border-green-700 shadow-sm">
+                  <div className="flex justify-between items-baseline mb-2">
+                    <p className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                      Commented By: {modComment.commentedBy.name}
+                      <span className="ml-2 px-2 py-0.5 rounded bg-green-200 text-green-800 text-xs font-semibold">Modification</span>
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(modComment.datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                    </p>
                   </div>
-              ))
-          ) : (
-              <div className="text-center p-8 text-gray-500">No comments found for this patient.</div>
-          )}
+                  <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: modComment.comment }}></div>
+                </div>
+              )}
+              {otherComments.map((comment) => (
+                <div key={comment._id} className="p-4 mb-4 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 shadow-sm">
+                  <div className="flex justify-between items-baseline mb-2">
+                    <p className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
+                      Commented By: {comment.commentedBy.name}
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(comment.datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
+                    </p>
+                  </div>
+                  <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: comment.comment }}></div>
+                </div>
+              ))}
+            </>;
+          })()}
         </div>
         
         {/* Footer */}

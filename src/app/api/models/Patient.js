@@ -77,6 +77,11 @@ const patientSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+    plannerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null,
+    },
 
     // Chief complaint & case
     chiefComplaint: {
@@ -123,6 +128,16 @@ const patientSchema = new mongoose.Schema(
       default: { required: false, comments: '' },
     },
 
+    fileUploadCount: {
+        count: {
+          type: Number,
+          default: 0,
+        },
+        remianing: {
+          type: Number,
+          default: 1,
+        },
+    },
     // IPR
     interproximalReduction: {
       type: {
@@ -194,9 +209,13 @@ const patientSchema = new mongoose.Schema(
       enum: ['in-progress', 'midway', 'completed'],
       default: 'in-progress',
     },
-    caseApproval: {
-      type: Boolean,
-      default: false,
+    caseStatus: {
+      type: String,
+      enum: ['setup pending', 'approval pending', 'approved', 'rejected', 'modify'],
+      default: 'setup pending',
+    },
+    modification: {
+      commentSubmitted: { type: Boolean, default: false },
     },
     MRP: {
       type: String,
@@ -205,6 +224,11 @@ const patientSchema = new mongoose.Schema(
     actualPrice: {
       type: String,
       default: '',
+    },
+    amount: {
+      total: { type: Number, default: 0 },
+      received: { type: Number, default: 0 },
+      pending: { type: Number, default: 0 },
     },
   },
   {

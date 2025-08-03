@@ -1,9 +1,8 @@
+import { verifyAuth } from '@/app/api/middleware/authMiddleware';
 import { NextResponse } from 'next/server';
-import { handleError, AppError } from '../../../utils/errorHandler';
 import connectDB from '../../../config/db';
 import User from '../../../models/User';
-import { verifyAuth } from '@/app/api/middleware/authMiddleware';
-import bcrypt from 'bcryptjs';
+import { AppError, handleError } from '../../../utils/errorHandler';
 
 export async function POST(req) {
   try {
@@ -33,10 +32,12 @@ export async function POST(req) {
       throw new AppError('User with this email already exists', 409);
     }
 
-    // Create new admin user
+    // Create new admin or planner user
+    const allowedRoles = ['admin', 'planner', 'distributer'];
+    const role = allowedRoles.includes(body.role) ? body.role : 'admin';
     const newUser = new User({
       ...body,
-      role: 'admin',
+      role,
     });
     await newUser.save();
 
@@ -44,7 +45,7 @@ export async function POST(req) {
     const userResponse = newUser.toObject();
     delete userResponse.password;
 
-    return NextResponse.json({ message: 'Admin created successfully' }, { status: 201 });
+    return NextResponse.json({ message: `${role.charAt(0).toUpperCase() + role.slice(1)} created successfully` }, { status: 201 });
   } catch (error) {
     return handleError(error);
   }

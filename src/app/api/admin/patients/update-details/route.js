@@ -93,10 +93,11 @@ export async function PUT(req) {
         archExpansion: body.archExpansion,
         archExpansionComments: body.archExpansionComments,
         additionalComments: body.additionalComments,
+        plannerId: body.plannerId,
         // Step-4 field
         scanFiles: body.scanFiles,
         userId: body.userId,
-      }).filter(([_, v]) => v !== undefined)
+      }).filter(([v]) => v !== undefined)
     );
 
     const updatedPatient = await Patient.findOneAndUpdate(

@@ -1,27 +1,24 @@
 "use client";
 import { useSidebar } from "@/context/SidebarContext";
-import {
-  HorizontaLDots
-} from "@/icons/index";
+import { HorizontaLDots } from "@/icons/index";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback } from "react";
 import {
-  MdAdd, MdComment,
+  MdAdd,
+  MdComment,
   MdDashboard,
   MdDescription,
   MdEvent,
-  MdLogin,
   MdLoop,
   MdMenuBook,
   MdNotifications,
+  MdPayment,
   MdPerson,
-  MdPieChart,
   MdTableChart,
   MdVideoLibrary,
-  MdWidgets
-} from 'react-icons/md';
+} from "react-icons/md";
 import { useSelector } from "react-redux";
 
 const navItems = [
@@ -41,10 +38,15 @@ const navItems = [
     path: "/doctor/patients/create-patient-record/step-1",
   },
   {
-    icon: <MdLoop />,
-    name: "Manage Patient Progress",
-    path: "/doctor/patients/manage-status",
+    icon: <MdPayment />,
+    name: "Payment Status",
+    path: "/doctor/payments",
   },
+  // {
+  //   icon: <MdLoop />,
+  //   name: "Manage Patient Progress",
+  //   path: "/doctor/patients/manage-status",
+  // },
   {
     icon: <MdNotifications />,
     name: "Notifications",
@@ -82,8 +84,6 @@ const navItems = [
   },
 ];
 
-
-
 const renderMenuItems = (
   navItems,
   menuType,
@@ -91,42 +91,40 @@ const renderMenuItems = (
   isExpanded,
   isHovered,
   isMobileOpen,
-  unreadCount
+  unreadCount,
 ) => (
   <ul className="flex flex-col gap-4">
     {navItems.map((nav, index) => (
       <li key={nav.name}>
-        {nav.subItems ? (
-          null
-        ) : (
-          nav.path && (
-            <Link
-              href={nav.path}
-              className={`menu-item group ${
-                isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-              }`}
-            >
-              <span
-                className={`${
-                  isActive(nav.path)
-                    ? "menu-item-icon-active"
-                    : "menu-item-icon-inactive"
-                } relative`}
+        {nav.subItems
+          ? null
+          : nav.path && (
+              <Link
+                href={nav.path}
+                className={`menu-item group ${
+                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
+                }`}
               >
-                {nav.icon}
-                {/* Unread notification badge for Notifications */}
-                {nav.name === "Notifications" && unreadCount > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full px-1.5 py-0.5 shadow-lg border-2 border-white animate-bounce z-10 min-w-[20px] text-center">
-                    {unreadCount > 99 ? "99+" : unreadCount}
-                  </span>
+                <span
+                  className={`${
+                    isActive(nav.path)
+                      ? "menu-item-icon-active"
+                      : "menu-item-icon-inactive"
+                  } relative`}
+                >
+                  {nav.icon}
+                  {/* Unread notification badge for Notifications */}
+                  {nav.name === "Notifications" && unreadCount > 0 && (
+                    <span className="absolute -top-2 -right-2 z-10 min-w-[20px] animate-bounce rounded-full border-2 border-white bg-blue-600 px-1.5 py-0.5 text-center text-xs font-bold text-white shadow-lg">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </span>
+                {(isExpanded || isHovered || isMobileOpen) && (
+                  <span className={`menu-item-text`}>{nav.name}</span>
                 )}
-              </span>
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <span className={`menu-item-text`}>{nav.name}</span>
-              )}
-            </Link>
-          )
-        )}
+              </Link>
+            )}
       </li>
     ))}
   </ul>
@@ -141,21 +139,18 @@ const AppSidebar = () => {
 
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-        ${
-          isExpanded || isMobileOpen
-            ? "w-[290px]"
-            : isHovered
+      className={`fixed top-0 left-0 z-50 mt-16 flex h-screen flex-col border-r border-gray-200 bg-white px-5 text-gray-900 transition-all duration-300 ease-in-out lg:mt-0 dark:border-gray-800 dark:bg-gray-900 ${
+        isExpanded || isMobileOpen
+          ? "w-[290px]"
+          : isHovered
             ? "w-[290px]"
             : "w-[90px]"
-        }
-        ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:translate-x-0`}
+      } ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex  ${
+        className={`flex py-8 ${
           !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
         }`}
       >
@@ -178,21 +173,16 @@ const AppSidebar = () => {
               />
             </>
           ) : (
-            <Image
-              src="/logo.png"
-              alt="Logo"
-              width={32}
-              height={32}
-            />
+            <Image src="/logo.png" alt="Logo" width={32} height={32} />
           )}
         </Link>
       </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
+      <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             <div>
               <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+                className={`mb-4 flex text-xs leading-[20px] text-gray-400 uppercase ${
                   !isExpanded && !isHovered
                     ? "lg:justify-center"
                     : "justify-start"
@@ -204,7 +194,15 @@ const AppSidebar = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(navItems, "navItems", isActive, isExpanded, isHovered, isMobileOpen, unreadCount)}
+              {renderMenuItems(
+                navItems,
+                "navItems",
+                isActive,
+                isExpanded,
+                isHovered,
+                isMobileOpen,
+                unreadCount,
+              )}
             </div>
           </div>
         </nav>

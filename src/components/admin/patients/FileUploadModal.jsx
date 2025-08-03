@@ -1,87 +1,105 @@
 "use client";
 import Button from "@/components/ui/button/Button";
 import { Modal } from "@/components/ui/modal";
-import { useDropzone } from "react-dropzone";
-import { useState, useEffect } from "react";
-import { toast } from "react-toastify";
-import { useDispatch } from 'react-redux';
 import { setLoading } from '@/store/features/uiSlice';
+import { useEffect, useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { useDispatch, useSelector } from 'react-redux';
+import { toast } from "react-toastify";
 
 const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
   const [fileName, setFileName] = useState("");
-  const [fileType, setFileType] = useState("image");
-  const [file, setFile] = useState(null);
-  const dispatch = useDispatch();
+  const [files, setFiles] = useState([]);
+  const [loading, setLoading] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
       setFileName("");
-      setFileType("");
-      setFile(null);
+      setFiles([]);
     }
   }, [isOpen, patient]);
 
-  const accept = fileType === 'image'
-    ? { 'image/*': [] }
-    : fileType === 'pdf'
-    ? { 'application/pdf': [] }
-    : { 'video/*': [] };
-
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    accept,
-    multiple: false,
+    multiple: true,
+    maxFiles: 3,
     onDrop: (acceptedFiles) => {
-      if (acceptedFiles.length > 0) {
-        setFile(acceptedFiles[0]);
+      if (acceptedFiles.length > 3) {
+        toast.warning("You can only upload up to 3 files.");
+      } else {
+        setFiles(acceptedFiles);
       }
     },
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!file || !fileName || !fileType || !patient?._id) return;
-    dispatch(setLoading(true));
+    if (!files.length || !fileName || !patient?._id) return;
+
+    setLoading(true);
     try {
-      // 1. Upload file to Firebase Storage
-      const { storage } = await import('@/utils/firebase');
-      const { ref, uploadBytesResumable, getDownloadURL } = await import('firebase/storage');
-      const uniqueFileName = `${patient._id}-${Date.now()}-${file.name}`;
-      const storagePath = `patients/${patient._id}/${uniqueFileName}`;
-      const storageRef = ref(storage, storagePath);
-      const uploadTask = uploadBytesResumable(storageRef, file);
-      await new Promise((resolve, reject) => {
-        uploadTask.on('state_changed', null, reject, resolve);
-      });
-      const fileUrl = await getDownloadURL(uploadTask.snapshot.ref);
-      const fileKey = storagePath;
-      // 2. Call API to save file record
-      const response = await fetch('/api/patients/files', {
-        method: 'POST',
+      const { storage } = await import("@/utils/firebase");
+      const { ref, uploadBytesResumable, getDownloadURL } = await import(
+        "firebase/storage"
+      );
+
+      const uploadedFiles = [];
+
+      for (const file of files) {
+        const uniqueFileName = `${patient._id}-${Date.now()}-${file.name}`;
+        const storagePath = `patients/${patient._id}/${uniqueFileName}`;
+        const storageRef = ref(storage, storagePath);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        await new Promise((resolve, reject) => {
+          uploadTask.on("state_changed", null, reject, resolve);
+        });
+
+        const fileUrl = await getDownloadURL(uploadTask.snapshot.ref);
+
+        const mimeType = file.type;
+
+        let fileTypeCategory = "other";
+        if (mimeType.startsWith("image/")) {
+          fileTypeCategory = "image";
+        } else if (mimeType.startsWith("video/")) {
+          fileTypeCategory = "video";
+        } else if (mimeType === "application/pdf") {
+          fileTypeCategory = "pdf";
+        }
+        uploadedFiles.push({
+          fileName,
+          fileType: fileTypeCategory,
+          fileUrl,
+          fileKey: storagePath,
+        });
+      }
+
+      const response = await fetch("/api/patients/files", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           patientId: patient._id,
-          fileName,
-          fileType,
-          fileUrl,
-          fileKey,
+          files: uploadedFiles,
         }),
       });
+
       const result = await response.json();
+
       if (!response.ok || !result.success) {
-        toast.error("Failed to upload file")
-        throw new Error(result.message || 'Failed to upload file');
+        toast.error("Failed to upload file(s)");
+        throw new Error(result.message || "Upload failed");
       }
-      // Success
-      toast.success("File Uploaded Successfully")
+
+      toast.success("Files uploaded successfully!");
       onClose();
     } catch (error) {
-      toast.error("Upload failed")
-      alert(error.message || 'Upload failed');
+      toast.error("Upload failed");
+      alert(error.message || "Upload failed");
     } finally {
-      dispatch(setLoading(false));
+      setLoading(false);
     }
   };
 
@@ -89,53 +107,56 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-md w-full p-1"
+      className="w-full max-w-md p-1"
       showCloseButton={false}
     >
-      <div className="relative rounded-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/50 shadow-2xl backdrop-blur-lg border border-white/20">
-        <div className="p-8 relative z-10">
-          <div className="text-center mb-6">
-            <h2 className="text-3xl font-extrabold text-blue-800 dark:text-white/90 tracking-tight drop-shadow-lg">
-              Upload File
+      <div className="relative rounded-2xl border border-white/20 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-2xl backdrop-blur-lg dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/50">
+        <div className="relative z-10 p-8">
+          <div className="mb-6 text-center">
+            <h2 className="text-3xl font-extrabold tracking-tight text-blue-800 drop-shadow-lg dark:text-white/90">
+              Upload Files
             </h2>
             {patient && (
-              <p className="mt-2 text-base text-gray-500 dark:text-gray-400 font-medium">
-                For patient: <span className="font-bold text-purple-600 dark:text-purple-400">{patient.patientName}</span>
+              <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
+                For patient:{" "}
+                <span className="font-bold text-purple-600 dark:text-purple-400">
+                  {patient.patientName}
+                </span>
               </p>
             )}
           </div>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="mb-2 block font-semibold text-gray-700 dark:text-gray-300">File Name</label>
+              <label className="mb-2 block font-semibold text-gray-700 dark:text-gray-300">
+                File Name
+              </label>
               <input
                 type="text"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 py-3 px-4 text-gray-900 dark:text-gray-100 shadow-inner"
+                className="w-full rounded-lg border border-gray-200 bg-gray-100 px-4 py-3 text-gray-900 shadow-inner dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
                 value={fileName}
-                onChange={e => setFileName(e.target.value)}
+                onChange={(e) => setFileName(e.target.value)}
                 required
               />
             </div>
             <div>
-              <label className="mb-2 block font-semibold text-gray-700 dark:text-gray-300">File Type</label>
-              <select
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 py-3 px-4 text-gray-900 dark:text-gray-100 shadow-inner"
-                value={fileType}
-                onChange={e => { setFileType(e.target.value); setFile(null); }}
-              required>
-                <option value="">Select File Type</option>
-                <option value="image">Image</option>
-                <option value="pdf">PDF</option>
-                <option value="video">Video</option>
-              </select>
-            </div>
-            <div>
-              <label className="mb-2 block font-semibold text-gray-700 dark:text-gray-300">File Upload</label>
-              <div {...getRootProps()} className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition ${isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300 bg-gray-50'}`}>
+              <label className="mb-2 block font-semibold text-gray-700 dark:text-gray-300">
+                Upload up to 3 files(Must be JPG/PNG/PDF/DOCX/DOC/TXT/MP4)
+              </label>
+              <div
+                {...getRootProps()}
+                className={`cursor-pointer rounded-lg border-2 border-dashed p-4 text-center transition ${isDragActive ? "border-blue-500 bg-blue-50" : "border-gray-300 bg-gray-50"}`}
+              >
                 <input {...getInputProps()} />
-                {file ? (
-                  <div className="text-green-700 font-semibold">{file.name}</div>
+                {files.length > 0 ? (
+                  <ul className="space-y-1 font-semibold text-green-700">
+                    {files.map((file, index) => (
+                      <li key={index}>{file.name}</li>
+                    ))}
+                  </ul>
                 ) : (
-                  <span className="text-gray-500">Drag & drop a file here, or click to select</span>
+                  <span className="text-gray-500">
+                    Drag & drop files here, or click to select
+                  </span>
                 )}
               </div>
             </div>
@@ -144,16 +165,16 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
                 type="button"
                 onClick={onClose}
                 variant="secondary"
-                className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-md bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105"
+                className="flex transform items-center gap-2 rounded-lg bg-gray-200 px-6 py-3 text-gray-800 shadow-md transition-all duration-300 hover:scale-105 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                disabled={!fileName || !file}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg shadow-lg bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold hover:from-blue-600 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100"
+                disabled={!fileName || !files.length || loading}
+                className={`flex transform items-center gap-2 rounded-lg bg-gradient-to-r ${loading ? "from-blue-300 to-purple-400" : "from-blue-500 to-purple-600"} px-6 py-3 font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-50`}
               >
-                Upload
+                {loading ? "Uploading..." : "Upload"}
               </Button>
             </div>
           </form>
@@ -164,6 +185,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
 };
 
 export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
+  const { user } = useSelector(state => state.auth);
   const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
   const dispatch = useDispatch();
@@ -217,7 +239,6 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
                   <tr>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Uploader</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">File Name</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">File Type</th>
                     <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Uploaded At</th>
                     <th className="px-4 py-2"></th>
                   </tr>
@@ -225,11 +246,12 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
                   {files.map(file => (
                     <tr key={file._id}>
-                      <td className="px-4 py-2 font-semibold text-gray-900 dark:text-gray-100">{file.uploadedBy}</td>
+                      <td className="px-4 py-2 font-semibold text-gray-900 dark:text-gray-100">
+                        {file.uploadedBy} 
+                      </td>
                       <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{file.fileName}</td>
-                      <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{file.fileType}</td>
                       <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">{new Date(file.uploadedAt).toLocaleString()}</td>
-                      <td className="px-4 py-2">
+                     {user?.role !== 'planner' && <td className="px-4 py-2">
                         <a
                           href={file.fileUrl}
                           download={file.fileName}
@@ -239,7 +261,7 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
                         >
                           View File
                         </a>
-                      </td>
+                      </td>}
                     </tr>
                   ))}
                 </tbody>

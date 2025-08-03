@@ -17,7 +17,7 @@ export default function MonthlyTarget() {
   const options = {
     colors: ["#465FFF"],
     chart: {
-      fontFamily: "Outfit, sans-serif",
+      fontFamily: "Poppins, sans-serif",
       type: "radialBar",
       height: 330,
       sparkline: {

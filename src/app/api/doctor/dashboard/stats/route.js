@@ -1,8 +1,7 @@
-import { NextResponse } from 'next/server';
 import dbConnect from '@/app/api/config/db';
-import Patient from '@/app/api/models/Patient';
-import PatientComment from '@/app/api/models/PatientComment';
 import { verifyAuth } from '@/app/api/middleware/authMiddleware';
+import Patient from '@/app/api/models/Patient';
+import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   await dbConnect();
@@ -13,7 +12,7 @@ export async function GET(req) {
   }
   
   const doctorId = authResult.user.id;
-  console.log(authResult.user.id)
+
   try {
     const myPatients = await Patient.countDocuments({ userId: doctorId });
     

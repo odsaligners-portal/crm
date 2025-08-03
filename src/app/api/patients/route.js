@@ -21,6 +21,7 @@ export async function GET(req) {
   const caseType = searchParams.get('caseType') || '';
   const selectedPrice = searchParams.get('selectedPrice') || '';
   const treatmentFor = searchParams.get('treatmentFor') || '';
+  const caseStatus = searchParams.get('caseStatus') || '';
   const sort = searchParams.get('sort') || '';
 
   // Get userId from token
@@ -72,6 +73,10 @@ export async function GET(req) {
 
   if (treatmentFor) {
     query.treatmentFor = treatmentFor;
+  }
+
+  if (caseStatus) {
+    query.caseStatus = caseStatus;
   }
 
   if (startDate && endDate) {

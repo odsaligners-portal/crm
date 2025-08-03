@@ -1,47 +1,57 @@
-import { verifyAuth } from '@/app/api/middleware/authMiddleware';
-import dbConnect from '@/app/api/config/db';
-import Patient from '@/app/api/models/Patient';
-import mongoose from 'mongoose';
-import { NextResponse } from 'next/server';
+import { verifyAuth } from "@/app/api/middleware/authMiddleware";
+import dbConnect from "@/app/api/config/db";
+import Patient from "@/app/api/models/Patient";
+import mongoose from "mongoose";
+import { NextResponse } from "next/server";
 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-   
-    const id = searchParams.get('id');
+
+    const id = searchParams.get("id");
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid patient ID" },
+        { status: 400 },
+      );
     }
     // Verify authentication
     const authResult = await verifyAuth(req);
     if (!authResult.success) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
-    await dbConnect();
 
+    await dbConnect();
+    let patient;
     // Find patient and check if it belongs to the logged-in user
-    const patient = await Patient.findOne({
-      _id: id,
-      userId: authResult.user.id // Use id from decoded token
-    }).lean();
+    if (authResult.user.role === "planner") {
+      patient = await Patient.findOne({
+        _id: id,
+        plannerId: authResult.user.id, // Use id from decoded token
+      }).lean();
+    } else if (authResult.user.role === "doctor") {
+      patient = await Patient.findOne({
+        _id: id,
+        userId: authResult.user.id, // Use id from decoded token
+      }).lean();
+    }
 
     if (!patient) {
       return NextResponse.json(
-        { error: 'Patient not found or you do not have permission to view this record' },
-        { status: 404 }
+        {
+          error:
+            "Patient not found or you do not have permission to view this record",
+        },
+        { status: 404 },
       );
     }
 
     return NextResponse.json(patient);
   } catch (error) {
-    console.error('Error in GET patient:', error);
+    console.error("Error in GET patient:", error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { error: error.message || "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -49,41 +59,73 @@ export async function GET(req) {
 export async function PUT(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = searchParams.get("id");
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid patient ID" },
+        { status: 400 },
+      );
     }
     const authResult = await verifyAuth(req);
     if (!authResult.success) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await dbConnect();
 
     const body = await req.json();
 
-    // If only caseApproval is being updated, allow admin or doctor
+    // If only caseStatus is being updated, allow admin or doctor
     if (
       Object.keys(body).length === 1 &&
-      Object.prototype.hasOwnProperty.call(body, 'caseApproval') &&
-      typeof body.caseApproval === 'boolean'
+      Object.prototype.hasOwnProperty.call(body, "caseStatus") &&
+      typeof body.caseStatus === "string"
     ) {
       // Allow admin or doctor
-      if (['admin', 'doctor'].includes(authResult.user.role)) {
+      if (["admin", "doctor"].includes(authResult.user.role)) {
         const updatedPatient = await Patient.findByIdAndUpdate(
           id,
-          { $set: { caseApproval: body.caseApproval } },
-          { new: true, runValidators: true }
+          { $set: { caseStatus: body.caseStatus } },
+          { new: true, runValidators: true },
         );
         if (!updatedPatient) {
           return NextResponse.json(
-            { error: 'Patient not found' },
-            { status: 404 }
+            { error: "Patient not found" },
+            { status: 404 },
           );
         }
         return NextResponse.json(updatedPatient);
       } else {
-        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+    }
+
+    // If modification comment is being submitted
+    if (
+      Object.prototype.hasOwnProperty.call(body, "modification") &&
+      typeof body.modification === "object"
+    ) {
+      if (["admin", "doctor","distributer"].includes(authResult.user.role)) {
+        const updatedPatient = await Patient.findByIdAndUpdate(
+          id,
+          {
+            $set: {
+              "modification.commentSubmitted":
+                body.modification.commentSubmitted,
+              caseStatus: body.caseStatus || "setup pending",
+            },
+          },
+          { new: true, runValidators: true },
+        );
+        if (!updatedPatient) {
+          return NextResponse.json(
+            { error: "Patient not found" },
+            { status: 404 },
+          );
+        }
+        return NextResponse.json(updatedPatient);
+      } else {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
     }
 
@@ -124,7 +166,7 @@ export async function PUT(req) {
         additionalComments: body.additionalComments,
         // Step-4 field
         scanFiles: body.scanFiles,
-      }).filter(([_, v]) => v !== undefined)
+      }).filter(([v]) => v !== undefined),
     );
 
     const updatedPatient = await Patient.findOneAndUpdate(
@@ -133,22 +175,25 @@ export async function PUT(req) {
         userId: authResult.user.id,
       },
       { $set: fieldsToUpdate },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedPatient) {
       return NextResponse.json(
-        { error: 'Patient not found or you do not have permission to modify this record' },
-        { status: 404 }
+        {
+          error:
+            "Patient not found or you do not have permission to modify this record",
+        },
+        { status: 404 },
       );
     }
 
     return NextResponse.json(updatedPatient);
   } catch (error) {
-    console.error('Error in PUT patient:', error);
+    console.error("Error in PUT patient:", error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { error: error.message || "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -156,17 +201,17 @@ export async function PUT(req) {
 export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = searchParams.get("id");
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid patient ID" },
+        { status: 400 },
+      );
     }
     // Verify authentication
     const authResult = await verifyAuth(req);
     if (!authResult.success) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await dbConnect();
@@ -174,22 +219,25 @@ export async function DELETE(req) {
     // Delete patient only if it belongs to the logged-in user
     const patient = await Patient.findOneAndDelete({
       _id: id,
-      userId: authResult.user.id // Use id from decoded token
+      userId: authResult.user.id, // Use id from decoded token
     });
 
     if (!patient) {
       return NextResponse.json(
-        { error: 'Patient not found or you do not have permission to delete this record' },
-        { status: 404 }
+        {
+          error:
+            "Patient not found or you do not have permission to delete this record",
+        },
+        { status: 404 },
       );
     }
 
-    return NextResponse.json({ message: 'Patient deleted successfully' });
+    return NextResponse.json({ message: "Patient deleted successfully" });
   } catch (error) {
-    console.error('Error in DELETE patient:', error);
+    console.error("Error in DELETE patient:", error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { error: error.message || "Internal server error" },
+      { status: 500 },
     );
   }
-} 
+}

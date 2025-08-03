@@ -1,19 +1,37 @@
 "use client";
 import { useSidebar } from "@/context/SidebarContext";
 import {
-  MdDashboard, MdTableChart, MdAdd, MdComment, MdEvent, MdPerson, MdDescription, MdPieChart, MdWidgets, MdLogin, MdList, MdPageview, MdMenuBook, MdVideoLibrary,
-  MdNotifications, MdAdminPanelSettings,
+  MdDashboard,
+  MdTableChart,
+  MdAdd,
+  MdComment,
+  MdEvent,
+  MdPerson,
+  MdDescription,
+  MdPieChart,
+  MdWidgets,
+  MdLogin,
+  MdList,
+  MdPageview,
+  MdMenuBook,
+  MdVideoLibrary,
+  MdNotifications,
+  MdAdminPanelSettings,
   MdLoop,
-  MdLockReset
-} from 'react-icons/md';
+  MdLockReset,
+  MdMoney,
+  MdMoneyOffCsred,
+  MdAttachMoney,
+  MdManageAccounts,
+} from "react-icons/md";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDownIcon, HorizontaLDots } from "@/icons";
+import { ChevronDownIcon } from "@/icons";
 import { useSelector } from "react-redux";
 
-const navItems = [
+const baseNavItems = [
   {
     icon: <MdDashboard />,
     name: "Dashboard",
@@ -22,7 +40,14 @@ const navItems = [
   {
     name: "Patients",
     icon: <MdTableChart />,
-    subItems: [{ name: "Patient Records", path: "/admin/patients", pro: false },{ name: "Create Patient Record", path: "/admin/patients/create-patient-record/step-1", pro: false },],
+    subItems: [
+      { name: "Patient Records", path: "/admin/patients", pro: false },
+      {
+        name: "Create Patient Record",
+        path: "/admin/patients/create-patient-record/step-1",
+        pro: false,
+      },
+    ],
   },
   {
     icon: <MdList />,
@@ -40,19 +65,78 @@ const navItems = [
     path: "/admin/notifications",
   },
   {
+    name: "Patient Payments",
+    icon: <MdAttachMoney />,
+    subItems: [
+      {
+        name: "Update Case Amount",
+        path: "/admin/update-patient-payments/case-amount",
+        pro: false,
+      },
+      {
+        name: "Update Patient Payments",
+        path: "/admin/update-patient-payments",
+        pro: false,
+      },
+    ],
+  },
+  {
     icon: <MdComment />,
     name: "View Comments",
     path: "/admin/view-comments",
   },
-  {
-    icon: <MdLoop />,
-    name: "Manage Patient Progress",
-    path: "/admin/patients/manage-status",
-  },
+  // {
+  //   icon: <MdLoop />,
+  //   name: "Manage Patient Progress",
+  //   path: "/admin/patients/manage-status",
+  // },
   {
     icon: <MdPerson />,
     name: "Doctors",
     path: "/admin/doctors",
+  },
+  {
+    icon: <MdManageAccounts />,
+    name: "Accounts Team",
+    path: "/admin/accounts",
+  },
+  {
+    name: "Planners",
+    icon: <MdTableChart />,
+    subItems: [
+      {
+        name: "Create A Planner",
+        path: "/admin/planners/create-planner",
+        pro: false,
+      },
+      { name: "View All Planners", path: "/admin/planners", pro: false },
+      {
+        name: "Assign Planner",
+        path: "/admin/planners/assign-planner",
+        pro: false,
+      },
+    ],
+  },
+  {
+    name: "Distributers",
+    icon: <MdTableChart />,
+    subItems: [
+      {
+        name: "Create A Distributer",
+        path: "/admin/distributers/create-distributer",
+        pro: false,
+      },
+      {
+        name: "View All Distributers",
+        path: "/admin/distributers",
+        pro: false,
+      },
+      {
+        name: "Assign Distributer",
+        path: "/admin/distributers/assign-distributer",
+        pro: false,
+      },
+    ],
   },
   {
     icon: <MdLockReset />,
@@ -83,26 +167,6 @@ const navItems = [
 
 const othersItems = [
   {
-    icon: <MdPieChart />,
-    name: "Charts",
-    subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <MdWidgets />,
-    name: "UI Elements",
-    subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
-    ],
-  },
-  {
     icon: <MdLogin />,
     name: "Authentication",
     subItems: [
@@ -116,45 +180,79 @@ const AppSidebar = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
   const { user, token } = useSelector((state) => state.auth) || {};
-  const [hasPasswordAccess, setHasPasswordAccess] = useState(false);
-  const superAdminId = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID;
-  const isSuperAdmin = user && user.id && superAdminId && user.id === superAdminId;
   const unreadCount = useSelector((state) => state.notification.unreadCount);
+  const superAdminId = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID;
+  const isSuperAdmin =
+    user && user.id && superAdminId && user.id === superAdminId;
 
+  const [hasPasswordAccess, setHasPasswordAccess] = useState(false);
+  const [hasDistributerAccess, setHasDistributerAccess] = useState(false);
+  const [hasPlannerAccess, setHasPlannerAccess] = useState(false);
+  const [hasPriceUpdateAccess, setHasPriceUpdateAccess] = useState(false);
+  const [hasAccountsAccess, setHasAccountsAccess] = useState(false);
+  
   useEffect(() => {
     const fetchAccess = async () => {
       if (!token) return;
       try {
-        const res = await fetch('/api/user/profile', {
+        const res = await fetch("/api/user/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
         if (res.ok && data.user) {
           setHasPasswordAccess(data.user.changeDoctorPasswordAccess);
-        } else {
-          setHasPasswordAccess(false);
+          setHasDistributerAccess(data.user.distributerAccess);
+          setHasPlannerAccess(data.user.plannerAccess);
+          setHasPriceUpdateAccess(data.user.priceUpdateAccess);
+          setHasAccountsAccess(data?.user?.addSalesPersonAccess);
+          
         }
-      } catch (error) {
-        console.error("Failed to fetch access rights", error);
+      } catch (err) {
+        console.error("Failed to fetch access", err);
         setHasPasswordAccess(false);
+        setHasDistributerAccess(false);
+        setHasPlannerAccess(false);
+        setHasPriceUpdateAccess(false);
+        setHasAccountsAccess(false);
       }
     };
     fetchAccess();
   }, [token]);
 
-  // Dynamically add Admin dropdown for superadmin
-  let tempNavItems = [...navItems];
+  // Build dynamic nav items
+  let tempNavItems = [...baseNavItems];
+
+  if (!hasDistributerAccess) {
+    tempNavItems = tempNavItems.filter((item) => item.name !== "Distributers");
+  }
+  if (!hasPlannerAccess) {
+    tempNavItems = tempNavItems.filter((item) => item.name !== "Planners");
+  }
+  if (!hasPriceUpdateAccess) {
+    tempNavItems = tempNavItems.filter(
+      (item) => item.name !== "Patient Payments",
+    );
+  }
+  if (!hasAccountsAccess) {
+    tempNavItems = tempNavItems.filter((item) => item.name !== "Accounts Team");
+  }
+
   if (isSuperAdmin) {
     tempNavItems.splice(1, 0, {
       name: "Admin",
       icon: <MdAdminPanelSettings />,
       subItems: [
         { name: "Admin", path: "/admin/other-admins", pro: false },
-        { name: "Create New Admin", path: "/admin/other-admins/create", pro: false },
+        {
+          name: "Create New Admin",
+          path: "/admin/other-admins/create",
+          pro: false,
+        },
       ],
     });
-    // Insert 'Change Super Admin Password' after 'Change Doctor Password'
-    const doctorPwdIdx = tempNavItems.findIndex(item => item.name === "Change Doctor Password");
+    const doctorPwdIdx = tempNavItems.findIndex(
+      (item) => item.name === "Change Doctor Password",
+    );
     if (doctorPwdIdx !== -1) {
       tempNavItems.splice(doctorPwdIdx + 1, 0, {
         icon: <MdLockReset />,
@@ -163,85 +261,112 @@ const AppSidebar = () => {
       });
     }
   }
-  
-  const dynamicNavItems = tempNavItems.filter(item => {
-    if (item.name === "Change Doctor Password") {
-      return hasPasswordAccess;
-    }
-    if (item.name === "Change Super Admin Password") {
-      return isSuperAdmin;
-    }
+
+  const dynamicNavItems = tempNavItems.filter((item) => {
+    if (item.name === "Change Doctor Password") return hasPasswordAccess;
+    if (item.name === "Change Super Admin Password") return isSuperAdmin;
     return true;
   });
 
-  const renderMenuItems = (
-    navItems,
-    menuType
-  ) => (
-    <ul className="flex flex-col gap-4">
+  // -------------------- UI state handlers below --------------------
+
+  const [openSubmenu, setOpenSubmenu] = useState(null);
+  const [subMenuHeight, setSubMenuHeight] = useState({});
+  const subMenuRefs = useRef({});
+
+  const isActive = useCallback((path) => path === pathname, [pathname]);
+
+  useEffect(() => {
+    let submenuMatched = false;
+    ["main", "others"].forEach((menuType) => {
+      const items = menuType === "main" ? dynamicNavItems : othersItems;
+      items.forEach((nav, index) => {
+        if (nav.subItems) {
+          nav.subItems.forEach((subItem) => {
+            if (isActive(subItem.path)) {
+              setOpenSubmenu({ type: menuType, index });
+              submenuMatched = true;
+            }
+          });
+        }
+      });
+    });
+    if (!submenuMatched) setOpenSubmenu(null);
+  }, [pathname, isActive]);
+
+  useEffect(() => {
+    if (openSubmenu !== null) {
+      const key = `${openSubmenu.type}-${openSubmenu.index}`;
+      if (subMenuRefs.current[key]) {
+        setSubMenuHeight((prev) => ({
+          ...prev,
+          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
+        }));
+      }
+    }
+  }, [openSubmenu]);
+
+  const handleSubmenuToggle = (index, menuType) => {
+    setOpenSubmenu((prev) => {
+      if (prev?.type === menuType && prev?.index === index) return null;
+      return { type: menuType, index };
+    });
+  };
+
+  const renderMenuItems = (navItems, menuType) => (
+    <ul className="flex flex-col gap-1">
       {navItems.map((nav, index) => (
         <li key={nav.name}>
           {nav.subItems ? (
             <button
               onClick={() => handleSubmenuToggle(index, menuType)}
-              className={`menu-item group  ${
+              className={`flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all duration-200 ${
                 openSubmenu?.type === menuType && openSubmenu?.index === index
-                  ? "menu-item-active"
-                  : "menu-item-inactive"
-              } cursor-pointer ${
-                !isExpanded && !isHovered
-                  ? "lg:justify-center"
-                  : "lg:justify-start"
-              }`}
+                  ? "bg-blue-50 text-blue-700 dark:bg-slate-700 dark:text-blue-300"
+                  : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-slate-800"
+              } ${!isExpanded && !isHovered ? "justify-center" : "justify-start"}`}
             >
               <span
-                className={` ${
-                  openSubmenu?.type === menuType && openSubmenu?.index === index
-                    ? "menu-item-icon-active"
-                    : "menu-item-icon-inactive"
-                }`}
+                className={`text-xl ${openSubmenu?.type === menuType && openSubmenu?.index === index ? "text-blue-600" : "text-gray-500"}`}
               >
                 {nav.icon}
               </span>
               {(isExpanded || isHovered || isMobileOpen) && (
-                <span className={`menu-item-text`}>{nav.name}</span>
-              )}
-              {(isExpanded || isHovered || isMobileOpen) && (
-                <ChevronDownIcon
-                  className={`ml-auto w-5 h-5 transition-transform duration-200  ${
-                    openSubmenu?.type === menuType &&
-                    openSubmenu?.index === index
-                      ? "rotate-180 text-brand-500"
-                      : ""
-                  }`}
-                />
+                <>
+                  <span className="text-sm font-medium">{nav.name}</span>
+                  <ChevronDownIcon
+                    className={`ml-auto h-4 w-4 transition-transform duration-200 ${
+                      openSubmenu?.type === menuType &&
+                      openSubmenu?.index === index
+                        ? "rotate-180"
+                        : ""
+                    }`}
+                  />
+                </>
               )}
             </button>
           ) : (
             nav.path && (
               <Link
                 href={nav.path}
-                className={`menu-item group ${
-                  isActive(nav.path) ? "menu-item-active" : "menu-item-inactive"
-                }`}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 ${
+                  isActive(nav.path)
+                    ? "bg-blue-600 text-white"
+                    : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-slate-800"
+                } ${!isExpanded && !isHovered ? "justify-center" : "justify-start"}`}
               >
                 <span
-                  className={`$${
-                    isActive(nav.path)
-                      ? "menu-item-icon-active"
-                      : "menu-item-icon-inactive"
-                  } relative`}
+                  className={`relative text-xl ${isActive(nav.path) ? "text-white" : "text-gray-500"}`}
                 >
                   {nav.icon}
-                  {/* Unread notification badge for Notifications */}
                   {nav.name === "Notifications" && unreadCount > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-blue-600 text-white text-xs font-bold rounded-full px-1.5 py-0.5 shadow-lg border-2 border-white animate-bounce z-10 min-w-[20px] text-center">
-                      {unreadCount > 99 ? "99+" : unreadCount}
+                    <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                      {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
                 </span>
                 {(isExpanded || isHovered || isMobileOpen) && (
-                  <span className={`menu-item-text`}>{nav.name}</span>
+                  <span className="text-sm font-medium">{nav.name}</span>
                 )}
               </Link>
             )
@@ -251,7 +376,7 @@ const AppSidebar = () => {
               ref={(el) => {
                 subMenuRefs.current[`${menuType}-${index}`] = el;
               }}
-              className="overflow-hidden transition-all duration-300"
+              className="overflow-hidden transition-all duration-300 ease-in-out"
               style={{
                 height:
                   openSubmenu?.type === menuType && openSubmenu?.index === index
@@ -259,41 +384,31 @@ const AppSidebar = () => {
                     : "0px",
               }}
             >
-              <ul className="mt-2 space-y-1 ml-9">
+              <ul className="mt-1 ml-9 space-y-1 border-l border-gray-200 pl-3 dark:border-gray-700">
                 {nav.subItems.map((subItem) => (
                   <li key={subItem.name}>
                     <Link
                       href={subItem.path}
-                      className={`menu-dropdown-item ${
+                      className={`block rounded-md px-3 py-2 text-sm transition-colors duration-200 ${
                         isActive(subItem.path)
-                          ? "menu-dropdown-item-active"
-                          : "menu-dropdown-item-inactive"
+                          ? "bg-blue-50 text-blue-700 dark:bg-slate-700 dark:text-blue-300"
+                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-slate-800 dark:hover:text-gray-200"
                       }`}
                     >
-                      {subItem.name}
-                      <span className="flex items-center gap-1 ml-auto">
-                        {subItem.new && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge `}
-                          >
-                            new
-                          </span>
-                        )}
-                        {subItem.pro && (
-                          <span
-                            className={`ml-auto ${
-                              isActive(subItem.path)
-                                ? "menu-dropdown-badge-active"
-                                : "menu-dropdown-badge-inactive"
-                            } menu-dropdown-badge `}
-                          >
-                            pro
-                          </span>
-                        )}
+                      <span className="flex items-center justify-between">
+                        <span>{subItem.name}</span>
+                        <span className="flex gap-1">
+                          {subItem.new && (
+                            <span className="rounded bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 dark:bg-green-900 dark:text-green-300">
+                              NEW
+                            </span>
+                          )}
+                          {subItem.pro && (
+                            <span className="rounded bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-800 dark:bg-orange-900 dark:text-orange-300">
+                              PRO
+                            </span>
+                          )}
+                        </span>
                       </span>
                     </Link>
                   </li>
@@ -306,134 +421,52 @@ const AppSidebar = () => {
     </ul>
   );
 
-  const [openSubmenu, setOpenSubmenu] = useState({
-    type: "main",
-    index: 0,
-  });
-  const [subMenuHeight, setSubMenuHeight] = useState({});
-  const subMenuRefs = useRef({});
-
-  const isActive = useCallback((path) => path === pathname, [pathname]);
-
-  useEffect(() => {
-    // Check if the current path matches any submenu item
-    let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? dynamicNavItems : othersItems;
-      items.forEach((nav, index) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType,
-                index,
-              });
-              submenuMatched = true;
-            }
-          });
-        }
-      });
-    });
-
-    // If no submenu item matches, close the open submenu
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
-  }, [pathname, isActive]);
-
-  useEffect(() => {
-    // Set the height of the submenu items when the submenu is opened
-    if (openSubmenu !== null) {
-      const key = `${openSubmenu.type}-${openSubmenu.index}`;
-      if (subMenuRefs.current[key]) {
-        setSubMenuHeight((prevHeights) => ({
-          ...prevHeights,
-          [key]: subMenuRefs.current[key]?.scrollHeight || 0,
-        }));
-      }
-    }
-  }, [openSubmenu]);
-
-  const handleSubmenuToggle = (index, menuType) => {
-    setOpenSubmenu((prevOpenSubmenu) => {
-      if (
-        prevOpenSubmenu &&
-        prevOpenSubmenu.type === menuType &&
-        prevOpenSubmenu.index === index
-      ) {
-        return null;
-      }
-      return { type: menuType, index };
-    });
-  };
-
   return (
     <aside
-      className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
-        ${
-          isExpanded || isMobileOpen
-            ? "w-[290px]"
-            : isHovered
-            ? "w-[290px]"
-            : "w-[90px]"
-        }
-        ${isMobileOpen ? "translate-x-0" : "-translate-x-full"}
-        lg:translate-x-0`}
+      className={`fixed top-0 left-0 z-50 mt-16 flex h-screen flex-col border-r border-gray-200 bg-white px-4 transition-all duration-300 ease-in-out lg:mt-0 dark:border-gray-700 dark:bg-slate-900 ${
+        isExpanded || isMobileOpen
+          ? "w-[280px]"
+          : isHovered
+            ? "w-[280px]"
+            : "w-[70px]"
+      } ${isMobileOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0`}
       onMouseEnter={() => !isExpanded && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex  ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-        }`}
+        className={`flex py-6 ${!isExpanded && !isHovered ? "justify-center" : "justify-start"}`}
       >
-        <Link href="/">
+        <Link href="/" className="transition-all duration-200 hover:opacity-80">
           {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <Image
-                className="dark:hidden"
-                src="/logo.png"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-              <Image
-                className="hidden dark:block"
-                src="/logo.png"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-            </>
+            <div className="flex items-center">
+              <Image src="/logo.png" alt="Logo" width={140} height={36} />
+            </div>
           ) : (
             <Image
               src="/logo.png"
               alt="Logo"
-              width={32}
-              height={32}
+              width={28}
+              height={28}
+              className="rounded"
             />
           )}
         </Link>
       </div>
-      <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
-        <nav className="mb-6">
-          <div className="flex flex-col gap-4">
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(dynamicNavItems, "main")}
+      <div className="scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent flex flex-1 flex-col overflow-y-auto">
+        <nav className="flex-1">
+          <div className="space-y-1">
+            <div
+              className={`mb-6 ${!isExpanded && !isHovered ? "flex justify-center" : ""}`}
+            >
+              {isExpanded || isHovered || isMobileOpen ? (
+                <h2 className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                  Navigation
+                </h2>
+              ) : (
+                <div className="h-px w-8 bg-gray-300 dark:bg-gray-600"></div>
+              )}
             </div>
+            {renderMenuItems(dynamicNavItems, "main")}
           </div>
         </nav>
       </div>

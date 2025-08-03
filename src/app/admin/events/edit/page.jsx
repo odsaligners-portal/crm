@@ -239,7 +239,7 @@ const EditPage = () => {
     );
   }
   if (hasEventUpdateAccess === null) {
-    return null; // or a spinner if you want
+    return null; 
   }
 
   return (

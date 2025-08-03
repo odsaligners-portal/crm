@@ -1,60 +1,51 @@
 "use client";
-import Image from "next/image";
-import Link from "next/link";
 import React, { useState } from "react";
+import Link from "next/link";
 import { Dropdown } from "../ui/dropdown/Dropdown";
-import { DropdownItem } from "../ui/dropdown/DropdownItem";
-import { useSelector, useDispatch } from 'react-redux';
-import { markAsRead } from '@/store/features/notificationSlice';
-import { useRouter } from 'next/navigation';
+import { useSelector, useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
+import { markAsRead } from "@/store/features/notificationSlice";
 
 export default function NotificationDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const notifications = useSelector((state) => state.notification.notifications);
+  const notifications = useSelector(
+    (state) => state.notification.notifications,
+  );
   const unreadCount = useSelector((state) => state.notification.unreadCount);
-  const role = useSelector((state) => state.auth.role);
+  const user = useSelector((state) => state.auth.user);
   const dispatch = useDispatch();
   const router = useRouter();
 
-  function toggleDropdown() {
-    setIsOpen(!isOpen);
-  }
-
-  function closeDropdown() {
-    setIsOpen(false);
-  }
-
-  const handleClick = () => {
-    toggleDropdown();
-  };
-
-  // Sort notifications: unread first, then read
-  const sortedNotifications = notifications
-    .slice()
-    .sort((a, b) => (a.read === b.read ? 0 : a.read ? 1 : -1))
-    .slice(0, 10);
+  const toggleDropdown = () => setIsOpen((prev) => !prev);
+  const closeDropdown = () => setIsOpen(false);
 
   const handleSeeComment = (notificationId) => {
     closeDropdown();
-    if (role === 'admin') {
-      router.push('/admin/notifications');
-    } else if (role === 'doctor') {
-      router.push('/doctor/notifications');
-    } else {
-      router.push('/');
-    }
+    dispatch(markAsRead({ notificationId, userId: user?.id }));
+    router.push(`/${user?.role}/notifications`);
   };
+
+  const isNotificationRead = (notif) =>
+    notif.recipients?.find((r) => r.user === user?.id)?.read === true;
+
+  const sortedNotifications = notifications
+    .slice()
+    .sort((a, b) => {
+      const aRead = isNotificationRead(a);
+      const bRead = isNotificationRead(b);
+      return aRead === bRead ? 0 : aRead ? 1 : -1;
+    })
+    .slice(0, 10);
 
   return (
     <div className="relative">
       <button
-        className="relative dropdown-toggle flex items-center justify-center text-gray-500 transition-colors bg-white border border-gray-200 rounded-full hover:text-gray-700 h-11 w-11 hover:bg-gray-100 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
-        onClick={handleClick}
+        className="dropdown-toggle relative flex h-11 w-11 items-center justify-center rounded-full border border-gray-200 bg-white text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+        onClick={toggleDropdown}
       >
-        {/* Orange dot if there are any unread notifications */}
         {unreadCount > 0 && (
-          <span className="absolute right-0 top-0.5 z-10 h-2 w-2 rounded-full bg-orange-400 flex">
-            <span className="absolute inline-flex w-full h-full bg-orange-400 rounded-full opacity-75 animate-ping"></span>
+          <span className="absolute top-0.5 right-0 z-10 flex h-2 w-2 rounded-full bg-orange-400">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-orange-400 opacity-75"></span>
           </span>
         )}
         <svg
@@ -62,7 +53,6 @@ export default function NotificationDropdown() {
           width="20"
           height="20"
           viewBox="0 0 20 20"
-          xmlns="http://www.w3.org/2000/svg"
         >
           <path
             fillRule="evenodd"
@@ -72,77 +62,89 @@ export default function NotificationDropdown() {
           />
         </svg>
       </button>
+
       <Dropdown
         isOpen={isOpen}
         onClose={closeDropdown}
-        className="fixed inset-x-0 mt-[17px] flex max-h-[480px] w-screen flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark sm:absolute sm:right-0 sm:left-auto sm:w-[400px] sm:mx-0 sm:inset-x-auto md:w-[450px] lg:w-[500px] sm:border-2 sm:border-blue-500 dark:sm:border-blue-400"
+        className="shadow-theme-lg dark:bg-gray-dark fixed inset-x-0 mt-[17px] flex max-h-[480px] w-screen flex-col rounded-2xl border border-gray-200 bg-white p-3 sm:absolute sm:inset-x-auto sm:right-0 sm:left-auto sm:mx-0 sm:w-[400px] sm:border-2 sm:border-blue-500 md:w-[450px] lg:w-[500px] dark:border-gray-800 dark:sm:border-blue-400"
       >
-        <div className="flex items-center justify-between pb-3 mb-3 border-b border-gray-100 dark:border-gray-700">
+        <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-700">
           <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
             Notification
           </h5>
           <button
             onClick={toggleDropdown}
-            className="text-gray-500 transition dropdown-toggle dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+            className="dropdown-toggle text-gray-500 transition hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
           >
-            <svg
-              className="fill-current"
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
+            <svg className="fill-current" width="24" height="24">
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
                 d="M6.21967 7.28131C5.92678 6.98841 5.92678 6.51354 6.21967 6.22065C6.51256 5.92775 6.98744 5.92775 7.28033 6.22065L11.999 10.9393L16.7176 6.22078C17.0105 5.92789 17.4854 5.92788 17.7782 6.22078C18.0711 6.51367 18.0711 6.98855 17.7782 7.28144L13.0597 12L17.7782 16.7186C18.0711 17.0115 18.0711 17.4863 17.7782 17.7792C17.4854 18.0721 17.0105 18.0721 16.7176 17.7792L11.999 13.0607L7.28033 17.7794C6.98744 18.0722 6.51256 18.0722 6.21967 17.7794C5.92678 17.4865 5.92678 17.0116 6.21967 16.7187L10.9384 12L6.21967 7.28131Z"
-                fill="currentColor"
               />
             </svg>
           </button>
         </div>
-        <ul className="flex flex-col h-auto overflow-y-auto custom-scrollbar">
+
+        <ul className="custom-scrollbar flex h-auto flex-col overflow-y-auto">
           {sortedNotifications.length === 0 ? (
-            <li className="text-center text-gray-400 py-6">No notifications found<br/>Please go to notification page to check.</li>
+            <li className="py-6 text-center text-gray-400">
+              No notifications found
+              <br />
+              Please go to notification page to check.
+            </li>
           ) : (
-            sortedNotifications.map((n) => (
-              <li key={n._id}>
-                <div
-                  className={`flex flex-col gap-1 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5 ${!n.read ? 'bg-blue-50/60' : ''}`}
-                  role="menuitem"
-                  tabIndex={0}
-                  onClick={closeDropdown}
-                >
-                  <span className="block">
-                    <span className="mb-1.5 space-x-1 block text-theme-sm text-gray-700 dark:text-gray-200">
-                      <span className={`font-medium ${!n.read ? 'text-blue-800' : 'text-gray-800 dark:text-white/90'}`}>
-                        {n.title}
+            sortedNotifications.map((n) => {
+              const isRead = isNotificationRead(n);
+              return (
+                <li key={n._id}>
+                  <div
+                    className={`flex flex-col gap-1 rounded-lg border-b border-gray-100 p-3 px-4.5 py-3 hover:bg-gray-100 dark:border-gray-800 dark:hover:bg-white/5 ${!isRead ? "bg-blue-50/60" : ""}`}
+                    role="menuitem"
+                    tabIndex={0}
+                    onClick={closeDropdown}
+                  >
+                    <span className="block">
+                      <span className="text-theme-sm mb-1.5 block space-x-1 text-gray-700 dark:text-gray-200">
+                        <span
+                          className={`font-medium ${!isRead ? "text-blue-800" : "text-gray-800 dark:text-white/90"}`}
+                        >
+                          {n.title}
+                        </span>
+                      </span>
+                      <span className="text-theme-xs flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                        <span>{n.type || "Notification"}</span>
+                        <span className="h-1 w-1 rounded-full bg-gray-400"></span>
+                        <span>
+                          {n.createdAt
+                            ? new Date(n.createdAt).toLocaleString()
+                            : ""}
+                        </span>
                       </span>
                     </span>
-                    <span className="flex items-center gap-2 text-gray-500 text-theme-xs dark:text-gray-400">
-                      <span>{n.type || 'Notification'}</span>
-                      <span className="w-1 h-1 bg-gray-400 rounded-full"></span>
-                      <span>{n.createdAt ? new Date(n.createdAt).toLocaleString() : ''}</span>
-                    </span>
-                  </span>
-                  <button
-                    className={`mt-2 px-2 py-1 rounded text-[11px] md:text-xs font-semibold shadow transition-all duration-200
-                      ${n.read
-                        ? "bg-gray-200/80 text-gray-500 hover:bg-gray-300/90 hover:text-gray-700"
-                        : "bg-gradient-to-r from-blue-600 to-purple-500 text-white hover:from-blue-700 hover:to-purple-600 shadow-lg hover:shadow-xl"}
-                    `}
-                    onClick={(e) => { e.stopPropagation(); handleSeeComment(n._id); }}
-                  >
-                    See Comment
-                  </button>
-                </div>
-              </li>
-            ))
+                    <button
+                      className={`mt-2 rounded px-2 py-1 text-[11px] font-semibold shadow transition-all duration-200 md:text-xs ${
+                        isRead
+                          ? "bg-gray-200/80 text-gray-500 hover:bg-gray-300/90 hover:text-gray-700"
+                          : "bg-gradient-to-r from-blue-600 to-purple-500 text-white shadow-lg hover:from-blue-700 hover:to-purple-600 hover:shadow-xl"
+                      } `}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSeeComment(n._id);
+                      }}
+                    >
+                      Mark As Read
+                    </button>
+                  </div>
+                </li>
+              );
+            })
           )}
         </ul>
+
         <Link
-          href="/admin/notifications"
-          className="block px-4 py-2 mt-3 text-sm font-medium text-center text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+          href={`/${user?.role}/notifications`}
+          className="mt-3 block rounded-lg border border-gray-300 bg-white px-4 py-2 text-center text-sm font-medium text-gray-700 hover:bg-gray-100 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
         >
           View All Notifications
         </Link>

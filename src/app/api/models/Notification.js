@@ -1,18 +1,53 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
-const notificationSchema = new mongoose.Schema({
-    title: { type: String, required: true },
-    createdAt: { type: Date, default: Date.now },
-    patientCommentId: { type: mongoose.Schema.Types.ObjectId, ref: 'PatientComment', required: true },
-    commentId: { type: mongoose.Schema.Types.ObjectId, required: true },
-    commentFor: { type: mongoose.Schema.Types.Mixed, required: true }, // ObjectId (User) or 'admin'
-    commentedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+const recipientSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
+    role: {
+      type: String,
+      enum: ["admin", "doctor", "planner", "distributor"],
+      required: true,
+    },
     read: {
-        type: Boolean,
-        default: false,
+      type: Boolean,
+      default: false,
+    },
+  },
+  { _id: false },
+);
+
+const notificationSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    type: {
+      type: String,
+      required: true,
+    },
+    commentedBy: {
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        required: true,
       },
-});
+      name: {
+        type: String,
+        required: true,
+      },
+      model: {
+        type: String,
+        enum: ["User", "Distributer"],
+        required: true,
+      },
+    },
+    recipients: [recipientSchema],
+  },
+  { timestamps: true }, 
+);
 
-const Notification = mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
+const Notification =
+  mongoose.models.Notification ||
+  mongoose.model("Notification", notificationSchema);
 
-export default Notification; 
+export default Notification;

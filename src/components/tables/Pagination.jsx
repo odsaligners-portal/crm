@@ -3,10 +3,21 @@ const Pagination = ({
   totalPages,
   onPageChange,
 }) => {
-  const pagesAroundCurrent = Array.from(
-    { length: Math.min(3, totalPages) },
-    (_, i) => i + Math.max(currentPage - 1, 1)
-  );
+  if (totalPages <= 1) return null;
+
+  // Dynamic page range logic
+  let pages = [];
+  if (totalPages <= 5) {
+    pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+  } else {
+    pages = [1];
+    if (currentPage > 3) pages.push('...');
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      pages.push(i);
+    }
+    if (currentPage < totalPages - 2) pages.push('...');
+    pages.push(totalPages);
+  }
 
   return (
     <div className="flex items-center ">
@@ -18,8 +29,10 @@ const Pagination = ({
         Previous
       </button>
       <div className="flex items-center gap-2">
-        {currentPage > 3 && <span className="px-2">...</span>}
-        {pagesAroundCurrent.map((page) => (
+        {pages.map((page, idx) =>
+          page === '...'
+            ? <span key={"ellipsis-" + idx} className="px-2">...</span>
+            : (
           <button
             key={page}
             onClick={() => onPageChange(page)}
@@ -31,8 +44,8 @@ const Pagination = ({
           >
             {page}
           </button>
-        ))}
-        {currentPage < totalPages - 2 && <span className="px-2">...</span>}
+            )
+        )}
       </div>
       <button
         onClick={() => onPageChange(currentPage + 1)}

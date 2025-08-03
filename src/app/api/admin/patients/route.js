@@ -23,6 +23,7 @@ export async function GET(req) {
   const selectedPrice = searchParams.get('selectedPrice') || '';
   const treatmentFor = searchParams.get('treatmentFor') || '';
   const sort = searchParams.get('sort') || '';
+  const caseStatus = searchParams.get("caseStatus") || "";
 
   // Get userId from token
   const authResult = await admin(req);
@@ -74,7 +75,9 @@ export async function GET(req) {
   if (treatmentFor) {
     query.treatmentFor = treatmentFor;
   }
-
+  if (caseStatus) {
+    query.caseStatus = caseStatus;
+  }
   if (startDate && endDate) {
     query.createdAt = {
       $gte: new Date(startDate),
@@ -92,6 +95,7 @@ export async function GET(req) {
     const skip = (page - 1) * limit;
     const patients = await Patient.find(query)
       .populate('userId', 'name')
+      .populate('plannerId', 'name')
       .sort(sortOption)
       .skip(skip)
       .limit(limit);
