@@ -1,16 +1,16 @@
 "use client";
 import Button from "@/components/ui/button/Button";
 import { Modal } from "@/components/ui/modal";
-import { setLoading } from '@/store/features/uiSlice';
+import { setLoading } from "@/store/features/uiSlice";
 import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 
 const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
   const [fileName, setFileName] = useState("");
   const [files, setFiles] = useState([]);
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -185,7 +185,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
 };
 
 export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
-  const { user } = useSelector(state => state.auth);
+  const { user } = useSelector((state) => state.auth);
   const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
   const dispatch = useDispatch();
@@ -195,10 +195,10 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
       dispatch(setLoading(true));
       setError("");
       fetch(`/api/patients/files?patientId=${patient._id}`, {
-        headers: { 'Authorization': `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${token}` },
       })
-        .then(res => res.json())
-        .then(data => {
+        .then((res) => res.json())
+        .then((data) => {
           if (data.success) setFiles(data.files);
           else {
             setError(data.message || "Failed to fetch files");
@@ -217,51 +217,79 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
   }, [isOpen, patient, token, dispatch]);
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl w-full p-1" showCloseButton={false}>
-      <div className="relative rounded-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/50 shadow-2xl backdrop-blur-lg border border-white/20">
-        <div className="p-8 relative z-10">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-extrabold text-blue-800 dark:text-white/90 tracking-tight drop-shadow-lg">Patient Files</h2>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      className="w-full max-w-2xl p-1"
+      showCloseButton={false}
+    >
+      <div className="relative rounded-2xl border border-white/20 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-2xl backdrop-blur-lg dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/50">
+        <div className="relative z-10 p-8">
+          <div className="mb-6 text-center">
+            <h2 className="text-2xl font-extrabold tracking-tight text-blue-800 drop-shadow-lg dark:text-white/90">
+              Patient Files
+            </h2>
             {patient && (
-              <p className="mt-2 text-base text-gray-500 dark:text-gray-400 font-medium">
-                For patient: <span className="font-bold text-purple-600 dark:text-purple-400">{patient.patientName}</span> &nbsp;|&nbsp; Case ID: <span className="font-bold text-blue-600 dark:text-blue-400">{patient.caseId}</span>
+              <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
+                For patient:{" "}
+                <span className="font-bold text-purple-600 dark:text-purple-400">
+                  {patient.patientName}
+                </span>{" "}
+                &nbsp;|&nbsp; Case ID:{" "}
+                <span className="font-bold text-blue-600 dark:text-blue-400">
+                  {patient.caseId}
+                </span>
               </p>
             )}
           </div>
           {error ? (
-            <div className="text-center text-red-500 py-8">{error}</div>
+            <div className="py-8 text-center text-red-500">{error}</div>
           ) : files.length === 0 ? (
-            <div className="text-center text-gray-500 py-8">No files uploaded for this patient.</div>
+            <div className="py-8 text-center text-gray-500">
+              No files uploaded for this patient.
+            </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead>
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Uploader</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">File Name</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase">Uploaded At</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
+                      Uploader
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
+                      File Name
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
+                      Uploaded At
+                    </th>
                     <th className="px-4 py-2"></th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                  {files.map(file => (
+                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                  {files.map((file) => (
                     <tr key={file._id}>
                       <td className="px-4 py-2 font-semibold text-gray-900 dark:text-gray-100">
-                        {file.uploadedBy} 
+                        {/* {file.uploadedBy}  */}Planner
                       </td>
-                      <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">{file.fileName}</td>
-                      <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">{new Date(file.uploadedAt).toLocaleString()}</td>
-                     {user?.role !== 'planner' && <td className="px-4 py-2">
-                        <a
-                          href={file.fileUrl}
-                          download={file.fileName}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition"
-                        >
-                          View File
-                        </a>
-                      </td>}
+                      <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+                        {file.fileName}
+                      </td>
+                      <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
+                        {new Date(file.uploadedAt).toLocaleString()}
+                      </td>
+                      {user?.role !== "planner" && (
+                        <td className="px-4 py-2">
+                          <a
+                            href={file.fileUrl}
+                            download={file.fileName}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white shadow transition hover:bg-blue-700"
+                          >
+                            View File
+                          </a>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -269,7 +297,12 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
             </div>
           )}
           <div className="mt-8 flex justify-end">
-            <Button type="button" onClick={onClose} variant="secondary" className="px-6 py-3 rounded-lg shadow-md bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105">
+            <Button
+              type="button"
+              onClick={onClose}
+              variant="secondary"
+              className="transform rounded-lg bg-gray-200 px-6 py-3 text-gray-800 shadow-md transition-all duration-300 hover:scale-105 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+            >
               Close
             </Button>
           </div>
@@ -279,4 +312,4 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
   );
 };
 
-export default FileUploadModal; 
+export default FileUploadModal;

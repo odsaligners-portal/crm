@@ -24,13 +24,14 @@ export async function POST(req) {
     }
 
     const { user } = authResult;
+    
     const body = await req.json();
     const { patientId, files } = body;
 
     const verifyPlannerForPatient = await Patient.findOne({
       _id: patientId,
       plannerId: user.id,
-    }).populate("userId");
+    }).populate("userId").populate("plannerId");
 
     if (!verifyPlannerForPatient) {
       return NextResponse.json(
@@ -41,6 +42,8 @@ export async function POST(req) {
         { status: 403 },
       );
     }
+
+    console.log(verifyPlannerForPatient);
 
     if (!patientId || !Array.isArray(files) || files.length === 0) {
       return NextResponse.json(
@@ -72,7 +75,7 @@ export async function POST(req) {
           fileType: file.fileType,
           fileUrl: file.fileUrl,
           fileKey: file.fileKey,
-          uploadedBy: user.name,
+          uploadedBy: user.id,
         }).save(),
       ),
     );
