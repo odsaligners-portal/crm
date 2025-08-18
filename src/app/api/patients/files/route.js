@@ -24,14 +24,16 @@ export async function POST(req) {
     }
 
     const { user } = authResult;
-    
+
     const body = await req.json();
     const { patientId, files } = body;
 
     const verifyPlannerForPatient = await Patient.findOne({
       _id: patientId,
       plannerId: user.id,
-    }).populate("userId").populate("plannerId");
+    })
+      .populate("userId")
+      .populate("plannerId");
 
     if (!verifyPlannerForPatient) {
       return NextResponse.json(
@@ -159,21 +161,85 @@ export async function POST(req) {
     }
     // Send email
     if (notifyEmail) {
-      const fileListHtml = files
-        .map(
-          (file) => `
-          <li><strong>${file.fileName}</strong> :- <a href="${file.fileUrl}" target="_blank">${file.fileUrl}</a></li>`,
-        )
-        .join("");
-
       await sendEmail({
         to: notifyEmail,
-        subject: `New Files Uploaded for Patient: ${updatedPatient.patientName} `,
+        subject: `New Files Uploaded for Patient: ${updatedPatient.patientName}`,
         html: `
-          <p>Hello,</p>
-          <p>The following files were uploaded for patient <strong>${updatedPatient.patientName}</strong> (Case ID: ${updatedPatient.caseId}) by <strong>${planner?.name}</strong>:</p>
-          <ul>${fileListHtml}</ul>
-          <p>Please log in to the portal to review them.</p>
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>New Files Uploaded</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
+              .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
+              .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+              .content { margin-bottom: 30px; }
+              .patient-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
+              .patient-info h3 { margin: 0 0 15px 0; color: #667eea; font-size: 18px; }
+              .patient-info p { margin: 5px 0; }
+              .file-list { background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
+              .file-list h3 { margin: 0 0 15px 0; color: #495057; font-size: 16px; }
+              .file-item { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 6px; border-left: 3px solid #28a745; }
+              .file-name { font-weight: 600; color: #28a745; margin-bottom: 5px; }
+              .file-url { color: #007bff; text-decoration: none; word-break: break-all; }
+              .file-url:hover { text-decoration: underline; }
+              .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+              .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+              .cta-button:hover { opacity: 0.9; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>📁 New Files Uploaded</h1>
+              </div>
+              
+              <div class="content">
+                <p>Hello,</p>
+                
+                <p>New files have been uploaded to the patient portal that require your attention.</p>
+                
+                <div class="patient-info">
+                  <h3>👤 Patient Information</h3>
+                  <p><strong>Patient Name:</strong> ${updatedPatient.patientName}</p>
+                  <p><strong>Case ID:</strong> ${updatedPatient.caseId}</p>
+                  <p><strong>Uploaded By:</strong> ${planner?.name}</p>
+                  <p><strong>Upload Date:</strong> ${new Date().toLocaleDateString()}</p>
+                </div>
+                
+                                  <div class="file-list">
+                    <h3>📋 Uploaded Files</h3>
+                    ${files
+                      .map(
+                        (file, index) => `
+                        <div class="file-name" style="margin-bottom: 10px;">${index === 0 && file.fileName}</div>
+                          <div class="file-item">
+                        <a href="${file.fileUrl}" class="file-url" target="_blank">View File</a>
+                      </div>
+                    `,
+                      )
+                      .join("")}
+                  </div>
+                
+                <p>Please review these files and take appropriate action as required.</p>
+                
+                <div style="text-align: center;">
+                  <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}" class="cta-button">
+                    🔗 Access Patient Portal
+                  </a>
+                </div>
+              </div>
+              
+              <div class="footer">
+                <p>This is an automated notification from the Patient Management System.</p>
+                <p>Please do not reply to this email.</p>
+              </div>
+            </div>
+          </body>
+          </html>
         `,
       });
     }

@@ -15,7 +15,7 @@ export const handleApiError = async (response) => {
   
   if (!response.ok) {
     const error = new FetchError(
-      data.message || 'Something went wrong',
+      data.error || 'Something went wrong',
       response.status,
       data
     );

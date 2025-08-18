@@ -39,8 +39,7 @@ export async function GET(req) {
     if (!patient) {
       return NextResponse.json(
         {
-          error:
-            "Patient not found or you do not have permission to view this record",
+          error: "You do not have permission to view Patient Record",
         },
         { status: 404 },
       );
@@ -105,7 +104,7 @@ export async function PUT(req) {
       Object.prototype.hasOwnProperty.call(body, "modification") &&
       typeof body.modification === "object"
     ) {
-      if (["admin", "doctor","distributer"].includes(authResult.user.role)) {
+      if (["admin", "doctor", "distributer"].includes(authResult.user.role)) {
         const updatedPatient = await Patient.findByIdAndUpdate(
           id,
           {
@@ -166,6 +165,9 @@ export async function PUT(req) {
         additionalComments: body.additionalComments,
         // Step-4 field
         scanFiles: body.scanFiles,
+        // Dental Examination fields
+        dentalExamination: body.dentalExamination,
+        dentalExaminationFiles: body.dentalExaminationFiles,
       }).filter(([v]) => v !== undefined),
     );
 

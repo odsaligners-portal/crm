@@ -145,7 +145,6 @@ export async function POST(req) {
       // Handle JSON data
       const jsonData = await req.json();
       patientData = { ...patientData, ...jsonData };
-      console.log('Received JSON data:', patientData);
     } else if (contentType.includes('multipart/form-data')) {
       // Handle FormData
       const formData = await req.formData();

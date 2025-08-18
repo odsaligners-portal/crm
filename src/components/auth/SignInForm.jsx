@@ -35,6 +35,7 @@ export default function SignInForm() {
   };
 
   const handleSubmit = async (e) => {
+    console.log("object")
     e.preventDefault();
     dispatch(setLoading(true));
     try {

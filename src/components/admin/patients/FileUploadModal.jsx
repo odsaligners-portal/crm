@@ -6,16 +6,19 @@ import { useEffect, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { Editor } from "@tinymce/tinymce-react";
 
 const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
   const [fileName, setFileName] = useState("");
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [editorKey, setEditorKey] = useState(0); // Key to force re-render
 
   useEffect(() => {
     if (isOpen) {
       setFileName("");
       setFiles([]);
+      setEditorKey((prevKey) => prevKey + 1); // Change key to re-mount the editor
     }
   }, [isOpen, patient]);
 
@@ -33,7 +36,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!files.length || !fileName || !patient?._id) return;
+    if (!files.length || !fileName.trim() || !patient?._id) return;
 
     setLoading(true);
     try {
@@ -130,12 +133,48 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
               <label className="mb-2 block font-semibold text-gray-700 dark:text-gray-300">
                 File Name
               </label>
-              <input
-                type="text"
-                className="w-full rounded-lg border border-gray-200 bg-gray-100 px-4 py-3 text-gray-900 shadow-inner dark:border-gray-700 dark:bg-gray-800 dark:text-gray-100"
-                value={fileName}
-                onChange={(e) => setFileName(e.target.value)}
-                required
+              <Editor
+                key={editorKey}
+                apiKey={process.env.NEXT_PUBLIC_TINY_EDITOR_API_KEY}
+                initialValue=""
+                init={{
+                  height: 200,
+                  menubar: false,
+                  plugins: [
+                    "advlist",
+                    "autolink",
+                    "lists",
+                    "link",
+                    "image",
+                    "charmap",
+                    "preview",
+                    "anchor",
+                    "searchreplace",
+                    "visualblocks",
+                    "code",
+                    "fullscreen",
+                    "insertdatetime",
+                    "media",
+                    "table",
+                    "help",
+                    "wordcount",
+                  ],
+                  toolbar:
+                    "undo redo | blocks | " +
+                    "bold italic forecolor | alignleft aligncenter " +
+                    "alignright alignjustify | bullist numlist outdent indent | " +
+                    "removeformat | help",
+                  content_style: "body {font-size:14px }",
+                  skin: document.documentElement.classList.contains("dark")
+                    ? "oxide-dark"
+                    : "oxide",
+                  content_css: document.documentElement.classList.contains(
+                    "dark",
+                  )
+                    ? "dark"
+                    : "default",
+                }}
+                onEditorChange={(content, editor) => setFileName(content)}
               />
             </div>
             <div>
@@ -171,7 +210,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
               </Button>
               <Button
                 type="submit"
-                disabled={!fileName || !files.length || loading}
+                disabled={!fileName.trim() || !files.length || loading}
                 className={`flex transform items-center gap-2 rounded-lg bg-gradient-to-r ${loading ? "from-blue-300 to-purple-400" : "from-blue-500 to-purple-600"} px-6 py-3 font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 {loading ? "Uploading..." : "Upload"}
@@ -224,8 +263,8 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
       showCloseButton={false}
     >
       <div className="relative rounded-2xl border border-white/20 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-2xl backdrop-blur-lg dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/50">
-        <div className="relative z-10 p-8">
-          <div className="mb-6 text-center">
+        <div className="relative z-10 flex h-[600px] flex-col p-8">
+          <div className="mb-6 flex-shrink-0 text-center">
             <h2 className="text-2xl font-extrabold tracking-tight text-blue-800 drop-shadow-lg dark:text-white/90">
               Patient Files
             </h2>
@@ -242,61 +281,66 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
               </p>
             )}
           </div>
-          {error ? (
-            <div className="py-8 text-center text-red-500">{error}</div>
-          ) : files.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">
-              No files uploaded for this patient.
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead>
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
-                      Uploader
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
-                      File Name
-                    </th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
-                      Uploaded At
-                    </th>
-                    <th className="px-4 py-2"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                  {files.map((file) => (
-                    <tr key={file._id}>
-                      <td className="px-4 py-2 font-semibold text-gray-900 dark:text-gray-100">
-                        {/* {file.uploadedBy}  */}Planner
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
-                        {file.fileName}
-                      </td>
-                      <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
-                        {new Date(file.uploadedAt).toLocaleString()}
-                      </td>
-                      {user?.role !== "planner" && (
-                        <td className="px-4 py-2">
-                          <a
-                            href={file.fileUrl}
-                            download={file.fileName}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white shadow transition hover:bg-blue-700"
-                          >
-                            View File
-                          </a>
-                        </td>
-                      )}
+          <div className="flex-1 overflow-y-auto">
+            {error ? (
+              <div className="py-8 text-center text-red-500">{error}</div>
+            ) : files.length === 0 ? (
+              <div className="py-8 text-center text-gray-500">
+                No files uploaded for this patient.
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="sticky top-0 z-10 bg-white dark:bg-gray-900">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
+                        Uploader
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
+                        File Name
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-700 uppercase dark:text-gray-300">
+                        Uploaded At
+                      </th>
+                      <th className="px-4 py-2"></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-          <div className="mt-8 flex justify-end">
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                    {files.map((file) => (
+                      <tr key={file._id}>
+                        <td className="px-4 py-2 font-semibold text-gray-900 dark:text-gray-100">
+                          {/* {file.uploadedBy}  */}Planner
+                        </td>
+                        <td className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300">
+                          <div
+                            className="max-w-xs"
+                            dangerouslySetInnerHTML={{ __html: file.fileName }}
+                          />
+                        </td>
+                        <td className="px-4 py-2 text-sm text-gray-600 dark:text-gray-400">
+                          {new Date(file.uploadedAt).toLocaleString()}
+                        </td>
+                        {user?.role !== "planner" && (
+                          <td className="px-4 py-2">
+                            <a
+                              href={file.fileUrl}
+                              download={file.fileName}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white shadow transition hover:bg-blue-700"
+                            >
+                              View File
+                            </a>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+          <div className="mt-6 flex flex-shrink-0 justify-end">
             <Button
               type="button"
               onClick={onClose}
