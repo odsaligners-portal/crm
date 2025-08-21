@@ -11,7 +11,9 @@ import Distributer from "@/app/api/models/Distributer";
 export const GET = async (req) => {
   try {
     await dbConnect();
+  
     const authResult = await verifyAuth(req);
+    
     if (!authResult.success) {
       return NextResponse.json({ message: authResult.error }, { status: 401 });
     }
@@ -62,27 +64,26 @@ export const GET = async (req) => {
     const caseId = patient.caseId;
 
     // Check if patient has userId and handle the authorization properly
-    if (user.role !== "admin") {
-      // For non-admin users, check if they own the patient
-      if (!patient.userId) {
-        return NextResponse.json(
-          { message: "Patient record is invalid" },
-          { status: 400 },
-        );
-      }
+    // if (user.role !== "admin") {
+    //   // For non-admin users, check if they own the patient
+    //   if (!patient.userId) {
+    //     return NextResponse.json(
+    //       { message: "Patient record is invalid" },
+    //       { status: 400 },
+    //     );
+    //   }
 
-      // Convert both IDs to strings for comparison
-      const patientUserId = patient.userId.toHexString();
+    //   // Convert both IDs to strings for comparison
+    //   const patientUserId = patient.userId.toHexString();
 
-      const currentUserId = user.id;
+    //   const currentUserId = user.id;
 
-      if (patientUserId !== currentUserId) {
-        return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
-      }
-    }
+    //   if (patientUserId !== currentUserId) {
+    //     return NextResponse.json({ message: "Unauthorized" }, { status: 403 });
+    //   }
+    // }
 
     const patientComment = await PatientComment.findOne({ patientId });
-
     if (!patientComment) {
       return NextResponse.json([], { status: 200 });
     }

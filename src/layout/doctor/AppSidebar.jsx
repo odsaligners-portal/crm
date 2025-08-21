@@ -35,7 +35,7 @@ const navItems = [
   {
     icon: <MdAdd />,
     name: "Create Patient Record",
-    path: "/doctor/patients/create-patient-record/step-1",
+    path: "/doctor/patients/create-patient-record",
   },
   {
     icon: <MdPayment />,

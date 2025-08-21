@@ -75,7 +75,6 @@ export const admin = async (req) => {
 export async function verifyAuth(request) {
   try {
     const token = request.headers.get('Authorization')?.replace('Bearer ', '');
-
     if (!token) {
       return { success: false, error: 'No token provided' };
     }
