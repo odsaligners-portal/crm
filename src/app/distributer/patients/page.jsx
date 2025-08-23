@@ -72,7 +72,7 @@ export default function ViewPatientRecords() {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log(data.patients)
+     
       setPatients(data.patients);
       setTotalPages(data.pagination.totalPages);
       setTotalPatients(data.pagination.totalPatients);
@@ -291,16 +291,9 @@ export default function ViewPatientRecords() {
             Manage and view all patient records
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="">
           <Button onClick={exportToExcel} className="px-4 py-2 shadow-md bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform">
             Export to Excel
-          </Button>
-          <Button
-            onClick={() => router.push("/doctor/patients/create-patient-record/step-1")}
-            className="px-4 py-2 shadow-md bg-gradient-to-r from-green-400 to-green-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform"
-          >
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Add Patient
           </Button>
         </div>
       </div>

@@ -73,7 +73,7 @@ export async function PUT(req) {
     await dbConnect();
 
     const body = await req.json();
-
+    console.log(body)
     // If only caseStatus is being updated, allow admin or doctor
     if (
       Object.keys(body).length === 1 &&

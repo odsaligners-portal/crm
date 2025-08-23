@@ -1,108 +1,149 @@
-import dbConnect from '@/app/api/config/db';
-import { verifyAuth } from '@/app/api/middleware/authMiddleware';
-import { NextResponse } from 'next/server';
-import Patient from '../../models/Patient';
-import User from '../../models/User';
+import dbConnect from "@/app/api/config/db";
+import { verifyAuth } from "@/app/api/middleware/authMiddleware";
+import { NextResponse } from "next/server";
+import Patient from "../../models/Patient";
+import User from "../../models/User";
+import mongoose from "mongoose";
 
 export async function GET(req) {
-  await dbConnect();
-  const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const id = (searchParams.get('id') || '');
-  const limit = parseInt(searchParams.get('limit') || '25', 10);
-  const search = searchParams.get('search') || '';
-
-  // Get filter parameters
-  const gender = searchParams.get('gender') || '';
-  const country = searchParams.get('country') || '';
-  const city = searchParams.get('city') || '';
-  const startDate = searchParams.get('startDate') || '';
-  const endDate = searchParams.get('endDate') || '';
-  const state = searchParams.get('state') || '';
-  const caseCategory = searchParams.get('caseCategory') || '';
-  const caseType = searchParams.get('caseType') || '';
-  const selectedPrice = searchParams.get('selectedPrice') || '';
-  const treatmentFor = searchParams.get('treatmentFor') || '';
-  const caseStatus = searchParams.get('caseStatus') || '';
-  const sort = searchParams.get('sort') || '';
-
-  // Get userId from token
-  const authResult = await verifyAuth(req);
-  if (!authResult.success || !authResult.user || !authResult.user.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  const distributerId = authResult.user.id;
-
-  const alldoctors = await User.find({ distributerId: distributerId });
-
-  const doctorIds = alldoctors.map((doctor) => doctor._id);
-
-  const query = { userId: { $in: doctorIds } };
-
-  // Search functionality
-  if (search) {
-    query.$or = [
-      { patientName: { $regex: search, $options: 'i' } },
-      { city: { $regex: search, $options: 'i' } },
-      { caseId: { $regex: search, $options: 'i' } },
-    ];
-  }
-
-  if (id) {
-    query._id = id;
-  }
-
-  // Filter functionality
-  if (gender) {
-    query.gender = gender;
-  }
-
-  if (country) {
-    query.country = country;
-  }
-
-  if (city) {
-    query.city = city;
-  }
-
-  if (state) {
-    query.state = state;
-  }
-
-  if (caseCategory) {
-    query.caseCategory = caseCategory;
-  }
-
-  if (caseType) {
-    query.caseType = caseType;
-  }
-
-  if (selectedPrice) {
-    query.selectedPrice = selectedPrice;
-  }
-
-  if (treatmentFor) {
-    query.treatmentFor = treatmentFor;
-  }
-
-  if (caseStatus) {
-    query.caseStatus = caseStatus;
-  }
-
-  if (startDate && endDate) {
-    query.createdAt = {
-      $gte: new Date(startDate),
-      $lte: new Date(endDate),
-    };
-  }
-
-  let sortOption = {};
-
-  if (sort === 'latest') {
-    sortOption = { createdAt: -1 };
-  }
-
   try {
+    await dbConnect();
+    const { searchParams } = new URL(req.url);
+
+    // Check if this is a request for a specific patient by ID
+    const id = searchParams.get("id");
+
+    // If ID is provided, return individual patient (similar to update-details route)
+    if (id) {
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return NextResponse.json(
+          { error: "Invalid patient ID" },
+          { status: 400 },
+        );
+      }
+
+      // Verify authentication
+      const authResult = await verifyAuth(req);
+      if (!authResult.success || !authResult.user || !authResult.user.id) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      const distributerId = authResult.user.id;
+
+      // Get all doctors associated with this distributer
+      const allDoctors = await User.find({ distributerId: distributerId });
+      const doctorIds = allDoctors.map((doctor) => doctor._id);
+
+      // Find patient and check if it belongs to one of the distributer's doctors
+      const patient = await Patient.findOne({
+        _id: id,
+        userId: { $in: doctorIds },
+      }).lean();
+
+      if (!patient) {
+        return NextResponse.json(
+          {
+            error:
+              "Patient not found or you do not have permission to view this record",
+          },
+          { status: 404 },
+        );
+      }
+
+      return NextResponse.json(patient);
+    }
+
+    // If no ID provided, return paginated list (existing functionality)
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "25", 10);
+    const search = searchParams.get("search") || "";
+
+    // Get filter parameters
+    const gender = searchParams.get("gender") || "";
+    const country = searchParams.get("country") || "";
+    const city = searchParams.get("city") || "";
+    const startDate = searchParams.get("startDate") || "";
+    const endDate = searchParams.get("endDate") || "";
+    const state = searchParams.get("state") || "";
+    const caseCategory = searchParams.get("caseCategory") || "";
+    const caseType = searchParams.get("caseType") || "";
+    const selectedPrice = searchParams.get("selectedPrice") || "";
+    const treatmentFor = searchParams.get("treatmentFor") || "";
+    const caseStatus = searchParams.get("caseStatus") || "";
+    const sort = searchParams.get("sort") || "";
+
+    // Get userId from token
+    const authResult = await verifyAuth(req);
+    if (!authResult.success || !authResult.user || !authResult.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const distributerId = authResult.user.id;
+
+    const alldoctors = await User.find({ distributerId: distributerId });
+
+    const doctorIds = alldoctors.map((doctor) => doctor._id);
+
+    const query = { userId: { $in: doctorIds } };
+
+    // Search functionality
+    if (search) {
+      query.$or = [
+        { patientName: { $regex: search, $options: "i" } },
+        { city: { $regex: search, $options: "i" } },
+        { caseId: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Filter functionality
+    if (gender) {
+      query.gender = gender;
+    }
+
+    if (country) {
+      query.country = country;
+    }
+
+    if (city) {
+      query.city = city;
+    }
+
+    if (state) {
+      query.state = state;
+    }
+
+    if (caseCategory) {
+      query.caseCategory = caseCategory;
+    }
+
+    if (caseType) {
+      query.caseType = caseType;
+    }
+
+    if (selectedPrice) {
+      query.selectedPrice = selectedPrice;
+    }
+
+    if (treatmentFor) {
+      query.treatmentFor = treatmentFor;
+    }
+
+    if (caseStatus) {
+      query.caseStatus = caseStatus;
+    }
+
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    let sortOption = {};
+
+    if (sort === "latest") {
+      sortOption = { createdAt: -1 };
+    }
+
     const skip = (page - 1) * limit;
     const patients = await Patient.find(query)
       .sort(sortOption)
@@ -122,10 +163,10 @@ export async function GET(req) {
       },
     });
   } catch (error) {
-    console.error('Error fetching patients:', error);
+    console.error("Error in GET:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch patients' },
-      { status: 500 }
+      { error: error.message || "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -136,33 +177,32 @@ export async function POST(req) {
 
     // Get userId from token
     const authResult = await verifyAuth(req);
-    
-    
+
     if (!authResult.success || !authResult.user || !authResult.user.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const userId = authResult.user.id;
-    
+
     let patientData = {
       userId: userId,
     };
 
     // Check content type to determine how to parse the request
-    const contentType = req.headers.get('content-type') || '';
-    
-    if (contentType.includes('application/json')) {
+    const contentType = req.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
       // Handle JSON data
       const jsonData = await req.json();
       patientData = { ...patientData, ...jsonData };
-      console.log('Received JSON data:', patientData);
-    } else if (contentType.includes('multipart/form-data')) {
+      console.log("Received JSON data:", patientData);
+    } else if (contentType.includes("multipart/form-data")) {
       // Handle FormData
       const formData = await req.formData();
-      console.log('FormData received');
-      
+      console.log("FormData received");
+
       // Process form fields
       for (const [key, value] of formData.entries()) {
-        if (key !== 'scanFiles') {
+        if (key !== "scanFiles") {
           try {
             // Try to parse as JSON for nested objects
             patientData[key] = JSON.parse(value);
@@ -174,7 +214,7 @@ export async function POST(req) {
       }
 
       // Handle file uploads
-      const files = formData.getAll('scanFiles');
+      const files = formData.getAll("scanFiles");
       const scanFiles = files.map((file, index) => ({
         fileName: file.name,
         fileUrl: `/uploads/${Date.now()}-${index}-${file.name}`, // Placeholder URL
@@ -186,19 +226,19 @@ export async function POST(req) {
 
     // --- CASE ID GENERATION LOGIC ---
     function getStateAbbreviation(state) {
-      if (!state) return '';
-      const words = state.trim().split(' ');
+      if (!state) return "";
+      const words = state.trim().split(" ");
       if (words.length > 1) {
-        return words.map(w => w[0].toUpperCase()).join('');
+        return words.map((w) => w[0].toUpperCase()).join("");
       } else {
         return state.substring(0, 3).toUpperCase();
       }
     }
 
     async function generateUniqueCaseId(state) {
-      const prefix = '+91';
+      const prefix = "+91";
       const stateAbbr = getStateAbbreviation(state);
-      let caseId = '';
+      let caseId = "";
       let isUnique = false;
       let attempts = 0;
       const maxAttempts = 100; // Prevent infinite loops
@@ -206,14 +246,16 @@ export async function POST(req) {
       while (!isUnique && attempts < maxAttempts) {
         const randomNum = Math.floor(1000000 + Math.random() * 9000000); // 7-digit
         caseId = `${prefix}${stateAbbr}${randomNum}`;
-        console.log('Attempting caseId:', caseId);
+        console.log("Attempting caseId:", caseId);
         const exists = await Patient.findOne({ caseId });
         if (!exists) isUnique = true;
         attempts++;
       }
 
       if (!isUnique) {
-        throw new Error('Failed to generate unique case ID after multiple attempts');
+        throw new Error(
+          "Failed to generate unique case ID after multiple attempts",
+        );
       }
 
       return caseId;
@@ -221,41 +263,39 @@ export async function POST(req) {
 
     // Only generate caseId if not already present (first creation)
     if (!patientData.caseId) {
-      
       patientData.caseId = await generateUniqueCaseId(patientData.state);
-      
     }
     // --- END CASE ID GENERATION ---
 
-   // Create patient
+    // Create patient
     const patient = await Patient.create(patientData);
-  
+
     return NextResponse.json(patient, { status: 201 });
   } catch (error) {
-    console.error('Error in POST:', error);
-    
+    console.error("Error in POST:", error);
+
     // Handle duplicate key error
     if (error.code === 11000) {
       return NextResponse.json(
-        { error: 'A patient with this information already exists' },
-        { status: 400 }
+        { error: "A patient with this information already exists" },
+        { status: 400 },
       );
     }
 
     // Handle validation errors
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       const validationErrors = Object.values(error.errors).map(
-        (err) => err.message
+        (err) => err.message,
       );
       return NextResponse.json(
-        { error: validationErrors.join(', ') },
-        { status: 400 }
+        { error: validationErrors.join(", ") },
+        { status: 400 },
       );
     }
 
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { error: error.message || "Internal server error" },
+      { status: 500 },
     );
   }
-} 
+}

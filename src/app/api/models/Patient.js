@@ -94,6 +94,10 @@ const patientSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    singleArchType: {
+      type: String,
+      default: "",
+    },
     caseCategory: {
       type: String,
       default: "",

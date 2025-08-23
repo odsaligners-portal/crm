@@ -1,20 +1,24 @@
-export const caseTypes = ["Single Upper Arch", "Single Lower Arch", "Double Arch"];
+export const caseTypes = [
+  "Single Upper Arch",
+  "Single Lower Arch",
+  "Double Arch",
+];
 export const treatmentForOptions = ["Invisalign", "Clear Aligners", "Braces"];
 export const genders = ["Male", "Female", "Other"];
 export const imageLabels = [
-  'Upper arch',
-  'Lower arch',
-  'Anterior View',
-  'Left View',
-  'Right View',
-  'Profile View',
-  'Frontal View',
-  'Smiling',
-  'Panoramic Radiograph',
-  'Lateral Radiograph',
-  'Others',
+  "Upper arch",
+  "Lower arch",
+  "Anterior View",
+  "Left View",
+  "Right View",
+  "Open Mouth",
+  "Profile View",
+  "Frontal View",
+  "Smiling",
+  "Panoramic Radiograph",
+  "Lateral Radiograph",
 ];
-export const modelLabels = ['Select PLY/STL File 1', 'Select PLY/STL File 2'];
+export const modelLabels = ["Select PLY/STL File 1", "Select PLY/STL File 2"];
 
 export const singleArchTypeOptions = [
   { label: "Single Upper Arch", value: "Single Upper Arch" },
@@ -25,13 +29,13 @@ export const interproximalReductionOptions = [
   "Anterior Region (3 To 3)",
   "Posterior Region (Distal To Canine)",
   "plan as required",
-  "No IPR"
+  "No IPR",
 ];
 
 export const measureOfIPROptions = [
   "Upto 0.25mm/surface",
   "0.25mm to 0.5mm/surface",
-  "Plan as required"
+  "Plan as required",
 ];
 
 export const midlineOptions = [
@@ -83,8 +87,7 @@ export const terms = [
   },
   {
     title: "7. Replacement Costs",
-    content:
-      "Loss or breakage of aligners will be charged additionally.",
+    content: "Loss or breakage of aligners will be charged additionally.",
   },
   {
     title: "8. Fabrication Time",
@@ -148,8 +151,7 @@ export const terms = [
   },
   {
     title: "20. Repeat Impressions",
-    content:
-      "Repeat impressions due to faults will be charged additionally.",
+    content: "Repeat impressions due to faults will be charged additionally.",
   },
   {
     title: "21. Payments Policy",

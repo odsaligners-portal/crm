@@ -880,8 +880,8 @@ const DentalExaminationForm = () => {
           model2: imageUrls[12]
             ? [
                 {
-                  fileUrl: imageUrls[12],
-                  fileKey: fileKeys[12],
+                  fileUrl: imageUrls[13],
+                  fileKey: fileKeys[13],
                   uploadedAt: new Date().toISOString(),
                 },
               ]
@@ -1116,8 +1116,8 @@ const DentalExaminationForm = () => {
           model2: imageUrls[12]
             ? [
                 {
-                  fileUrl: imageUrls[12],
-                  fileKey: fileKeys[12],
+                  fileUrl: imageUrls[13],
+                  fileKey: fileKeys[13],
                   uploadedAt: new Date().toISOString(),
                 },
               ]
@@ -1274,8 +1274,8 @@ const DentalExaminationForm = () => {
           model2: imageUrls[12]
             ? [
                 {
-                  fileUrl: imageUrls[12],
-                  fileKey: fileKeys[12],
+                  fileUrl: imageUrls[13],
+                  fileKey: fileKeys[13],
                   uploadedAt: new Date().toISOString(),
                 },
               ]
@@ -1436,8 +1436,31 @@ const DentalExaminationForm = () => {
     const fileUrl = imageUrls[idx];
     const fileName = fileUrl ? getFileNameFromUrl(fileUrl) : "";
     const fileExt = fileName.split(".").pop()?.toLowerCase();
+
+    // Background images for different upload slots
+    const getBackgroundImage = (idx) => {
+      if (idx < 11) {
+        const backgroundImages = [
+          "/images/upload/upper-arch.jpeg", // Upper arch
+          "/images/upload/lower-arch.jpeg", // Lower arch
+          "/images/upload/Anterior-View-Arch.jpeg", // Anterior View
+          "/images/upload/Left-View.jpeg", // Left View
+          "/images/upload/right-view.jpeg", // Right View
+          "/images/upload/open-mouth-with-teeth.jpeg", // Open Mouth
+          "/images/upload/profile.jpeg", // Profile View
+          "/images/upload/frontal.jpeg", // Frontal View
+          "/images/upload/smiling.jpeg", // Smiling
+          // Lateral Radiograph (placeholder)
+        ];
+        return backgroundImages[idx];
+      }
+      return null;
+    };
+
+    const backgroundImage = getBackgroundImage(idx);
+
     return (
-      <div className="group text-center">
+      <div className="group rounded-xl p-2 text-center transition-all duration-300 hover:bg-gray-50/50">
         <label className="mb-3 block text-sm font-semibold text-gray-700 transition-colors duration-200 group-focus-within:text-blue-600">
           {idx < 11 ? imageLabels[idx] : modelLabels[idx - 11]}
         </label>
@@ -1462,23 +1485,42 @@ const DentalExaminationForm = () => {
           ) : (
             <div
               {...getRootProps()}
-              className={`group/upload mt-2 flex h-36 w-full cursor-pointer appearance-none items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-300 hover:scale-105 focus:outline-none ${
+              className={`group/upload relative mt-2 flex ${idx < 9 ? "h-72" : "h-36"} w-full cursor-pointer appearance-none items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300 hover:scale-105 focus:outline-none ${
                 isDragActive
-                  ? "border-blue-500 bg-gradient-to-br from-blue-50 to-blue-100 shadow-lg shadow-blue-500/20"
-                  : "border-gray-300 bg-white/80 backdrop-blur-sm hover:border-blue-400 hover:bg-blue-50/50"
+                  ? "scale-105 border-blue-500 bg-gradient-to-br from-blue-100 to-blue-200 shadow-xl ring-4 shadow-blue-500/30 ring-blue-500/20"
+                  : "border-gray-300 bg-white/80 backdrop-blur-sm hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-lg"
               }`}
             >
               <input {...getInputProps()} />
-              <div className="flex flex-col items-center space-y-2">
+
+              {/* Background Image */}
+              {backgroundImage && (
                 <div
-                  className={`rounded-full p-3 transition-all duration-300 ${
+                  className="absolute inset-0 transition-all duration-500 group-hover/upload:scale-105 group-hover/upload:opacity-70"
+                  style={{
+                    backgroundImage: `url(${backgroundImage})`,
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                    backgroundRepeat: "no-repeat",
+                  }}
+                />
+              )}
+
+              {/* Gradient overlay for better text readability */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/85 via-white/70 to-white/50 transition-all duration-300 group-hover/upload:from-white/70 group-hover/upload:via-white/50 group-hover/upload:to-white/30" />
+
+              <div
+                className={`relative z-10 flex ${idx < 9 ? "h-full items-end justify-center gap-3" : "flex-col items-center gap-2"} py-2`}
+              >
+                <div
+                  className={`rounded-full p-4 shadow-lg transition-all duration-300 ${
                     isDragActive
-                      ? "bg-blue-100 text-blue-600"
-                      : "bg-gray-100 text-gray-500 group-hover/upload:bg-blue-100 group-hover/upload:text-blue-600"
+                      ? "scale-110 bg-blue-500 text-white shadow-blue-500/50"
+                      : "bg-white/90 text-blue-600 group-hover/upload:scale-110 group-hover/upload:bg-blue-500 group-hover/upload:text-white group-hover/upload:shadow-blue-500/50"
                   }`}
                 >
                   <svg
-                    className="h-6 w-6"
+                    className="h-7 w-7"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -1491,15 +1533,19 @@ const DentalExaminationForm = () => {
                     />
                   </svg>
                 </div>
-                <span className="font-medium text-gray-600">
-                  Drop file or{" "}
-                  <span className="font-semibold text-blue-600 underline">
-                    browse
+                <div
+                  className={`${idx < 9 ? "mb-2 text-start" : "mb-2 text-center"}`}
+                >
+                  <span className="block text-sm font-semibold text-gray-800 group-hover/upload:text-gray-900">
+                    Drop file or{" "}
+                    <span className="font-bold text-blue-600 underline group-hover/upload:text-blue-700">
+                      browse
+                    </span>
                   </span>
-                </span>
-                <span className="text-xs text-gray-500">
-                  {idx < 11 ? "JPEG, PNG" : "PLY, STL"}
-                </span>
+                  <span className="mt-1 block text-xs text-gray-600 group-hover/upload:text-gray-700">
+                    {idx < 11 ? "JPEG, PNG" : "PLY, STL"}
+                  </span>
+                </div>
               </div>
             </div>
           )
@@ -2150,13 +2196,13 @@ const DentalExaminationForm = () => {
                     {/* Billing Address */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Billing Address
+                        Billing Details
                       </label>
                       <textarea
                         name="billingAddress"
                         value={formData.billingAddress}
                         onChange={handleInputChange}
-                        placeholder="Enter billing address"
+                        placeholder="Enter billing details"
                         rows="3"
                         maxLength={1500}
                         className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none ${
@@ -2367,7 +2413,7 @@ const DentalExaminationForm = () => {
                         Follow-up Frequency (months): *
                       </label>
                       <input
-                        type="number"
+                        type="text"
                         name="followUpMonths"
                         value={formData.followUpMonths}
                         onChange={handleInputChange}
@@ -2603,8 +2649,8 @@ const DentalExaminationForm = () => {
                             value="Single Arch"
                             checked={
                               formData.caseType === "Single Arch" ||
-                              formData.caseType === "Single Upper Arch" ||
-                              formData.caseType === "Single Lower Arch"
+                              formData.caseType === "Upper Arch" ||
+                              formData.caseType === "Lower Arch"
                             }
                             onChange={handleInputChange}
                             className="mr-2 accent-blue-500"
@@ -2627,8 +2673,8 @@ const DentalExaminationForm = () => {
                       </div>
                       {/* Show dropdown if Single Arch is selected */}
                       {(formData.caseType === "Single Arch" ||
-                        formData.caseType === "Single Upper Arch" ||
-                        formData.caseType === "Single Lower Arch") && (
+                        formData.caseType === "Upper Arch" ||
+                        formData.caseType === "Lower Arch") && (
                         <div className="mt-4">
                           <label className="mb-2 block text-sm font-medium text-gray-700">
                             Arch *
@@ -2640,12 +2686,8 @@ const DentalExaminationForm = () => {
                             className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
                           >
                             <option value="">Select Arch Type</option>
-                            <option value="Single Upper Arch">
-                              Single Upper Arch
-                            </option>
-                            <option value="Single Lower Arch">
-                              Single Lower Arch
-                            </option>
+                            <option value="Upper Arch">Upper Arch</option>
+                            <option value="Lower Arch">Lower Arch</option>
                           </select>
                         </div>
                       )}
@@ -4618,6 +4660,21 @@ const DentalExaminationForm = () => {
                               No
                             </span>
                           </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="gainSpaceIPR"
+                              value="Plan as required"
+                              checked={
+                                formData.gainSpaceIPR === "Plan as required"
+                              }
+                              onChange={handleInputChange}
+                              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-sm font-medium text-gray-700">
+                              Plan as required
+                            </span>
+                          </label>
                         </div>
                       </div>
 
@@ -4665,6 +4722,22 @@ const DentalExaminationForm = () => {
                             />
                             <span className="ml-2 text-sm font-medium text-gray-700">
                               No
+                            </span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="gainSpaceExtraction"
+                              value="Plan as required"
+                              checked={
+                                formData.gainSpaceExtraction ===
+                                "Plan as required"
+                              }
+                              onChange={handleInputChange}
+                              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-sm font-medium text-gray-700">
+                              Plan as required
                             </span>
                           </label>
                         </div>
@@ -4718,6 +4791,22 @@ const DentalExaminationForm = () => {
                               No
                             </span>
                           </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="gainSpaceDistalization"
+                              value="Plan as required"
+                              checked={
+                                formData.gainSpaceDistalization ===
+                                "Plan as required"
+                              }
+                              onChange={handleInputChange}
+                              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-sm font-medium text-gray-700">
+                              Plan as required
+                            </span>
+                          </label>
                         </div>
                       </div>
 
@@ -4769,6 +4858,22 @@ const DentalExaminationForm = () => {
                               No
                             </span>
                           </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="gainSpaceProclination"
+                              value="Plan as required"
+                              checked={
+                                formData.gainSpaceProclination ===
+                                "Plan as required"
+                              }
+                              onChange={handleInputChange}
+                              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-sm font-medium text-gray-700">
+                              Plan as required
+                            </span>
+                          </label>
                         </div>
                       </div>
 
@@ -4816,6 +4921,22 @@ const DentalExaminationForm = () => {
                             />
                             <span className="ml-2 text-sm font-medium text-gray-700">
                               No
+                            </span>
+                          </label>
+                          <label className="flex items-center">
+                            <input
+                              type="radio"
+                              name="gainSpaceExpansion"
+                              value="Plan as required"
+                              checked={
+                                formData.gainSpaceExpansion ===
+                                "Plan as required"
+                              }
+                              onChange={handleInputChange}
+                              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                            />
+                            <span className="ml-2 text-sm font-medium text-gray-700">
+                              Plan as required
                             </span>
                           </label>
                         </div>
@@ -4919,61 +5040,143 @@ const DentalExaminationForm = () => {
                 </p>
               </div>
               <div className="space-y-8">
-                {/* Intraoral Photo Section - First 5 uploads (slots 0-4) */}
-                <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
-                  <h2 className="mb-4 border-b border-blue-300 pb-2 text-xl font-semibold text-blue-800">
-                    📸 Intraoral Photo
-                  </h2>
-                  <p className="mb-4 text-sm text-blue-700">
-                    Upload photos of the patient's teeth and oral cavity
-                  </p>
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    {imageLabels.slice(0, 5).map((_, idx) => (
+                {/* Intraoral Photo Section - First 6 uploads (slots 0-5) */}
+                <div className="rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-8 shadow-lg">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="rounded-xl bg-blue-200 p-3">
+                      <svg
+                        className="h-6 w-6 text-blue-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-blue-800">
+                        📸 Intraoral Photo
+                      </h2>
+                      <p className="text-blue-600">
+                        Upload photos of the patient's teeth and oral cavity
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    {imageLabels.slice(0, 6).map((_, idx) => (
                       <UploadComponent key={idx} idx={idx} />
                     ))}
                   </div>
                 </div>
 
-                {/* Facial Section - Next 3 uploads (slots 5-7) */}
-                <div className="rounded-lg border border-green-200 bg-green-50 p-6">
-                  <h2 className="mb-4 border-b border-green-300 pb-2 text-xl font-semibold text-green-800">
-                    👤 Facial
-                  </h2>
-                  <p className="mb-4 text-sm text-green-700">
-                    Upload photos showing the patient's facial features and
-                    profile
-                  </p>
+                {/* Facial Section - Next 3 uploads (slots 6-8) */}
+                <div className="rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-8 shadow-lg">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="rounded-xl bg-green-200 p-3">
+                      <svg
+                        className="h-6 w-6 text-green-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-green-800">
+                        👤 Facial
+                      </h2>
+                      <p className="text-green-600">
+                        Upload photos showing the patient's facial features and
+                        profile
+                      </p>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    {imageLabels.slice(5, 8).map((_, idx) => (
-                      <UploadComponent key={idx + 5} idx={idx + 5} />
+                    {imageLabels.slice(6, 9).map((_, idx) => (
+                      <UploadComponent key={idx + 6} idx={idx + 6} />
                     ))}
                   </div>
                 </div>
 
-                {/* X-ray Section - Remaining 3 uploads (slots 8-10) */}
-                <div className="rounded-lg border border-purple-200 bg-purple-50 p-6">
-                  <h2 className="mb-4 border-b border-purple-300 pb-2 text-xl font-semibold text-purple-800">
-                    🔬 X-ray
-                  </h2>
-                  <p className="mb-4 text-sm text-purple-700">
-                    Upload radiographic images for diagnostic purposes
-                  </p>
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    {imageLabels.slice(8, 11).map((_, idx) => (
-                      <UploadComponent key={idx + 8} idx={idx + 8} />
+                {/* X-ray Section - Remaining 2 uploads (slots 9-10) */}
+                <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100 p-8 shadow-lg">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="rounded-xl bg-purple-200 p-3">
+                      <svg
+                        className="h-6 w-6 text-purple-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-purple-800">
+                        🔬 X-ray
+                      </h2>
+                      <p className="text-purple-600">
+                        Upload radiographic images for diagnostic purposes
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {imageLabels.slice(9, 11).map((_, idx) => (
+                      <UploadComponent key={idx + 9} idx={idx + 9} />
                     ))}
                   </div>
                 </div>
 
                 {/* 3D Models Section */}
-                <div className="rounded-lg border border-orange-200 bg-orange-50 p-6">
-                  <h2 className="mb-4 border-b border-orange-300 pb-2 text-xl font-semibold text-orange-800">
-                    🎯 3D Models (PLY/STL)
-                  </h2>
-                  <p className="mb-4 text-sm text-orange-700">
-                    Upload 3D model files for treatment planning and
-                    visualization
-                  </p>
+                <div className="rounded-2xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100 p-8 shadow-lg">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="rounded-xl bg-orange-200 p-3">
+                      <svg
+                        className="h-6 w-6 text-orange-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 3l9 4.5v9L12 21l-9-4.5v-9L12 3z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-orange-800">
+                        🎯 3D Models (PLY/STL)
+                      </h2>
+                      <p className="text-orange-600">
+                        Upload 3D model files for treatment planning and
+                        visualization
+                      </p>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {modelLabels.map((_, idx) => (
                       <UploadComponent key={idx + 11} idx={idx + 11} />

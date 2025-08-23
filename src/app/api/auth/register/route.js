@@ -1,40 +1,59 @@
-import jwt from 'jsonwebtoken';
-import { NextResponse } from 'next/server';
-import connectDB from '../../config/db';
-import User from '../../models/User';
-import { AppError, handleError } from '../../utils/errorHandler';
+import jwt from "jsonwebtoken";
+import { NextResponse } from "next/server";
+import connectDB from "../../config/db";
+import User from "../../models/User";
+import { AppError, handleError } from "../../utils/errorHandler";
 
 export async function POST(req) {
   try {
     await connectDB();
-    
-    const { 
-      name, email, password, profilePicture
+
+    const {
+      name,
+      email,
+      password,
+      mobile,
+      gender,
+      country,
+      state,
+      city,
+      experience,
+      doctorType,
+      address,
+      profilePicture,
     } = await req.json();
 
-    if ( !name || !email || !password ) {
-      throw new AppError('Please provide all required fields', 400);
+    if (!name || !email || !password) {
+      throw new AppError("Please provide all required fields", 400);
     }
 
     // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      throw new AppError('User already exists', 400);
+      throw new AppError("User already exists", 400);
     }
 
-    // Create user
+    // Create user with all fields
     const user = await User.create({
       name,
       email,
       password,
+      mobile,
+      gender,
+      country,
+      state,
+      city,
+      experience,
+      doctorType,
+      address,
       ...(profilePicture ? { profilePicture } : {}),
     });
 
     // Generate JWT
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'fallback_secret',
-      { expiresIn: '30d' }
+      process.env.JWT_SECRET || "fallback_secret",
+      { expiresIn: "30d" },
     );
 
     // Return response without password
@@ -42,16 +61,26 @@ export async function POST(req) {
       id: user._id,
       name: user.name,
       email: user.email,
+      mobile: user.mobile,
+      gender: user.gender,
+      country: user.country,
+      state: user.state,
+      city: user.city,
+      experience: user.experience,
+      doctorType: user.doctorType,
+      address: user.address,
       role: user.role,
       profilePicture: user.profilePicture,
     };
 
-    return NextResponse.json({
-      user: userResponse,
-      token
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        user: userResponse,
+        token,
+      },
+      { status: 201 },
+    );
   } catch (error) {
     return handleError(error);
   }
-} 
+}

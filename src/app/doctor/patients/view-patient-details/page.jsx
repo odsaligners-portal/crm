@@ -7,6 +7,7 @@ import { fetchWithError } from "@/utils/apiErrorHandler";
 import { setLoading } from "@/store/features/uiSlice";
 
 import TeethSelector from "@/components/all/TeethSelector";
+import { imageLabels } from "@/constants/data";
 import {
   DocumentTextIcon,
   FolderIcon,
@@ -15,7 +16,7 @@ import {
 } from "@heroicons/react/24/solid";
 
 // File Display Component
-const FileDisplayComponent = ({ idx, patientData, imageLabels }) => {
+const FileDisplayComponent = ({ idx, patientData }) => {
   const getFileData = (idx) => {
     if (!patientData.dentalExaminationFiles) {
       return null;
@@ -54,7 +55,11 @@ const FileDisplayComponent = ({ idx, patientData, imageLabels }) => {
     return (
       <div className="group text-center">
         <label className="mb-3 block text-sm font-semibold text-gray-700">
-          {imageLabels[idx % imageLabels.length]}
+          {idx < 11
+            ? imageLabels[idx]
+            : idx === 11
+              ? "Select PLY/STL File 1"
+              : "Select PLY/STL File 2"}
         </label>
         <div className="mt-2 flex h-36 w-full items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50">
           <div className="text-center">
@@ -81,7 +86,11 @@ const FileDisplayComponent = ({ idx, patientData, imageLabels }) => {
   return (
     <div className="group text-center">
       <label className="mb-3 block text-sm font-semibold text-gray-700">
-        {imageLabels[idx % imageLabels.length]}
+        {idx < 11
+          ? imageLabels[idx]
+          : idx === 11
+            ? "Select PLY/STL File 1"
+            : "Select PLY/STL File 2"}
       </label>
 
       <div className="group relative mx-auto mt-2 max-w-xs">
@@ -751,7 +760,7 @@ export default function ViewPatientDetails() {
                             ? "Traveling – Available every " +
                               (patientData.dentalExamination?.followUpMonths ||
                                 "___") +
-                              " months for follow-up"
+                              " for follow-up"
                             : "Not specified"}
                       </span>
                     </div>
@@ -833,9 +842,9 @@ export default function ViewPatientDetails() {
                         Case Type
                       </label>
                       <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900">
-                        {patientData.caseType || "Not specified"}
-                        {patientData.singleArchType &&
-                          ` - ${patientData.singleArchType}`}
+                        {patientData.caseType != "Single Arch"
+                          ? patientData.caseType
+                          : patientData.singleArchType || "Not specified"}
                       </div>
                     </div>
 
@@ -2007,7 +2016,7 @@ export default function ViewPatientDetails() {
               </div> */}
 
               <div className="space-y-8">
-                {/* Intraoral Photo Section - First 5 uploads (slots 0-4) */}
+                {/* Intraoral Photo Section - First 6 uploads (slots 0-5) */}
                 <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
                   <h2 className="mb-4 border-b border-blue-300 pb-2 text-xl font-semibold text-blue-800">
                     📸 Intraoral Photo
@@ -2016,24 +2025,17 @@ export default function ViewPatientDetails() {
                     Photos of the patient's teeth and oral cavity
                   </p>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    {[0, 1, 2, 3, 4].map((idx) => (
+                    {[0, 1, 2, 3, 4, 5].map((idx) => (
                       <FileDisplayComponent
                         key={idx}
                         idx={idx}
                         patientData={patientData}
-                        imageLabels={[
-                          "Front View",
-                          "Right Side",
-                          "Left Side",
-                          "Upper Arch",
-                          "Lower Arch",
-                        ]}
                       />
                     ))}
                   </div>
                 </div>
 
-                {/* Facial Section - Next 3 uploads (slots 5-7) */}
+                {/* Facial Section - Next 3 uploads (slots 6-8) */}
                 <div className="rounded-lg border border-green-200 bg-green-50 p-6">
                   <h2 className="mb-4 border-b border-green-300 pb-2 text-xl font-semibold text-green-800">
                     👤 Facial
@@ -2042,22 +2044,17 @@ export default function ViewPatientDetails() {
                     Photos showing the patient's facial features and profile
                   </p>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    {[5, 6, 7].map((idx) => (
+                    {[6, 7, 8].map((idx) => (
                       <FileDisplayComponent
                         key={idx}
                         idx={idx}
                         patientData={patientData}
-                        imageLabels={[
-                          "Front View",
-                          "Right Profile",
-                          "Left Profile",
-                        ]}
                       />
                     ))}
                   </div>
                 </div>
 
-                {/* X-ray Section - Remaining 3 uploads (slots 8-10) */}
+                {/* X-ray Section - Remaining 2 uploads (slots 9-10) */}
                 <div className="rounded-lg border border-purple-200 bg-purple-50 p-6">
                   <h2 className="mb-4 border-b border-purple-300 pb-2 text-xl font-semibold text-purple-800">
                     🔬 X-ray
@@ -2065,17 +2062,12 @@ export default function ViewPatientDetails() {
                   <p className="mb-4 text-sm text-purple-700">
                     Radiographic images for diagnostic purposes
                   </p>
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    {[8, 9, 10].map((idx) => (
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {[9, 10].map((idx) => (
                       <FileDisplayComponent
                         key={idx}
                         idx={idx}
                         patientData={patientData}
-                        imageLabels={[
-                          "Panoramic X-ray",
-                          "Cephalometric X-ray",
-                          "Intraoral X-rays",
-                        ]}
                       />
                     ))}
                   </div>
@@ -2095,7 +2087,6 @@ export default function ViewPatientDetails() {
                         key={idx}
                         idx={idx}
                         patientData={patientData}
-                        imageLabels={["Upper Arch Model", "Lower Arch Model"]}
                       />
                     ))}
                   </div>
