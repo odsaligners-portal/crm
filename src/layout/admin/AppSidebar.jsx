@@ -85,6 +85,11 @@ const baseNavItems = [
     name: "View Comments",
     path: "/admin/view-comments",
   },
+  {
+    icon: <MdDescription />,
+    name: "Special Comments",
+    path: "/admin/special-comments",
+  },
   // {
   //   icon: <MdLoop />,
   //   name: "Manage Patient Progress",
@@ -190,7 +195,7 @@ const AppSidebar = () => {
   const [hasPlannerAccess, setHasPlannerAccess] = useState(false);
   const [hasPriceUpdateAccess, setHasPriceUpdateAccess] = useState(false);
   const [hasAccountsAccess, setHasAccountsAccess] = useState(false);
-  
+
   useEffect(() => {
     const fetchAccess = async () => {
       if (!token) return;
@@ -205,7 +210,6 @@ const AppSidebar = () => {
           setHasPlannerAccess(data.user.plannerAccess);
           setHasPriceUpdateAccess(data.user.priceUpdateAccess);
           setHasAccountsAccess(data?.user?.addSalesPersonAccess);
-          
         }
       } catch (err) {
         console.error("Failed to fetch access", err);

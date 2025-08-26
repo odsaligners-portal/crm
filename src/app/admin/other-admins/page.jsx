@@ -1,11 +1,17 @@
 "use client";
-import ConfirmationModal from '@/components/common/ConfirmationModal';
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import ConfirmationModal from "@/components/common/ConfirmationModal";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { setLoading } from "@/store/features/uiSlice";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash } from "react-icons/fa";
 import { MdAdd } from "react-icons/md";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
@@ -59,7 +65,8 @@ export default function OtherAdminsPage() {
     fetchCurrentUser();
   }, [user, currentUserId, token, dispatch]);
 
-  const isSuperAdmin = currentUserId && superAdminId && currentUserId === superAdminId;
+  const isSuperAdmin =
+    currentUserId && superAdminId && currentUserId === superAdminId;
 
   const handleAccessChange = async (adminId, field, value) => {
     dispatch(setLoading(true));
@@ -68,7 +75,7 @@ export default function OtherAdminsPage() {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           targetAdminId: adminId,
@@ -77,10 +84,14 @@ export default function OtherAdminsPage() {
       });
       setAdmins((prev) =>
         prev.map((a) =>
-          a._id === adminId || a.id === adminId ? { ...a, [field]: value === "Yes" } : a
-        )
+          a._id === adminId || a.id === adminId
+            ? { ...a, [field]: value === "Yes" }
+            : a,
+        ),
       );
-      toast.success(`${field.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} updated to ${value}`);
+      toast.success(
+        `${field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())} updated to ${value}`,
+      );
     } finally {
       dispatch(setLoading(false));
     }
@@ -91,15 +102,23 @@ export default function OtherAdminsPage() {
     dispatch(setLoading(true));
     try {
       await fetchWithError(`/api/admin/other-admins/delete`, {
-        method: 'POST',
+        method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify({ targetAdminId: adminToDelete._id || adminToDelete.id }),
+        body: JSON.stringify({
+          targetAdminId: adminToDelete._id || adminToDelete.id,
+        }),
       });
-      toast.success('Admin deleted successfully!');
-      setAdmins((prev) => prev.filter((a) => a._id !== (adminToDelete._id || adminToDelete.id) && a.id !== (adminToDelete._id || adminToDelete.id)));
+      toast.success("Admin deleted successfully!");
+      setAdmins((prev) =>
+        prev.filter(
+          (a) =>
+            a._id !== (adminToDelete._id || adminToDelete.id) &&
+            a.id !== (adminToDelete._id || adminToDelete.id),
+        ),
+      );
       setShowDeleteModal(false);
       setAdminToDelete(null);
     } finally {
@@ -111,10 +130,14 @@ export default function OtherAdminsPage() {
 
   if (!isSuperAdmin && admins.length > 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-white dark:bg-gray-900 p-8 rounded-xl shadow-xl text-center">
-          <h2 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h2>
-          <p className="text-gray-700 dark:text-gray-300">You do not have permission to view this page.</p>
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="rounded-xl bg-white p-8 text-center shadow-xl dark:bg-gray-900">
+          <h2 className="mb-2 text-2xl font-bold text-red-600">
+            Access Denied
+          </h2>
+          <p className="text-gray-700 dark:text-gray-300">
+            You do not have permission to view this page.
+          </p>
         </div>
       </div>
     );
@@ -142,7 +165,7 @@ export default function OtherAdminsPage() {
         )}
       </div>
       <div className="mb-8 h-2 w-full rounded-full bg-gradient-to-r from-blue-200 via-white to-blue-100 opacity-60 dark:from-blue-900 dark:via-gray-900 dark:to-blue-800" />
-      <div className="before:border-gradient-to-r before:animate-border-glow relative mx-auto w-full max-w-auto overflow-x-auto rounded-xl border border-transparent bg-white/90 shadow-xl backdrop-blur-md before:pointer-events-none before:absolute before:inset-0 before:rounded-xl before:border-2 before:from-blue-200 before:via-purple-100 before:to-blue-100 dark:bg-gray-900/80">
+      <div className="before:border-gradient-to-r before:animate-border-glow max-w-auto relative mx-auto w-full overflow-x-auto rounded-xl border border-transparent bg-white/90 shadow-xl backdrop-blur-md before:pointer-events-none before:absolute before:inset-0 before:rounded-xl before:border-2 before:from-blue-200 before:via-purple-100 before:to-blue-100 dark:bg-gray-900/80">
         <Table className="relative z-10 mx-auto min-w-full font-sans text-[10px]">
           {admins.length > 0 && (
             <>
@@ -219,6 +242,12 @@ export default function OtherAdminsPage() {
                     className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
                   >
                     Planner Access
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                  >
+                    Special Comment Access
                   </TableCell>
                   <TableCell
                     isHeader
@@ -391,6 +420,23 @@ export default function OtherAdminsPage() {
                           handleAccessChange(
                             admin._id || admin.id,
                             "plannerAccess",
+                            e.target.value,
+                          )
+                        }
+                        className="rounded border bg-white px-2 py-1 dark:bg-gray-800"
+                      >
+                        <option value="Yes">Yes</option>
+                        <option value="No">No</option>
+                      </select>
+                    </TableCell>
+                    <TableCell className="border p-2 text-center">
+                      <select
+                        value={admin.specialCommentAccess ? "Yes" : "No"}
+                        disabled={!isSuperAdmin}
+                        onChange={(e) =>
+                          handleAccessChange(
+                            admin._id || admin.id,
+                            "specialCommentAccess",
                             e.target.value,
                           )
                         }

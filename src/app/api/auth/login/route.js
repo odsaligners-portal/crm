@@ -15,7 +15,6 @@ export async function POST(req) {
     if (!email || !password) {
       throw new AppError("Please provide email and password", 400);
     }
-    console.log(email, password, distributer);
     let user;
     if (!distributer) {
       user = await User.findOne({ email }).select("+password");

@@ -75,6 +75,7 @@ export async function GET(req) {
         plannerAccess: user.plannerAccess,
         distributerAccess: user.distributerAccess,
         addSalesPersonAccess: user.addSalesPersonAccess,
+        specialCommentAccess: user.specialCommentAccess,
         mobile: user.mobile,
         gender: user.gender,
         country: user.country,

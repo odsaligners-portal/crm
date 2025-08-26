@@ -2098,14 +2098,15 @@ const DentalExaminationForm = () => {
                           <input
                             type="radio"
                             name="shippingAddressType"
-                            value="New Address"
+                            value="Alternate Address"
                             checked={
-                              formData.shippingAddressType === "New Address"
+                              formData.shippingAddressType ===
+                              "Alternate Address"
                             }
                             onChange={handleInputChange}
                             className="mr-2 accent-blue-500"
                           />
-                          New Address
+                          Alternate Address
                         </label>
                       </div>
                       {formData.shippingAddressType === "Primary Address" ? (
@@ -2152,7 +2153,7 @@ const DentalExaminationForm = () => {
                       ) : (
                         <div>
                           <label className="mb-2 block text-sm font-medium text-gray-700">
-                            New Shipping Address
+                            Alternate Shipping Address
                           </label>
                           <textarea
                             name="shippingAddress"
@@ -2239,12 +2240,9 @@ const DentalExaminationForm = () => {
 
                 {/* Medical History Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-700">
-                    Medical History
-                  </h2>
                   <div className="space-y-4">
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">
+                      <label className="mb-2 block text-xl font-semibold text-gray-700">
                         Chief Complaint
                       </label>
                       <textarea
@@ -2284,7 +2282,7 @@ const DentalExaminationForm = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">
+                      <label className="mb-2 block text-xl font-semibold text-gray-700">
                         Past Medical History
                       </label>
                       <textarea
@@ -2324,7 +2322,7 @@ const DentalExaminationForm = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">
+                      <label className="mb-2 block text-xl font-semibold text-gray-700">
                         Past Dental History
                       </label>
                       <textarea
@@ -2401,13 +2399,37 @@ const DentalExaminationForm = () => {
                       />
                       <label
                         htmlFor="traveling"
-                        className="ml-3 text-sm font-medium text-gray-700"
+                        className="ml-3 flex items-center gap-2 text-sm font-medium whitespace-nowrap text-gray-700"
                       >
-                        Traveling – Available every ___ months for follow-up
+                        Traveling{" "}
+                        {formData.natureOfAvailability === "traveling" && (
+                          <>
+                            - Available every
+                            <input
+                              type="text"
+                              name="followUpMonths"
+                              value={formData.followUpMonths}
+                              onChange={handleInputChange}
+                              placeholder="Enter number of months"
+                              min="1"
+                              max="24"
+                              required={
+                                formData.natureOfAvailability === "traveling"
+                              }
+                              className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                                formData.natureOfAvailability === "traveling" &&
+                                !formData.followUpMonths
+                                  ? "border-red-500 focus:ring-red-500"
+                                  : "border-gray-300"
+                              }`}
+                            />
+                            months for follow-up
+                          </>
+                        )}
                       </label>
                     </div>
                   </div>
-                  {formData.natureOfAvailability === "traveling" && (
+                  {/* {formData.natureOfAvailability === "traveling" && (
                     <div className="mt-4">
                       <label className="mb-2 block text-sm font-medium text-gray-700">
                         Follow-up Frequency (months): *
@@ -2436,7 +2458,7 @@ const DentalExaminationForm = () => {
                           </p>
                         )}
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 {/* Any Existing Oral Habits Section */}
@@ -2445,6 +2467,23 @@ const DentalExaminationForm = () => {
                     Any Existing Oral Habits
                   </h2>
                   <div className="space-y-3">
+                    <div className="flex items-center rounded-md bg-gray-50 p-3">
+                      <input
+                        type="radio"
+                        id="noHabit"
+                        name="oralHabits"
+                        value="noHabit"
+                        checked={formData.oralHabits === "noHabit"}
+                        onChange={handleInputChange}
+                        className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <label
+                        htmlFor="noHabit"
+                        className="ml-3 text-sm font-medium text-gray-700"
+                      >
+                        No Habit
+                      </label>
+                    </div>
                     <div className="flex items-center rounded-md bg-gray-50 p-3">
                       <input
                         type="radio"
@@ -2545,23 +2584,6 @@ const DentalExaminationForm = () => {
                         />
                       </div>
                     )}
-                    <div className="flex items-center rounded-md bg-gray-50 p-3">
-                      <input
-                        type="radio"
-                        id="noHabit"
-                        name="oralHabits"
-                        value="noHabit"
-                        checked={formData.oralHabits === "noHabit"}
-                        onChange={handleInputChange}
-                        className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <label
-                        htmlFor="noHabit"
-                        className="ml-3 text-sm font-medium text-gray-700"
-                      >
-                        No Habit
-                      </label>
-                    </div>
                   </div>
                 </div>
 
@@ -3142,7 +3164,7 @@ const DentalExaminationForm = () => {
                         </span>
                       </div>
                     </div>
-                    <div>
+                    {/* <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
                         Protrusion:{" "}
                         <input
@@ -3173,7 +3195,7 @@ const DentalExaminationForm = () => {
                         />{" "}
                         mm
                       </label>
-                    </div>
+                    </div> */}
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
                         Any Other Comments
@@ -4810,7 +4832,7 @@ const DentalExaminationForm = () => {
                         </div>
                       </div>
 
-                      {formData.gainSpaceDistalization === "yes" && (
+                      {/* {formData.gainSpaceDistalization === "yes" && (
                         <div className="space-y-4">
                           <label className="block text-sm font-medium text-gray-700">
                             Select Teeth for Distalization (Select tooth):
@@ -4822,7 +4844,7 @@ const DentalExaminationForm = () => {
                             selectedTeeth={formData.gainSpaceDistalizationTeeth}
                           />
                         </div>
-                      )}
+                      )} */}
                     </div>
 
                     {/* Proclination */}
@@ -4877,7 +4899,7 @@ const DentalExaminationForm = () => {
                         </div>
                       </div>
 
-                      {formData.gainSpaceProclination === "yes" && (
+                      {/* {formData.gainSpaceProclination === "yes" && (
                         <div className="space-y-4">
                           <label className="block text-sm font-medium text-gray-700">
                             Select Teeth for Proclination (Select tooth):
@@ -4887,7 +4909,7 @@ const DentalExaminationForm = () => {
                             selectedTeeth={formData.gainSpaceProclinationTeeth}
                           />
                         </div>
-                      )}
+                      )} */}
                     </div>
 
                     {/* Expansion */}
@@ -4942,7 +4964,7 @@ const DentalExaminationForm = () => {
                         </div>
                       </div>
 
-                      {formData.gainSpaceExpansion === "yes" && (
+                      {/* {formData.gainSpaceExpansion === "yes" && (
                         <div className="space-y-4">
                           <label className="block text-sm font-medium text-gray-700">
                             Select Teeth for Expansion (Select tooth):
@@ -4952,7 +4974,7 @@ const DentalExaminationForm = () => {
                             selectedTeeth={formData.gainSpaceExpansionTeeth}
                           />
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </div>
