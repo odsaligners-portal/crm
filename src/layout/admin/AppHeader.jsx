@@ -1,4 +1,5 @@
 "use client";
+import LanguageSwitcher from "@/components/common/LanguageSwitcher";
 import { ThemeToggleButton } from "@/components/common/ThemeToggleButton";
 import NotificationDropdown from "@/components/header/NotificationDropdown";
 import UserDropdown from "@/components/header/UserDropdown";
@@ -51,35 +52,27 @@ const AppHeader = () => {
   }, []);
 
   return (
-    <header className={`sticky top-0 flex w-full z-99999 transition-all duration-500 ease-out
-      ${scrolled 
-        ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border-b border-gray-200/50 dark:border-gray-700/50 shadow-lg shadow-gray-900/5' 
-        : 'bg-gradient-to-r from-white via-gray-50/90 to-white dark:from-gray-900 dark:via-gray-800/90 dark:to-gray-900 border-b border-gray-200/30 dark:border-gray-700/30'
-      } lg:border-b`}>
-      
+    <header
+      className={`sticky top-0 z-99999 flex w-full transition-all duration-500 ease-out ${
+        scrolled
+          ? "border-b border-gray-200/50 bg-white/80 shadow-lg shadow-gray-900/5 backdrop-blur-xl dark:border-gray-700/50 dark:bg-gray-900/80"
+          : "border-b border-gray-200/30 bg-gradient-to-r from-white via-gray-50/90 to-white dark:border-gray-700/30 dark:from-gray-900 dark:via-gray-800/90 dark:to-gray-900"
+      } lg:border-b`}
+    >
       {/* Animated gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-pink-600/5 dark:from-blue-400/10 dark:via-purple-400/10 dark:to-pink-400/10 opacity-0 hover:opacity-100 transition-opacity duration-700"></div>
-      
-      <div className="flex flex-col items-center justify-between grow lg:flex-row lg:px-6 relative">
-        <div className="flex items-center justify-between w-full gap-2 px-3 py-3 border-b border-gray-200/50 dark:border-gray-700/50 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4">
-          
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/5 via-purple-600/5 to-pink-600/5 opacity-0 transition-opacity duration-700 hover:opacity-100 dark:from-blue-400/10 dark:via-purple-400/10 dark:to-pink-400/10"></div>
+
+      <div className="relative flex grow flex-col items-center justify-between lg:flex-row lg:px-6">
+        <div className="flex w-full items-center justify-between gap-2 border-b border-gray-200/50 px-3 py-3 sm:gap-4 lg:justify-normal lg:border-b-0 lg:px-0 lg:py-4 dark:border-gray-700/50">
           {/* Enhanced Toggle Button */}
           <button
-            className="group relative items-center justify-center w-10 h-10 text-gray-600 border border-gray-200/60 rounded-xl z-99999 
-                     dark:border-gray-700/60 lg:flex dark:text-gray-300 lg:h-11 lg:w-11 
-                     bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm
-                     hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 
-                     dark:hover:from-blue-900/20 dark:hover:to-purple-900/20
-                     hover:border-blue-300/50 dark:hover:border-blue-600/50
-                     hover:shadow-lg hover:shadow-blue-500/20 dark:hover:shadow-blue-400/20
-                     transform hover:scale-105 active:scale-95
-                     transition-all duration-300 ease-out"
+            className="group relative z-99999 h-10 w-10 transform items-center justify-center rounded-xl border border-gray-200/60 bg-white/60 text-gray-600 backdrop-blur-sm transition-all duration-300 ease-out hover:scale-105 hover:border-blue-300/50 hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 hover:shadow-lg hover:shadow-blue-500/20 active:scale-95 lg:flex lg:h-11 lg:w-11 dark:border-gray-700/60 dark:bg-gray-800/60 dark:text-gray-300 dark:hover:border-blue-600/50 dark:hover:from-blue-900/20 dark:hover:to-purple-900/20 dark:hover:shadow-blue-400/20"
             onClick={handleToggle}
             aria-label="Toggle Sidebar"
           >
             {/* Glow effect */}
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 group-hover:opacity-20 blur transition-opacity duration-300"></div>
-            
+            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-400 to-purple-400 opacity-0 blur transition-opacity duration-300 group-hover:opacity-20"></div>
+
             <div className="relative transition-transform duration-300 group-hover:rotate-6">
               {isMobileOpen ? (
                 <svg
@@ -118,20 +111,20 @@ const AppHeader = () => {
           </button>
 
           {/* Enhanced Logo */}
-          <Link href="/" className="lg:hidden group">
+          <Link href="/" className="group lg:hidden">
             <div className="relative overflow-hidden rounded-lg p-1">
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 opacity-0 blur transition-opacity duration-500 group-hover:opacity-100"></div>
               <Image
                 width={154}
                 height={32}
-                className="dark:hidden relative z-10 transition-transform duration-300 group-hover:scale-105"
+                className="relative z-10 transition-transform duration-300 group-hover:scale-105 dark:hidden"
                 src="/logo.png"
                 alt="Logo"
               />
               <Image
                 width={154}
                 height={32}
-                className="hidden dark:block relative z-10 transition-transform duration-300 group-hover:scale-105"
+                className="relative z-10 hidden transition-transform duration-300 group-hover:scale-105 dark:block"
                 src="/logo.png"
                 alt="Logo"
               />
@@ -141,20 +134,11 @@ const AppHeader = () => {
           {/* Enhanced Menu Button */}
           <button
             onClick={toggleApplicationMenu}
-            className="group relative flex items-center justify-center w-10 h-10 text-gray-700 
-                     rounded-xl z-99999 
-                     bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm
-                     hover:bg-gradient-to-br hover:from-violet-50 hover:to-indigo-50
-                     dark:text-gray-300 dark:hover:from-violet-900/20 dark:hover:to-indigo-900/20
-                     border border-gray-200/60 dark:border-gray-700/60
-                     hover:border-violet-300/50 dark:hover:border-violet-600/50
-                     hover:shadow-lg hover:shadow-violet-500/20 dark:hover:shadow-violet-400/20
-                     transform hover:scale-105 active:scale-95
-                     transition-all duration-300 ease-out lg:hidden"
+            className="group relative z-99999 flex h-10 w-10 transform items-center justify-center rounded-xl border border-gray-200/60 bg-white/60 text-gray-700 backdrop-blur-sm transition-all duration-300 ease-out hover:scale-105 hover:border-violet-300/50 hover:bg-gradient-to-br hover:from-violet-50 hover:to-indigo-50 hover:shadow-lg hover:shadow-violet-500/20 active:scale-95 lg:hidden dark:border-gray-700/60 dark:bg-gray-800/60 dark:text-gray-300 dark:hover:border-violet-600/50 dark:hover:from-violet-900/20 dark:hover:to-indigo-900/20 dark:hover:shadow-violet-400/20"
           >
             {/* Pulse effect */}
-            <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-violet-400 to-indigo-400 opacity-0 group-hover:opacity-20 animate-pulse transition-opacity duration-500"></div>
-            
+            <div className="absolute inset-0 animate-pulse rounded-xl bg-gradient-to-r from-violet-400 to-indigo-400 opacity-0 transition-opacity duration-500 group-hover:opacity-20"></div>
+
             <div className="relative transition-transform duration-300 group-hover:rotate-12">
               <svg
                 width="20"
@@ -173,47 +157,43 @@ const AppHeader = () => {
               </svg>
             </div>
           </button>
-
         </div>
-        
+
         {/* Enhanced Controls Section */}
         <div
           className={`${
             isApplicationMenuOpen ? "flex" : "hidden"
-          } items-center justify-between w-full gap-4 px-5 py-4 lg:flex 
-          bg-white/40 dark:bg-gray-900/40 backdrop-blur-xl
-          border-t border-gray-200/50 dark:border-gray-700/50
-          lg:bg-transparent lg:backdrop-blur-none lg:border-t-0
-          shadow-lg shadow-gray-900/5 lg:shadow-none
-          lg:justify-end lg:px-0`}
+          } w-full items-center justify-between gap-4 border-t border-gray-200/50 bg-white/40 px-5 py-4 shadow-lg shadow-gray-900/5 backdrop-blur-xl lg:flex lg:justify-end lg:border-t-0 lg:bg-transparent lg:px-0 lg:shadow-none lg:backdrop-blur-none dark:border-gray-700/50 dark:bg-gray-900/40`}
         >
           {/* Enhanced Controls Group */}
-          <div className="flex items-center gap-3 2xsm:gap-4">
+          <div className="2xsm:gap-4 flex items-center gap-3">
             {/* Wrapper with subtle animation */}
-            <div className="flex items-center gap-3 p-1 rounded-2xl bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50">
-              <div className="transform hover:scale-110 transition-transform duration-300">
+            <div className="flex items-center gap-3 rounded-2xl border border-gray-200/50 bg-white/60 p-1 backdrop-blur-sm dark:border-gray-700/50 dark:bg-gray-800/60">
+              {/* Language Switcher */}
+              <LanguageSwitcher />
+              <div className="transform transition-transform duration-300 hover:scale-110">
                 <ThemeToggleButton />
               </div>
-              <div className="w-px h-6 bg-gray-300/50 dark:bg-gray-600/50"></div>
-              <div className="transform hover:scale-110 transition-transform duration-300">
+              <div className="h-6 w-px bg-gray-300/50 dark:bg-gray-600/50"></div>
+              <div className="transform transition-transform duration-300 hover:scale-110">
                 <NotificationDropdown />
               </div>
             </div>
           </div>
-          
+
           {/* Enhanced User Area */}
-          <div className="relative group">
+          <div className="group relative">
             {/* Subtle glow effect */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 rounded-2xl opacity-0 group-hover:opacity-100 blur transition-opacity duration-500"></div>
-            <div className="relative transform hover:scale-105 transition-transform duration-300">
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 opacity-0 blur transition-opacity duration-500 group-hover:opacity-100"></div>
+            <div className="relative transform transition-transform duration-300 hover:scale-105">
               <UserDropdown />
             </div>
           </div>
         </div>
       </div>
-      
+
       {/* Subtle bottom gradient line */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
+      <div className="absolute right-0 bottom-0 left-0 h-px bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
     </header>
   );
 };
