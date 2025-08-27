@@ -927,18 +927,20 @@ export default function ViewPatientRecords() {
                         >
                           <EyeIcon className="h-3 w-3" /> View
                         </Button>
-                        <Button
-                          onClick={() =>
-                            router.push(
-                              `/admin/patients/edit-patient-details?id=${patient._id}`,
-                            )
-                          }
-                          size="xs"
-                          variant="outline"
-                          className="flex items-center gap-1 border-green-400 p-1 text-green-600 shadow-sm transition-transform hover:scale-105 hover:bg-green-100/60 dark:hover:bg-green-900/40"
-                        >
-                          <PencilIcon className="h-3 w-3" /> Edit
-                        </Button>
+                        {hasUserDeleteAccess && (
+                          <Button
+                            onClick={() =>
+                              router.push(
+                                `/admin/patients/edit-patient-details?id=${patient._id}`,
+                              )
+                            }
+                            size="xs"
+                            variant="outline"
+                            className="flex items-center gap-1 border-green-400 p-1 text-green-600 shadow-sm transition-transform hover:scale-105 hover:bg-green-100/60 dark:hover:bg-green-900/40"
+                          >
+                            <PencilIcon className="h-3 w-3" /> Edit
+                          </Button>
+                        )}
                         {hasUserDeleteAccess && (
                           <Button
                             onClick={() => {
