@@ -53,7 +53,6 @@ export default function SalesPersonsPage() {
 
         setHasAccountsAccess(data.user?.addSalesPersonAccess);
       } catch (err) {
-        console.log("err", err);
         setHasAccountsAccess(false);
       }
     };

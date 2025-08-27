@@ -23,7 +23,6 @@ export default function CreatePlanner() {
   };
 
   useEffect(() => {
-    console.log(token)
     const fetchAccess = async () => {
       if (!token) {
         setHasPlannerAccess(false);
@@ -36,7 +35,6 @@ export default function CreatePlanner() {
         });
         setHasPlannerAccess(!!data.user?.plannerAccess);
       } catch (err) {
-        console.log(err)
         setHasPlannerAccess(false);
       } finally {
        

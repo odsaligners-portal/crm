@@ -42,7 +42,6 @@ export default function PaymentStatus() {
 
         setHasPriceUpdateAccess(data.user?.priceUpdateAccess);
       } catch (err) {
-        console.log("err", err);
         setHasPriceUpdateAccess(false);
       }
     };

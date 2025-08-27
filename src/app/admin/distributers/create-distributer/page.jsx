@@ -36,7 +36,6 @@ export default function CreateDistributer() {
   
           setHasDistributerAccess(data.user?.distributerAccess);
         } catch (err) {
-          console.log("err", err);
           setHasDistributerAccess(false);
         }
       };

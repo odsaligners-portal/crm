@@ -41,7 +41,6 @@ export default function DistributersList() {
 
         setHasDistributerAccess(data.user?.distributerAccess);
       } catch (err) {
-        console.log("err", err);
         setHasDistributerAccess(false);
       }
     };

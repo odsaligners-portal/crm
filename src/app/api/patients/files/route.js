@@ -45,7 +45,6 @@ export async function POST(req) {
       );
     }
 
-    console.log(verifyPlannerForPatient);
 
     if (!patientId || !Array.isArray(files) || files.length === 0) {
       return NextResponse.json(

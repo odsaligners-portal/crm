@@ -1227,8 +1227,6 @@ export default function ViewPatientDetails() {
                 let fileExt = "";
                 if (typeof fileUrl === "string") {
                   fileName = getFileNameFromUrl(fileUrl);
-                  console.log("fileName", fileName);
-                  console.log("fileUrl", fileUrl);
                   fileExt = fileName.split(".").pop()?.toLowerCase() || "";
                 }
                 return (

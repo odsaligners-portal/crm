@@ -5,7 +5,6 @@ import { useDropzone } from "react-dropzone";
 
 const DropzoneComponent = () => {
   const onDrop = (acceptedFiles) => {
-    console.log("Files dropped:", acceptedFiles);
     // Handle file uploads here
   };
 

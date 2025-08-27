@@ -48,7 +48,6 @@ export async function GET(req) {
     
     return NextResponse.json({ success: true, data: markers });
   } catch (error) {
-    console.log(error)
     return NextResponse.json(
       { success: false, message: error.message || 'Server Error' },
       { status: 500 }

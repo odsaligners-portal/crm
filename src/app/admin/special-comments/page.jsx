@@ -53,7 +53,6 @@ export default function SpecialCommentsPage() {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-        console.log(unreadData);
       setTotalUnread(unreadData.totalUnread || 0);
     } catch (error) {
       // fetchWithError handles toast
@@ -92,7 +91,6 @@ export default function SpecialCommentsPage() {
           headers: { Authorization: `Bearer ${token}` },
         },
       );
-      console.log(data);
       setComments(data.comments || []);
       setPagination(data.pagination || {});
 

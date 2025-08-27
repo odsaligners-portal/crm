@@ -22,7 +22,6 @@ const Sparkline = ({ data }) => {
 };
 
 const AtAGlancePatients = ({ patients = [] }) => {
-  console.log(patients)
   const timeAgo = (date) => {
     if (!date) return 'No activity';
     const seconds = Math.floor((new Date() - new Date(date)) / 1000);

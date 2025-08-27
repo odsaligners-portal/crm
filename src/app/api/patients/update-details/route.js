@@ -48,7 +48,6 @@ export async function GET(req) {
         { status: 404 },
       );
     }
-    console.log(patient);
 
     return NextResponse.json(patient);
   } catch (error) {

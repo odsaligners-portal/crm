@@ -154,7 +154,6 @@ export async function POST(req) {
     } else if (contentType.includes("multipart/form-data")) {
       // Handle FormData
       const formData = await req.formData();
-      console.log("FormData received");
 
       // Process form fields
       for (const [key, value] of formData.entries()) {
@@ -211,7 +210,6 @@ export async function POST(req) {
       while (!isUnique && attempts < maxAttempts) {
         const randomNum = Math.floor(1000000 + Math.random() * 9000000); // 7-digit
         caseId = `${prefix}${stateAbbr}${randomNum}`;
-        console.log("Attempting caseId:", caseId);
         const exists = await Patient.findOne({ caseId });
         if (!exists) isUnique = true;
         attempts++;

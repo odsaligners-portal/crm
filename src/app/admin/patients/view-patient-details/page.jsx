@@ -1996,17 +1996,6 @@ export default function ViewPatientDetails() {
                         <div className="space-y-4">
                           <div>
                             <label className="block text-sm font-medium text-gray-700">
-                              Extraction Type:
-                            </label>
-                            <div className="rounded-md bg-gray-50 px-3 py-2">
-                              <span className="text-sm font-medium text-gray-700">
-                                {patientData.dentalExamination
-                                  ?.extractionType || "Not specified"}
-                              </span>
-                            </div>
-                          </div>
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700">
                               Select Teeth for Extraction (Select tooth):
                             </label>
                             <div className="rounded-md bg-white p-3">
@@ -2082,7 +2071,7 @@ export default function ViewPatientDetails() {
                         </div>
                       </div>
 
-                      {patientData.dentalExamination?.gainSpaceDistalization ===
+                      {/* {patientData.dentalExamination?.gainSpaceDistalization ===
                         "yes" && (
                         <div className="space-y-4">
                           <label className="block text-sm font-medium text-gray-700">
@@ -2098,7 +2087,7 @@ export default function ViewPatientDetails() {
                             />
                           </div>
                         </div>
-                      )}
+                      )} */}
                     </div>
 
                     {/* Proclination */}
@@ -2122,7 +2111,7 @@ export default function ViewPatientDetails() {
                         </div>
                       </div>
 
-                      {patientData.dentalExamination?.gainSpaceProclination ===
+                      {/* {patientData.dentalExamination?.gainSpaceProclination ===
                         "yes" && (
                         <div className="space-y-4">
                           <label className="block text-sm font-medium text-gray-700">
@@ -2138,7 +2127,7 @@ export default function ViewPatientDetails() {
                             />
                           </div>
                         </div>
-                      )}
+                      )} */}
                     </div>
                   </div>
                 </div>

@@ -207,7 +207,6 @@ export async function POST(request) {
 
       await patient.save();
     }
-    console.log(patient);
     // --- Email Notification Logic ---
     try {
       // Fetch admins only once
