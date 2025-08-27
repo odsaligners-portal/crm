@@ -34,9 +34,13 @@ export async function GET(req) {
         _id: id,
         userId: authResult.user.id, // Use id from decoded token
       }).lean();
+    } else if (authResult.user.role === "admin") {
+      patient = await Patient.findOne({
+        _id: id,
+      }).lean();
     }
 
-    if (!patient) {
+    if (!patient && authResult.user.role !== "admin") {
       return NextResponse.json(
         {
           error: "You do not have permission to view Patient Record",
@@ -44,6 +48,7 @@ export async function GET(req) {
         { status: 404 },
       );
     }
+    console.log(patient);
 
     return NextResponse.json(patient);
   } catch (error) {
@@ -73,7 +78,7 @@ export async function PUT(req) {
     await dbConnect();
 
     const body = await req.json();
-    console.log(body)
+
     // If only caseStatus is being updated, allow admin or doctor
     if (
       Object.keys(body).length === 1 &&
@@ -171,14 +176,30 @@ export async function PUT(req) {
       }).filter(([v]) => v !== undefined),
     );
 
-    const updatedPatient = await Patient.findOneAndUpdate(
-      {
-        _id: id,
-        userId: authResult.user.id,
-      },
-      { $set: fieldsToUpdate },
-      { new: true, runValidators: true },
-    );
+    if (authResult.user.role === "admin") {
+      fieldsToUpdate.userId = body.userId;
+    }
+
+    let updatedPatient;
+
+    if (authResult.user.role === "admin") {
+      updatedPatient = await Patient.findOneAndUpdate(
+        {
+          _id: id,
+        },
+        { $set: fieldsToUpdate },
+        { new: true, runValidators: true },
+      );
+    } else {
+      updatedPatient = await Patient.findOneAndUpdate(
+        {
+          _id: id,
+          userId: authResult.user.id,
+        },
+        { $set: fieldsToUpdate },
+        { new: true, runValidators: true },
+      );
+    }
 
     if (!updatedPatient) {
       return NextResponse.json(

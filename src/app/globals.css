@@ -785,6 +785,12 @@ span.flatpickr-weekday,
   background-clip: text;
 }
 
+p>a{
+  text-decoration: underline;
+  color: #667eea !important;
+  font-weight: 800;
+}
+
 /* Glass morphism effect */
 .glass {
   background: rgba(255, 255, 255, 0.1);

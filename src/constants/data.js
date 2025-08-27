@@ -54,6 +54,13 @@ export const archExpansionOptions = [
   "None",
 ];
 
+export const extractionOptions = [
+  "Expand Anterior",
+  "Expand Posterior",
+  "No expansion required",
+  "Plan as required",
+];
+
 export const terms = [
   {
     title: "1. Product Portfolio",

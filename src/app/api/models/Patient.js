@@ -53,7 +53,6 @@ const patientSchema = new mongoose.Schema(
     },
     shippingAddressType: {
       type: String,
-      enum: ["Primary Address", "New Address"],
       required: false, // Made optional for dental examination form
       trim: true,
     },
@@ -82,6 +81,11 @@ const patientSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
     },
 
     // Chief complaint & case
@@ -354,6 +358,8 @@ const patientSchema = new mongoose.Schema(
       missingToothTeeth: [{ type: Number }],
       impactedToothTeeth: [{ type: Number }],
       supernumeraryToothTeeth: [{ type: Number }],
+      hasSupernumeraryTooth: { type: Boolean, default: false },
+      supernumeraryToothDescription: { type: String, trim: true, default: "" },
       endodonticallyTreatedToothTeeth: [{ type: Number }],
       occlusalWearTeeth: [{ type: Number }],
       prosthesisTeeth: [{ type: Number }],
@@ -363,7 +369,7 @@ const patientSchema = new mongoose.Schema(
       maxillaryArcShape: { type: String, trim: true, default: "" },
       maxillaryArcSymmetry: { type: String, trim: true, default: "" },
       maxillaryArcAlignment: { type: String, trim: true, default: "" },
-      mandibularArcShape: { type: String, trim: true, default: "" },
+      mandibularArcShape: [{ type: String, trim: true }],
       mandibularArcSymmetry: { type: String, trim: true, default: "" },
       mandibularArcAlignment: { type: String, trim: true, default: "" },
 
@@ -404,16 +410,16 @@ const patientSchema = new mongoose.Schema(
       treatmentPlanComments: { type: String, trim: true, default: "" },
 
       // How to Gain Space
-      gainSpaceIPR: { type: String, trim: true, default: "" },
-      gainSpaceIPRTeeth: [{ type: Number }],
+      iprType: { type: String, trim: true, default: "" },
+      iprMeasure: { type: String, trim: true, default: "" },
       gainSpaceExtraction: { type: String, trim: true, default: "" },
       gainSpaceExtractionTeeth: [{ type: Number }],
+      extractionType: { type: String, trim: true, default: "" },
       gainSpaceDistalization: { type: String, trim: true, default: "" },
       gainSpaceDistalizationTeeth: [{ type: Number }],
       gainSpaceProclination: { type: String, trim: true, default: "" },
       gainSpaceProclinationTeeth: [{ type: Number }],
-      gainSpaceExpansion: { type: String, trim: true, default: "" },
-      gainSpaceExpansionTeeth: [{ type: Number }],
+      expansionType: { type: String, trim: true, default: "" },
 
       // Any Other Comments
       anyOtherComments: { type: String, trim: true, default: "" },

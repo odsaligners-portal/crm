@@ -44,7 +44,7 @@ const baseNavItems = [
       { name: "Patient Records", path: "/admin/patients", pro: false },
       {
         name: "Create Patient Record",
-        path: "/admin/patients/create-patient-record/step-1",
+        path: "/admin/patients/create-patient-record",
         pro: false,
       },
     ],

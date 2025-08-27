@@ -5,7 +5,7 @@ import { MdPersonAdd, MdSchool } from 'react-icons/md';
 const DoctorQuickLinks = () => {
   const links = [
     {
-      href: '/doctor/patients/create-patient-record/step-1',
+      href: '/doctor/patients/create-patient-record',
       label: 'New Patient',
       icon: <MdPersonAdd className="w-8 h-8" />,
       color: 'bg-blue-500 hover:bg-blue-600',

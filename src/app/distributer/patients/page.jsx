@@ -1,22 +1,30 @@
 "use client";
-import FileUploadModal, { ViewFilesModal } from '@/components/admin/patients/FileUploadModal';
+import FileUploadModal, {
+  ViewFilesModal,
+} from "@/components/admin/patients/FileUploadModal";
 import UploadModal from "@/components/admin/patients/UploadModal";
 import ViewCommentsModal from "@/components/admin/patients/ViewCommentsModal";
 import Input from "@/components/form/input/InputField";
 import Select from "@/components/form/select/SelectField";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { caseTypes, genders, treatmentForOptions } from "@/constants/data";
 import { EyeIcon, PlusIcon } from "@/icons";
-import { setLoading } from '@/store/features/uiSlice';
-import { fetchWithError } from '@/utils/apiErrorHandler';
+import { setLoading } from "@/store/features/uiSlice";
+import { fetchWithError } from "@/utils/apiErrorHandler";
 import { countriesData } from "@/utils/countries";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
 const countries = Object.keys(countriesData);
 
@@ -37,7 +45,8 @@ export default function ViewPatientRecords() {
   const [fileUploadPatient, setFileUploadPatient] = useState(null);
   const [showViewFilesModal, setShowViewFilesModal] = useState(false);
   const [viewFilesPatient, setViewFilesPatient] = useState(null);
-  const [modificationModalPatient, setModificationModalPatient] = useState(null);
+  const [modificationModalPatient, setModificationModalPatient] =
+    useState(null);
   const dispatch = useDispatch();
 
   // Filter state
@@ -45,14 +54,8 @@ export default function ViewPatientRecords() {
     gender: "",
     country: "",
     state: "",
-    city: "",
-    caseCategory: "",
-    caseType: "",
-    treatmentFor: "",
-    selectedPrice: "",
     startDate: "",
     endDate: "",
-    caseStatus: "",
   });
 
   const [caseCategories, setCaseCategories] = useState([]);
@@ -63,7 +66,7 @@ export default function ViewPatientRecords() {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: "10",
-        sort: 'latest',
+        sort: "latest",
         search: searchTerm,
         ...filters,
       });
@@ -72,7 +75,7 @@ export default function ViewPatientRecords() {
           Authorization: `Bearer ${token}`,
         },
       });
-     
+
       setPatients(data.patients);
       setTotalPages(data.pagination.totalPages);
       setTotalPatients(data.pagination.totalPatients);
@@ -91,9 +94,12 @@ export default function ViewPatientRecords() {
     const fetchCaseCategories = async () => {
       dispatch(setLoading(true));
       try {
-        const result = await fetchWithError('/api/case-categories?active=true', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        });
+        const result = await fetchWithError(
+          "/api/case-categories?active=true",
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          },
+        );
         setCaseCategories(result.data || []);
       } catch (err) {
         // fetchWithError already toasts
@@ -118,7 +124,7 @@ export default function ViewPatientRecords() {
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
 
@@ -127,48 +133,205 @@ export default function ViewPatientRecords() {
       gender: "",
       country: "",
       state: "",
-      city: "",
-      caseCategory: "",
-      caseType: "",
-      selectedPrice: "",
-      treatmentFor: "",
       startDate: "",
       endDate: "",
-      caseStatus: "",
     });
     setCurrentPage(1);
   };
 
-  const getActiveFiltersCount = () => {
-    let count = 0;
-    if (filters.gender) count++;
-    if (filters.country) count++;
-    if (filters.city) count++;
-    if (filters.caseCategory) count++;
-    if (filters.caseType) count++;
-    if (filters.startDate || filters.endDate) count++;
-    if (filters.caseStatus) count++;
-    return count;
-  };
-
   const exportToExcel = () => {
-    const exportData = patients.map(patient => ({
+    const exportData = patients.map((patient) => ({
+      // Basic Patient Information
       "Case ID": patient.caseId,
       "Patient Name": patient.patientName,
-      "Age": patient.age,
-      "Gender": patient.gender,
+      Age: patient.age,
+      Gender: patient.gender,
       "Treatment For": patient.treatmentFor,
-      "Country": patient.country,
-      "State": patient.state,
-      "City": patient.city,
+
+      // Location Information
+      Country: patient.country,
+      State: patient.state,
+      City: patient.city,
+
+      // Case Information
       "Case Category": patient.caseCategory,
       "Case Type": patient.caseType,
-      "Selected Price": patient.selectedPrice,
-      "Extraction Required": patient.extraction.required ? "Yes" : "No",
-      "Extraction Comments": patient.extraction.comments,
-      "Chief Complaint": patient.chiefComplaint,
-      "Files Uploaded": ((patient.scanFiles?.img1?.length || 0) + (patient.scanFiles?.img2?.length || 0) + (patient.scanFiles?.img3?.length || 0)),
+      "Single Arch Type": patient.singleArchType || "N/A",
+      Package: patient.selectedPrice || "Not specified",
+      "Case Status": patient.caseStatus || "Not specified",
+      "Case Approval": patient.caseApproval ? "Yes" : "No",
+
+      // Medical Information
+      "Chief Complaint": patient.chiefComplaint || "Not specified",
+      "Case Category Comments": patient.caseCategoryDetails || "Not specified",
+      "Treatment Plan": patient.treatmentPlan || "Not specified",
+
+      // Dental Examination - Hard Tissue
+      "Caries Teeth":
+        patient.dentalExamination?.cariesTeeth?.join(", ") || "None",
+      "Missing Tooth Teeth":
+        patient.dentalExamination?.missingToothTeeth?.join(", ") || "None",
+      "Impacted Tooth Teeth":
+        patient.dentalExamination?.impactedToothTeeth?.join(", ") || "None",
+      "Supernumerary Tooth": patient.dentalExamination?.hasSupernumeraryTooth
+        ? "Yes"
+        : "No",
+      "Supernumerary Description":
+        patient.dentalExamination?.supernumeraryToothDescription || "N/A",
+      "Supernumerary Teeth":
+        patient.dentalExamination?.supernumeraryToothTeeth?.join(", ") || "N/A",
+      "Endodontically Treated Teeth":
+        patient.dentalExamination?.endodonticallyTreatedToothTeeth?.join(
+          ", ",
+        ) || "None",
+      "Occlusal Wear Teeth":
+        patient.dentalExamination?.occlusalWearTeeth?.join(", ") || "None",
+      "Prosthesis Teeth":
+        patient.dentalExamination?.prosthesisTeeth?.join(", ") || "None",
+      "Prosthesis Comments":
+        patient.dentalExamination?.prosthesisComments || "N/A",
+
+      // Dental Examination - Soft Tissue
+      Mucosa: patient.dentalExamination?.mucosa || "Not specified",
+      Gingiva: patient.dentalExamination?.gingiva || "Not specified",
+      Tongue: patient.dentalExamination?.tongue || "Not specified",
+      Palate: patient.dentalExamination?.palate || "Not specified",
+      "Floor of Mouth":
+        patient.dentalExamination?.floorOfMouth || "Not specified",
+      Lips: patient.dentalExamination?.lips || "Not specified",
+      Cheeks: patient.dentalExamination?.cheeks || "Not specified",
+      Tonsils: patient.dentalExamination?.tonsils || "Not specified",
+      Throat: patient.dentalExamination?.throat || "Not specified",
+
+      // Dental Examination - Functional Analysis
+      "Mouth Opening":
+        patient.dentalExamination?.mouthOpening || "Not specified",
+      "Lateral Movement Right":
+        patient.dentalExamination?.lateralMovementRight || "Not specified",
+      "Lateral Movement Left":
+        patient.dentalExamination?.lateralMovementLeft || "Not specified",
+      Protrusion: patient.dentalExamination?.protrusion || "Not specified",
+      Retrusion: patient.dentalExamination?.retrusion || "Not specified",
+      "TMJ Clicking": patient.dentalExamination?.tmjClicking || "Not specified",
+      "TMJ Pain": patient.dentalExamination?.tmjPain || "Not specified",
+      "TMJ Tenderness":
+        patient.dentalExamination?.tmjTenderness || "Not specified",
+
+      // Dental Examination - Skeletal Analysis
+      "Facial Form": patient.dentalExamination?.facialForm || "Not specified",
+      "Facial Profile":
+        patient.dentalExamination?.facialProfile || "Not specified",
+      "Facial Symmetry":
+        patient.dentalExamination?.facialSymmetry || "Not specified",
+      "Nasolabial Angle":
+        patient.dentalExamination?.nasolabialAngle || "Not specified",
+      "Mentolabial Sulcus":
+        patient.dentalExamination?.mentolabialSulcus || "Not specified",
+      "Lip Competency":
+        patient.dentalExamination?.lipCompetency || "Not specified",
+      "Gingival Display":
+        patient.dentalExamination?.gingivalDisplay || "Not specified",
+      "Smile Arc": patient.dentalExamination?.smileArc || "Not specified",
+
+      // Dental Examination - Dental Analysis
+      Overjet: patient.dentalExamination?.overjet || "Not specified",
+      Overbite: patient.dentalExamination?.overbite || "Not specified",
+      Crossbite: patient.dentalExamination?.crossbite || "Not specified",
+      "Open Bite": patient.dentalExamination?.openBite || "Not specified",
+      "Midline Shift":
+        patient.dentalExamination?.midlineShift || "Not specified",
+      Crowding: patient.dentalExamination?.crowding || "Not specified",
+      Spacing: patient.dentalExamination?.spacing || "Not specified",
+
+      // Space Analysis
+      "Space Required":
+        patient.dentalExamination?.spaceRequired || "Not specified",
+      "Space Available":
+        patient.dentalExamination?.spaceAvailable || "Not specified",
+      "Space Deficit":
+        patient.dentalExamination?.spaceDeficit || "Not specified",
+      "Space Surplus":
+        patient.dentalExamination?.spaceSurplus || "Not specified",
+
+      // How to Gain Space
+      "IPR Type": patient.dentalExamination?.iprType || "Not specified",
+      "IPR Measure": patient.dentalExamination?.iprMeasure || "Not specified",
+      "Expansion Type":
+        patient.dentalExamination?.expansionType || "Not specified",
+      "Gain Space Extraction":
+        patient.dentalExamination?.gainSpaceExtraction || "Not specified",
+      "Extraction Type": patient.dentalExamination?.extractionType || "N/A",
+      "Extraction Teeth":
+        patient.dentalExamination?.gainSpaceExtractionTeeth?.join(", ") ||
+        "N/A",
+      "Gain Space Distalization":
+        patient.dentalExamination?.gainSpaceDistalization || "Not specified",
+      "Distalization Teeth":
+        patient.dentalExamination?.gainSpaceDistalizationTeeth?.join(", ") ||
+        "N/A",
+      "Gain Space Proclination":
+        patient.dentalExamination?.gainSpaceProclination || "Not specified",
+      "Proclination Teeth":
+        patient.dentalExamination?.gainSpaceProclinationTeeth?.join(", ") ||
+        "N/A",
+
+      // Extraction Details
+      "Extraction Required": patient.dentalExamination?.extraction?.required
+        ? "Yes"
+        : "No",
+      "Extraction Comments":
+        patient.dentalExamination?.extraction?.comments || "N/A",
+
+      // Additional Information
+      "Nature of Availability":
+        patient.dentalExamination?.natureOfAvailability || "Not specified",
+      "Follow-up Months": patient.dentalExamination?.followUpMonths || "N/A",
+      "Oral Habits": patient.dentalExamination?.oralHabits || "Not specified",
+      "Other Habit Specification":
+        patient.dentalExamination?.otherHabitSpecification || "N/A",
+      "Family History":
+        patient.dentalExamination?.familyHistory ||
+        patient.familyHistory ||
+        "Not specified",
+
+      // File Information
+      "Intraoral Photos":
+        (patient.dentalExaminationFiles?.img1?.length || 0) +
+        (patient.dentalExaminationFiles?.img2?.length || 0) +
+        (patient.dentalExaminationFiles?.img3?.length || 0) +
+        (patient.dentalExaminationFiles?.img4?.length || 0) +
+        (patient.dentalExaminationFiles?.img5?.length || 0) +
+        (patient.dentalExaminationFiles?.img6?.length || 0),
+      "Facial Photos":
+        (patient.dentalExaminationFiles?.img7?.length || 0) +
+        (patient.dentalExaminationFiles?.img8?.length || 0) +
+        (patient.dentalExaminationFiles?.img9?.length || 0),
+      "X-ray Files":
+        (patient.dentalExaminationFiles?.img10?.length || 0) +
+        (patient.dentalExaminationFiles?.img11?.length || 0),
+      "3D Models":
+        (patient.dentalExaminationFiles?.model1?.length || 0) +
+        (patient.dentalExaminationFiles?.model2?.length || 0),
+      "Total Files":
+        (patient.dentalExaminationFiles?.img1?.length || 0) +
+        (patient.dentalExaminationFiles?.img2?.length || 0) +
+        (patient.dentalExaminationFiles?.img3?.length || 0) +
+        (patient.dentalExaminationFiles?.img4?.length || 0) +
+        (patient.dentalExaminationFiles?.img5?.length || 0) +
+        (patient.dentalExaminationFiles?.img6?.length || 0) +
+        (patient.dentalExaminationFiles?.img7?.length || 0) +
+        (patient.dentalExaminationFiles?.img8?.length || 0) +
+        (patient.dentalExaminationFiles?.img9?.length || 0) +
+        (patient.dentalExaminationFiles?.img10?.length || 0) +
+        (patient.dentalExaminationFiles?.img11?.length || 0) +
+        (patient.dentalExaminationFiles?.model1?.length || 0) +
+        (patient.dentalExaminationFiles?.model2?.length || 0),
+
+      // Timestamps
       "Created Date": new Date(patient.createdAt).toLocaleDateString(),
+      "Last Updated": new Date(
+        patient.updatedAt || patient.createdAt,
+      ).toLocaleDateString(),
     }));
 
     const ws = XLSX.utils.json_to_sheet(exportData);
@@ -179,43 +342,117 @@ export default function ViewPatientRecords() {
     const colWidths = [
       { wch: 20 }, // Case ID
       { wch: 20 }, // Patient Name
-      { wch: 8 },  // Age
+      { wch: 8 }, // Age
       { wch: 10 }, // Gender
       { wch: 15 }, // Treatment For
       { wch: 15 }, // Country
-      { wch: 15 }, // State 
+      { wch: 15 }, // State
       { wch: 15 }, // City
       { wch: 15 }, // Case Category
       { wch: 20 }, // Case Type
-      { wch: 15 }, // Selected Price
-      { wch: 15 }, // Extraction Required
-      { wch: 25 }, // Extraction Comments
-      { wch: 15 }, // Files Uploaded
+      { wch: 20 }, // Single Arch Type
+      { wch: 20 }, // Package
+      { wch: 15 }, // Case Status
+      { wch: 15 }, // Case Approval
+      { wch: 30 }, // Chief Complaint
+      { wch: 25 }, // Case Category Comments
+      { wch: 25 }, // Treatment Plan
+      { wch: 20 }, // Caries Teeth
+      { wch: 20 }, // Missing Tooth Teeth
+      { wch: 20 }, // Impacted Tooth Teeth
+      { wch: 20 }, // Supernumerary Tooth
+      { wch: 25 }, // Supernumerary Description
+      { wch: 20 }, // Supernumerary Teeth
+      { wch: 25 }, // Endodontically Treated Teeth
+      { wch: 20 }, // Occlusal Wear Teeth
+      { wch: 20 }, // Prosthesis Teeth
+      { wch: 25 }, // Prosthesis Comments
+      { wch: 20 }, // Mucosa
+      { wch: 20 }, // Gingiva
+      { wch: 20 }, // Tongue
+      { wch: 20 }, // Palate
+      { wch: 20 }, // Floor of Mouth
+      { wch: 20 }, // Lips
+      { wch: 20 }, // Cheeks
+      { wch: 20 }, // Tonsils
+      { wch: 20 }, // Throat
+      { wch: 20 }, // Mouth Opening
+      { wch: 20 }, // Lateral Movement Right
+      { wch: 20 }, // Lateral Movement Left
+      { wch: 20 }, // Protrusion
+      { wch: 20 }, // Retrusion
+      { wch: 20 }, // TMJ Clicking
+      { wch: 20 }, // TMJ Pain
+      { wch: 20 }, // TMJ Tenderness
+      { wch: 20 }, // Facial Form
+      { wch: 20 }, // Facial Profile
+      { wch: 20 }, // Facial Symmetry
+      { wch: 20 }, // Nasolabial Angle
+      { wch: 20 }, // Mentolabial Sulcus
+      { wch: 20 }, // Lip Competency
+      { wch: 20 }, // Gingival Display
+      { wch: 20 }, // Smile Arc
+      { wch: 20 }, // Overjet
+      { wch: 20 }, // Overbite
+      { wch: 20 }, // Crossbite
+      { wch: 20 }, // Open Bite
+      { wch: 20 }, // Midline Shift
+      { wch: 20 }, // Crowding
+      { wch: 20 }, // Spacing
+      { wch: 20 }, // Space Required
+      { wch: 20 }, // Space Available
+      { wch: 20 }, // Space Deficit
+      { wch: 20 }, // Space Surplus
+      { wch: 20 }, // IPR Type
+      { wch: 20 }, // IPR Measure
+      { wch: 20 }, // Expansion Type
+      { wch: 20 }, // Gain Space Extraction
+      { wch: 20 }, // Extraction Type
+      { wch: 20 }, // Extraction Teeth
+      { wch: 20 }, // Gain Space Distalization
+      { wch: 20 }, // Distalization Teeth
+      { wch: 20 }, // Gain Space Proclination
+      { wch: 20 }, // Proclination Teeth
+      { wch: 20 }, // Extraction Required
+      { wch: 30 }, // Extraction Comments
+      { wch: 25 }, // Nature of Availability
+      { wch: 15 }, // Follow-up Months
+      { wch: 20 }, // Oral Habits
+      { wch: 25 }, // Other Habit Specification
+      { wch: 25 }, // Family History
+      { wch: 15 }, // Intraoral Photos
+      { wch: 15 }, // Facial Photos
+      { wch: 15 }, // X-ray Files
+      { wch: 15 }, // 3D Models
+      { wch: 15 }, // Total Files
       { wch: 15 }, // Created Date
+      { wch: 15 }, // Last Updated
     ];
-    ws['!cols'] = colWidths;
+    ws["!cols"] = colWidths;
 
-    XLSX.writeFile(wb, `patients_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(
+      wb,
+      `distributer_patients_${new Date().toISOString().split("T")[0]}.xlsx`,
+    );
     toast.success("Patient data exported successfully!");
   };
 
-  const getFilterCount = () => {
-    return Object.values(filters).filter(value => value !== "").length;
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (filters.gender) count++;
+    if (filters.country) count++;
+    if (filters.state) count++;
+    if (filters.startDate || filters.endDate) count++;
+    return count;
   };
 
   // Helper to get filter label
   const filterLabels = {
-    gender: 'Gender',
-    country: 'Country',
-    state: 'State',
-    city: 'City',
-    caseCategory: 'Case Category',
-    caseType: 'Case Type',
-    selectedPrice: 'Package',
-    treatmentFor: 'Treatment For',
-    startDate: 'Start Date',
-    endDate: 'End Date',
-    caseStatus: 'Case Status',
+    gender: "Gender",
+    country: "Country",
+    state: "State",
+    startDate: "Start Date",
+    endDate: "End Date",
   };
 
   const handleOpenUploadModal = (patient) => {
@@ -241,58 +478,61 @@ export default function ViewPatientRecords() {
   const handleApprove = async (patientId) => {
     try {
       const res = await fetch(`/api/patients/update-details?id=${patientId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ caseApproval: true }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to approve case');
-      toast.success('Case approved successfully!');
+      if (!res.ok) throw new Error(data.error || "Failed to approve case");
+      toast.success("Case approved successfully!");
       fetchPatients();
     } catch (err) {
-      toast.error(err.message || 'Failed to approve case');
+      toast.error(err.message || "Failed to approve case");
     }
   };
 
   const handleStatusChange = async (patient, newStatus) => {
-    if (newStatus === 'modify') {
+    if (newStatus === "modify") {
       setModificationModalPatient(patient);
       return;
     }
     try {
       const res = await fetch(`/api/patients/change-status?id=${patient._id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ caseStatus: newStatus }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update status');
-      toast.success('Status updated successfully!');
+      if (!res.ok) throw new Error(data.error || "Failed to update status");
+      toast.success("Status updated successfully!");
       fetchPatients();
     } catch (err) {
-      toast.error(err.message || 'Failed to update status');
+      toast.error(err.message || "Failed to update status");
     }
   };
 
   return (
-    <div className="p-5 lg:p-10 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 p-5 lg:p-10 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold text-blue-800 dark:text-white/90 tracking-tight drop-shadow-lg">
+          <h1 className="text-3xl font-extrabold tracking-tight text-blue-800 drop-shadow-lg dark:text-white/90">
             Patient Records
           </h1>
-          <p className="mt-2 text-base text-gray-500 dark:text-gray-400 font-medium">
+          <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
             Manage and view all patient records
           </p>
         </div>
-        <div className="">
-          <Button onClick={exportToExcel} className="px-4 py-2 shadow-md bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform">
+        <div className="flex gap-3">
+          <Button
+            onClick={exportToExcel}
+            className="rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 py-2 font-semibold text-white shadow-md transition-transform hover:scale-105"
+          >
             Export to Excel
           </Button>
         </div>
@@ -300,41 +540,41 @@ export default function ViewPatientRecords() {
 
       {/* Search and Filters */}
       <div className="mb-8 space-y-4">
-        <div className="flex gap-2 items-end">
+        <div className="flex items-end gap-2">
           <Input
             type="text"
             placeholder="Search by name, city, or case ID..."
             value={searchTerm}
             onChange={(e) => {
               // Prevent + and - from being entered
-              const value = e.target.value.replace(/[+-]/g, '');
+              const value = e.target.value.replace(/[+-]/g, "");
               setSearchTerm(value);
             }}
-            onKeyDown={e => {
-              if (e.key === '+' || e.key === '-') {
+            onKeyDown={(e) => {
+              if (e.key === "+" || e.key === "-") {
                 e.preventDefault();
               }
             }}
-            onPaste={e => {
-              const pasteText = e.clipboardData.getData('text');
-              if (pasteText.includes('+') || pasteText.includes('-')) {
+            onPaste={(e) => {
+              const pasteText = e.clipboardData.getData("text");
+              if (pasteText.includes("+") || pasteText.includes("-")) {
                 e.preventDefault();
-                setSearchTerm(pasteText.replace(/[+-]/g, ''));
+                setSearchTerm(pasteText.replace(/[+-]/g, ""));
               }
             }}
-            className="w-full max-w-xs shadow-sm rounded-lg border border-blue-100 focus:ring-2 focus:ring-blue-300"
+            className="w-full max-w-xs rounded-lg border border-blue-100 shadow-sm focus:ring-2 focus:ring-blue-300"
           />
           <Button
             type="button"
             variant="primary"
-            className="h-10 px-4 w-1/4 shadow-md bg-gradient-to-r from-blue-100 to-blue-300 text-blue-800 font-semibold rounded-lg hover:scale-105 transition-transform"
+            className="h-10 w-1/4 rounded-lg bg-gradient-to-r from-blue-100 to-blue-300 px-4 font-semibold text-blue-800 shadow-md transition-transform hover:scale-105"
             onClick={() => setShowFilters((prev) => !prev)}
           >
             {showFilters ? "Hide Filters" : "Filters"}
           </Button>
           <Button
             type="button"
-            className="h-10 px-4 shadow-md bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform"
+            className="h-10 rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 font-semibold text-white shadow-md transition-transform hover:scale-105"
             onClick={() => {
               setCurrentPage(1);
               fetchPatients();
@@ -343,20 +583,18 @@ export default function ViewPatientRecords() {
             Search
           </Button>
         </div>
-        <div className={`transition-all duration-300 ${showFilters ? 'max-h-[2000px] opacity-100 mt-4' : 'max-h-0 opacity-0 overflow-hidden'} bg-white/80 dark:bg-gray-900/80 rounded-lg shadow-lg p-6 border-l-4 border-blue-200 dark:border-blue-800 backdrop-blur-md`}>  
-          <form className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 items-end" onSubmit={handleSearch}>
+        <div
+          className={`transition-all duration-300 ${showFilters ? "mt-4 max-h-[2000px] opacity-100" : "max-h-0 overflow-hidden opacity-0"} rounded-lg border-l-4 border-blue-200 bg-white/80 p-6 shadow-lg backdrop-blur-md dark:border-blue-800 dark:bg-gray-900/80`}
+        >
+          <form
+            className="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3"
+            onSubmit={handleSearch}
+          >
             <Select
               value={filters.gender}
               onChange={(e) => handleFilterChange("gender", e.target.value)}
-              options={[...genders.map(g => ({ label: g, value: g }))]}
+              options={[...genders.map((g) => ({ label: g, value: g }))]}
               label="Gender"
-              className="w-full"
-            />
-            <Select
-              value={filters.treatmentFor}
-              onChange={(e) => handleFilterChange("treatmentFor", e.target.value)}
-              options={[...treatmentForOptions.map(t => ({ label: t, value: t }))]}
-              label="Treatment For"
               className="w-full"
             />
             <Select
@@ -365,7 +603,7 @@ export default function ViewPatientRecords() {
                 handleFilterChange("country", e.target.value);
                 handleFilterChange("state", "");
               }}
-              options={[...countries.map(c => ({ label: c, value: c }))]}
+              options={[...countries.map((c) => ({ label: c, value: c }))]}
               label="Country"
               className="w-full"
             />
@@ -373,142 +611,198 @@ export default function ViewPatientRecords() {
               value={filters.state}
               onChange={(e) => handleFilterChange("state", e.target.value)}
               options={[
-                ...((filters.country && (countriesData)[filters.country]) ? (countriesData)[filters.country].map((s) => ({ label: s, value: s })) : [])
+                ...(filters.country && countriesData[filters.country]
+                  ? countriesData[filters.country].map((s) => ({
+                      label: s,
+                      value: s,
+                    }))
+                  : []),
               ]}
               label="State"
               className="w-full"
               disabled={!filters.country}
             />
-            <Select
-              value={filters.caseCategory}
-              onChange={(e) => {
-                handleFilterChange("caseCategory", e.target.value);
-                handleFilterChange("selectedPrice", "");
-              }}
-              options={caseCategories.map(c => ({ label: c.category, value: c.category }))}
-              label="Case Category"
-              className="w-full"
-            />
-            <Select
-              value={filters.caseType}
-              onChange={(e) => handleFilterChange("caseType", e.target.value)}
-              options={[...caseTypes.map(c => ({ label: c, value: c }))]}
-              label="Case Type"
-              className="w-full"
-            />
-            <Select
-              value={filters.caseStatus}
-              onChange={(e) => handleFilterChange("caseStatus", e.target.value)}
-              options={[
-                { label: 'Setup Pending', value: 'setup pending' },
-                { label: 'Approval Pending', value: 'approval pending' },
-                { label: 'Approved', value: 'approved' },
-                { label: 'Rejected', value: 'rejected' },
-              ]}
-              label="Case Status"
-              className="w-full"
-            />
 
-            <div className="flex flex-col gap-1 w-full col-span-2">
-              <label className="text-xs font-medium text-gray-600">Created Date</label>
+            <div className="col-span-2 flex w-full flex-col gap-1">
+              <label className="text-xs font-medium text-gray-600">
+                Created Date
+              </label>
               <div className="flex gap-2">
                 <Input
                   type="date"
                   value={filters.startDate}
-                  onChange={(e) => handleFilterChange("startDate", e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("startDate", e.target.value)
+                  }
                   className="w-full"
                 />
                 <span className="mx-1 text-gray-400">-</span>
                 <Input
                   type="date"
                   value={filters.endDate}
-                  onChange={(e) => handleFilterChange("endDate", e.target.value)}
+                  onChange={(e) =>
+                    handleFilterChange("endDate", e.target.value)
+                  }
                   className="w-full"
                 />
               </div>
             </div>
-            <div className="flex gap-2 w-full col-span-full justify-end mt-2">
-              <Button type="submit" className="h-10 px-4 shadow bg-blue-500 text-white font-semibold rounded-lg hover:scale-105 transition-transform">Apply Filters</Button>
-              <Button type="button" onClick={clearFilters} variant="outline" size="sm" className="h-10 px-4 shadow bg-white text-blue-700 font-semibold rounded-lg hover:scale-105 transition-transform">Reset</Button>
+            <div className="col-span-full mt-2 flex w-full justify-end gap-2">
+              <Button
+                type="submit"
+                className="h-10 rounded-lg bg-blue-500 px-4 font-semibold text-white shadow transition-transform hover:scale-105"
+              >
+                Apply Filters
+              </Button>
+              <Button
+                type="button"
+                onClick={clearFilters}
+                variant="outline"
+                size="sm"
+                className="h-10 rounded-lg bg-white px-4 font-semibold text-blue-700 shadow transition-transform hover:scale-105"
+              >
+                Reset
+              </Button>
             </div>
           </form>
-          {getFilterCount() > 0 && (
-            <Badge color="info" className="text-xs mt-2">
-              {getFilterCount()} filters active
+          {getActiveFiltersCount() > 0 && (
+            <Badge color="info" className="mt-2 text-xs">
+              {getActiveFiltersCount()} filters active
             </Badge>
           )}
         </div>
       </div>
 
       {/* Active Filters */}
-      {getFilterCount() > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          {Object.entries(filters).map(([key, value]) => (
+      {getActiveFiltersCount() > 0 && (
+        <div className="mb-4 flex flex-wrap gap-2">
+          {Object.entries(filters).map(([key, value]) =>
             value ? (
               <Badge
                 key={key}
                 color="info"
-                className="text-xs flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 rounded-full shadow-sm"
+                className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
               >
-                <span className="font-semibold text-blue-700 dark:text-blue-200">{filterLabels[key] || key}:</span>
-                <span className="text-blue-900 dark:text-blue-100">{value}</span>
+                <span className="font-semibold text-blue-700 dark:text-blue-200">
+                  {filterLabels[key] || key}:
+                </span>
+                <span className="text-blue-900 dark:text-blue-100">
+                  {value}
+                </span>
                 <button
                   type="button"
-                  className="ml-1 text-blue-400 hover:text-blue-700 dark:hover:text-blue-200 focus:outline-none"
+                  className="ml-1 text-blue-400 hover:text-blue-700 focus:outline-none dark:hover:text-blue-200"
                   onClick={() => handleFilterChange(key, "")}
                   aria-label={`Clear ${filterLabels[key] || key} filter`}
                 >
                   ×
                 </button>
               </Badge>
-            ) : null
-          ))}
+            ) : null,
+          )}
         </div>
       )}
 
-      <div className="h-2 w-full bg-gradient-to-r from-blue-200 via-white to-blue-100 dark:from-blue-900 dark:via-gray-900 dark:to-blue-800 rounded-full mb-8 opacity-60" />
+      <div className="mb-8 h-2 w-full rounded-full bg-gradient-to-r from-blue-200 via-white to-blue-100 opacity-60 dark:from-blue-900 dark:via-gray-900 dark:to-blue-800" />
 
       {/* Patients Table */}
-      <div className="relative rounded-xl border border-transparent bg-white/90 dark:bg-gray-900/80 shadow-xl mx-auto max-w-6xl w-full backdrop-blur-md overflow-x-auto sm:overflow-x-visible before:absolute before:inset-0 before:rounded-xl before:border-2 before:border-gradient-to-r before:from-blue-200 before:via-purple-100 before:to-blue-100 before:animate-border-glow before:pointer-events-none">
+      <div className="before:border-gradient-to-r before:animate-border-glow relative mx-auto w-full max-w-6xl overflow-x-auto rounded-xl border border-transparent bg-white/90 shadow-xl backdrop-blur-md before:pointer-events-none before:absolute before:inset-0 before:rounded-xl before:border-2 before:from-blue-200 before:via-purple-100 before:to-blue-100 sm:overflow-x-visible dark:bg-gray-900/80">
         {/* Subtle SVG pattern background */}
-        <svg className="absolute inset-0 w-full h-full opacity-10 pointer-events-none" xmlns="http://www.w3.org/2000/svg" fill="none"><defs><pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="1" cy="1" r="1" fill="#3b82f6" /></pattern></defs><rect width="100%" height="100%" fill="url(#dots)" /></svg>
-        <Table className="min-w-full text-[10px] font-sans mx-auto relative z-10">
+        <svg
+          className="pointer-events-none absolute inset-0 h-full w-full opacity-10"
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+        >
+          <defs>
+            <pattern
+              id="dots"
+              x="0"
+              y="0"
+              width="20"
+              height="20"
+              patternUnits="userSpaceOnUse"
+            >
+              <circle cx="1" cy="1" r="1" fill="#3b82f6" />
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#dots)" />
+        </svg>
+        <Table className="relative z-10 mx-auto min-w-full font-sans text-[10px]">
           {patients?.length > 0 && (
             <>
               <TableHeader>
-                <TableRow className="sticky top-0 z-20 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90 shadow-lg rounded-t-xl border-b-2 border-blue-200 dark:border-blue-900 backdrop-blur-sm">
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Case ID</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Patient Name</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Location</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Comments</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Files</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Actions</TableCell>
+                <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                  >
+                    Case ID
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                  >
+                    Patient Name
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                  >
+                    Location
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                  >
+                    Comments
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                  >
+                    Files
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                  >
+                    Actions
+                  </TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {patients.map((patient, idx) => (
                   <TableRow
                     key={patient._id}
-                    className={`transition-all duration-300 group hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? 'bg-blue-50/50 dark:bg-gray-900/30' : 'bg-white/70 dark:bg-gray-900/50'} animate-fadeInUp h-10 items-center`}
-                    style={{ fontFamily: 'Inter, sans-serif', animationDelay: `${idx * 30}ms` }}
+                    className={`group transition-all duration-300 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? "bg-blue-50/50 dark:bg-gray-900/30" : "bg-white/70 dark:bg-gray-900/50"} animate-fadeInUp h-10 items-center`}
+                    style={{
+                      fontFamily: "Inter, sans-serif",
+                      animationDelay: `${idx * 30}ms`,
+                    }}
                   >
-                    <TableCell className="font-semibold text-blue-600 dark:text-blue-300 text-center py-1 px-2">{patient.caseId}</TableCell>
-                    <TableCell className="h-10 flex justify-center items-center gap-2 font-medium text-center py-1 px-2">
-                      <span className="flex items-center">{patient.patientName}</span>
+                    <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 dark:text-blue-300">
+                      {patient.caseId}
                     </TableCell>
-                    <TableCell className="text-center py-1 px-2">
+                    <TableCell className="flex h-10 items-center justify-center gap-2 px-2 py-1 text-center font-medium">
+                      <span className="flex items-center">
+                        {patient.patientName}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-2 py-1 text-center">
                       <div className="text-[10px] leading-tight">
                         <div>{patient.city}</div>
-                        <div className="text-gray-500 text-[9px]">{patient.country}</div>
+                        <div className="text-[9px] text-gray-500">
+                          {patient.country}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-center py-1 px-2">
-                      <div className="flex gap-1 justify-center">
+                    <TableCell className="px-2 py-1 text-center">
+                      <div className="flex justify-center gap-1">
                         <Button
                           onClick={() => handleOpenUploadModal(patient)}
                           size="xs"
                           variant="outline"
-                          className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          className="flex items-center gap-1 border-purple-400 p-1 text-purple-600 shadow-sm transition-transform hover:scale-105 hover:bg-purple-100/60 dark:hover:bg-purple-900/40"
                         >
                           Upload
                         </Button>
@@ -516,14 +810,14 @@ export default function ViewPatientRecords() {
                           onClick={() => handleOpenViewCommentsModal(patient)}
                           size="xs"
                           variant="outline"
-                          className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
                         >
                           See
                         </Button>
                       </div>
                     </TableCell>
-                    <TableCell className="text-center py-1 px-2">
-                      <div className="flex gap-1 justify-center">
+                    <TableCell className="px-2 py-1 text-center">
+                      <div className="flex justify-center gap-1">
                         <Button
                           onClick={() => {
                             setViewFilesPatient(patient);
@@ -531,57 +825,76 @@ export default function ViewPatientRecords() {
                           }}
                           size="xs"
                           variant="outline"
-                          className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
                         >
                           See Files
                         </Button>
                       </div>
                     </TableCell>
-                    <TableCell className="text-center py-1 px-2 gap-1">
-                      <div className="flex gap-1 justify-center">
+                    <TableCell className="gap-1 px-2 py-1 text-center">
+                      <div className="flex justify-center gap-1">
                         <Button
-                          onClick={() => router.push(`/distributer/patients/view-patient-details?id=${patient._id}`)}
+                          onClick={() =>
+                            router.push(
+                              `/distributer/patients/view-patient-details?id=${patient._id}`,
+                            )
+                          }
                           size="xs"
                           variant="outline"
-                          className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
+                          className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
                         >
-                          <EyeIcon className="w-3 h-3" /> View
+                          <EyeIcon className="h-3 w-3" /> View
                         </Button>
                         {/* Status Dropdown */}
-                        <div className="text-center items-center justify-center flex">
-                          {patient.caseStatus === 'setup pending' && (
-                            <span disabled className="bg-gray-100 text-gray-500 rounded px-2 py-1 text-xs">
+                        <div className="flex items-center justify-center text-center">
+                          {patient.caseStatus === "setup pending" && (
+                            <span
+                              disabled
+                              className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-500"
+                            >
                               Setup Pending
                             </span>
                           )}
-                          {patient.caseStatus === 'approval pending' && (
+                          {patient.caseStatus === "approval pending" && (
                             <select
-                              className="bg-blue-100 text-blue-700 rounded px-2 py-1 text-xs border border-blue-300"
+                              className="rounded border border-blue-300 bg-blue-100 px-2 py-1 text-xs text-blue-700"
                               value="approval pending"
-                              onChange={e => handleStatusChange(patient, e.target.value)}
+                              onChange={(e) =>
+                                handleStatusChange(patient, e.target.value)
+                              }
                             >
-                              <option value="approval pending">Approval Pending</option>
+                              <option value="approval pending">
+                                Approval Pending
+                              </option>
                               <option value="approved">Approve</option>
                               <option value="rejected">Reject</option>
                               <option value="modify">Modify</option>
                             </select>
                           )}
-                          {patient.caseStatus === 'approved' && (
-                            <span disabled className="bg-green-100 text-green-700 rounded px-2 py-1 text-xs">
+                          {patient.caseStatus === "approved" && (
+                            <span
+                              disabled
+                              className="rounded bg-green-100 px-2 py-1 text-xs text-green-700"
+                            >
                               Approved
                             </span>
                           )}
-                          {patient.caseStatus === 'rejected' && (
-                            <span disabled className="bg-red-100 text-red-700 rounded px-2 py-1 text-xs">
+                          {patient.caseStatus === "rejected" && (
+                            <span
+                              disabled
+                              className="rounded bg-red-100 px-2 py-1 text-xs text-red-700"
+                            >
                               Rejected
                             </span>
                           )}
-                          {patient.caseStatus === 'modify' && (
+                          {patient.caseStatus === "modify" && (
                             <Button
                               size="xs"
                               variant="outline"
-                              className="border-yellow-400 text-yellow-700 bg-yellow-50 hover:bg-yellow-100 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
-                              onClick={() => setModificationModalPatient(patient)}
+                              className="flex items-center gap-1 border-yellow-400 bg-yellow-50 p-1 text-yellow-700 shadow-sm transition-transform hover:scale-105 hover:bg-yellow-100"
+                              onClick={() =>
+                                setModificationModalPatient(patient)
+                              }
                             >
                               Submit Modification
                             </Button>
@@ -601,12 +914,13 @@ export default function ViewPatientRecords() {
       {totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Showing {((currentPage - 1) * 10) + 1} to{" "}
-            {Math.min(currentPage * 10, totalPatients)} of {totalPatients} patients
+            Showing {(currentPage - 1) * 10 + 1} to{" "}
+            {Math.min(currentPage * 10, totalPatients)} of {totalPatients}{" "}
+            patients
           </div>
           <div className="flex gap-2">
             <Button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               variant="outline"
               size="sm"
@@ -617,7 +931,9 @@ export default function ViewPatientRecords() {
               Page {currentPage} of {totalPages}
             </span>
             <Button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+              }
               disabled={currentPage === totalPages}
               variant="outline"
               size="sm"
@@ -630,12 +946,40 @@ export default function ViewPatientRecords() {
 
       {patients?.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16">
-          <svg width="120" height="120" fill="none" className="mb-6 opacity-60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" stroke="#3b82f6" strokeWidth="4" fill="#e0e7ff" /><path d="M40 80c0-11 9-20 20-20s20 9 20 20" stroke="#6366f1" strokeWidth="4" strokeLinecap="round" /><circle cx="60" cy="54" r="10" fill="#6366f1" /></svg>
-          <div className="text-2xl font-bold text-blue-700 dark:text-blue-200 mb-2">No patients found</div>
-          <div className="text-gray-500 mb-6">Try adjusting your filters or add a new patient record.</div>
+          <svg
+            width="120"
+            height="120"
+            fill="none"
+            className="mb-6 opacity-60"
+            viewBox="0 0 120 120"
+          >
+            <circle
+              cx="60"
+              cy="60"
+              r="56"
+              stroke="#3b82f6"
+              strokeWidth="4"
+              fill="#e0e7ff"
+            />
+            <path
+              d="M40 80c0-11 9-20 20-20s20 9 20 20"
+              stroke="#6366f1"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            <circle cx="60" cy="54" r="10" fill="#6366f1" />
+          </svg>
+          <div className="mb-2 text-2xl font-bold text-blue-700 dark:text-blue-200">
+            No patients found
+          </div>
+          <div className="mb-6 text-gray-500">
+            Try adjusting your filters or add a new patient record.
+          </div>
           <Button
-            onClick={() => router.push("/doctor/patients/create-patient-record/step-1")}
-            className="px-6 py-3 bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg shadow-lg hover:scale-105 transition-transform"
+            onClick={() =>
+              router.push("/distributer/patients/create-patient-record")
+            }
+            className="rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform hover:scale-105"
           >
             Add your first patient
           </Button>

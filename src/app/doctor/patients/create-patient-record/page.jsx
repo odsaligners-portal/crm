@@ -2,7 +2,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import TeethSelector from "@/components/all/TeethSelector";
 import { countriesData } from "@/utils/countries";
-import { imageLabels, modelLabels } from "@/constants/data";
+import {
+  imageLabels,
+  modelLabels,
+  interproximalReductionOptions,
+  measureOfIPROptions,
+  extractionOptions,
+} from "@/constants/data";
 import { storage } from "@/utils/firebase";
 import {
   deleteObject,
@@ -81,6 +87,8 @@ const DentalExaminationForm = () => {
     missingToothTeeth: [],
     impactedToothTeeth: [],
     supernumeraryToothTeeth: [],
+    hasSupernumeraryTooth: false,
+    supernumeraryToothDescription: "",
     endodonticallyTreatedToothTeeth: [],
     occlusalWearTeeth: [],
     prosthesisTeeth: [],
@@ -90,7 +98,7 @@ const DentalExaminationForm = () => {
     maxillaryArcSymmetry: "",
     maxillaryArcAlignment: "",
     // Mandibular Arch
-    mandibularArcShape: "",
+    mandibularArcShape: [],
     mandibularArcSymmetry: "",
     mandibularArcAlignment: "",
     // Midline Assessment
@@ -126,16 +134,17 @@ const DentalExaminationForm = () => {
     treatmentPlanClassIII: false,
     treatmentPlanComments: "",
     // How to Gain Space
-    gainSpaceIPR: "",
-    gainSpaceIPRTeeth: [],
+
+    iprType: "",
+    iprMeasure: "",
     gainSpaceExtraction: "",
     gainSpaceExtractionTeeth: [],
+    extractionType: "",
     gainSpaceDistalization: "",
     gainSpaceDistalizationTeeth: [],
     gainSpaceProclination: "",
     gainSpaceProclinationTeeth: [],
-    gainSpaceExpansion: "",
-    gainSpaceExpansionTeeth: [],
+    expansionType: "",
     anyOtherComments: "",
   });
 
@@ -365,6 +374,20 @@ const DentalExaminationForm = () => {
               setFormData((prev) => ({
                 ...prev,
                 supernumeraryToothTeeth: data.supernumeraryToothTeeth,
+                hasSupernumeraryTooth: true, // If teeth are selected, assume yes
+              }));
+            }
+            if (data.hasSupernumeraryTooth !== undefined) {
+              setFormData((prev) => ({
+                ...prev,
+                hasSupernumeraryTooth: data.hasSupernumeraryTooth,
+              }));
+            }
+            if (data.supernumeraryToothDescription) {
+              setFormData((prev) => ({
+                ...prev,
+                supernumeraryToothDescription:
+                  data.supernumeraryToothDescription,
               }));
             }
             if (data.endodonticallyTreatedToothTeeth) {
@@ -392,6 +415,51 @@ const DentalExaminationForm = () => {
                 prosthesisComments: data.prosthesisComments,
               }));
             }
+            if (data.iprType) {
+              setFormData((prev) => ({
+                ...prev,
+                iprType: data.iprType,
+              }));
+            }
+            if (data.iprMeasure) {
+              setFormData((prev) => ({
+                ...prev,
+                iprMeasure: data.iprMeasure,
+              }));
+            }
+            if (data.extractionType) {
+              setFormData((prev) => ({
+                ...prev,
+                extractionType: data.extractionType,
+              }));
+            }
+            if (data.gainSpaceExtraction) {
+              setFormData((prev) => ({
+                ...prev,
+                gainSpaceExtraction: data.gainSpaceExtraction,
+              }));
+            }
+            if (data.gainSpaceExtractionTeeth) {
+              setFormData((prev) => ({
+                ...prev,
+                gainSpaceExtractionTeeth: data.gainSpaceExtractionTeeth,
+              }));
+            }
+            if (data.expansionType) {
+              setFormData((prev) => ({
+                ...prev,
+                expansionType: data.expansionType,
+              }));
+            }
+            if (data.mandibularArcShape) {
+              setFormData((prev) => ({
+                ...prev,
+                mandibularArcShape: Array.isArray(data.mandibularArcShape)
+                  ? data.mandibularArcShape
+                  : [data.mandibularArcShape],
+              }));
+            }
+
             // Also load address fields from the main patient data
             if (data.primaryAddress !== undefined) {
               setFormData((prev) => ({
@@ -639,6 +707,17 @@ const DentalExaminationForm = () => {
     }));
   };
 
+  const handleSupernumeraryToothToggle = (hasSupernumerary) => {
+    setFormData((prev) => ({
+      ...prev,
+      hasSupernumeraryTooth: hasSupernumerary,
+      // Clear description if no supernumerary tooth
+      supernumeraryToothDescription: hasSupernumerary
+        ? prev.supernumeraryToothDescription
+        : "",
+    }));
+  };
+
   const handleEndodonticallyTreatedToothSelection = (toothNumber) => {
     setFormData((prev) => ({
       ...prev,
@@ -672,14 +751,6 @@ const DentalExaminationForm = () => {
   };
 
   // How to Gain Space handlers
-  const handleGainSpaceIPRSelection = (toothNumber) => {
-    setFormData((prev) => ({
-      ...prev,
-      gainSpaceIPRTeeth: prev.gainSpaceIPRTeeth.includes(toothNumber)
-        ? prev.gainSpaceIPRTeeth.filter((t) => t !== toothNumber)
-        : [...prev.gainSpaceIPRTeeth, toothNumber],
-    }));
-  };
 
   const handleGainSpaceExtractionSelection = (toothNumber) => {
     setFormData((prev) => ({
@@ -714,23 +785,21 @@ const DentalExaminationForm = () => {
     }));
   };
 
-  const handleGainSpaceExpansionSelection = (toothNumber) => {
-    setFormData((prev) => ({
-      ...prev,
-      gainSpaceExpansionTeeth: prev.gainSpaceExpansionTeeth.includes(
-        toothNumber,
-      )
-        ? prev.gainSpaceExpansionTeeth.filter((t) => t !== toothNumber)
-        : [...prev.gainSpaceExpansionTeeth, toothNumber],
-    }));
-  };
-
   const handleProsthesisSelection = (toothNumber) => {
     setFormData((prev) => ({
       ...prev,
       prosthesisTeeth: prev.prosthesisTeeth.includes(toothNumber)
         ? prev.prosthesisTeeth.filter((t) => t !== toothNumber)
         : [...prev.prosthesisTeeth, toothNumber],
+    }));
+  };
+
+  const handleMandibularArcShapeChange = (shape) => {
+    setFormData((prev) => ({
+      ...prev,
+      mandibularArcShape: prev.mandibularArcShape.includes(shape)
+        ? prev.mandibularArcShape.filter((s) => s !== shape)
+        : [...prev.mandibularArcShape, shape],
     }));
   };
 
@@ -3512,7 +3581,6 @@ const DentalExaminationForm = () => {
                           selectedTeeth={formData.cariesTeeth}
                         />
                       </div>
-                      <div className="rounded-md bg-white p-3"></div>
                     </div>
 
                     {/* Missing Tooth Section */}
@@ -3526,7 +3594,6 @@ const DentalExaminationForm = () => {
                           selectedTeeth={formData.missingToothTeeth}
                         />
                       </div>
-                      <div className="rounded-md bg-white p-3"></div>
                     </div>
 
                     {/* Impacted Tooth Section */}
@@ -3540,21 +3607,81 @@ const DentalExaminationForm = () => {
                           selectedTeeth={formData.impactedToothTeeth}
                         />
                       </div>
-                      <div className="rounded-md bg-white p-3"></div>
                     </div>
 
                     {/* Supernumerary Tooth Section */}
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                       <h3 className="mb-4 text-lg font-medium text-gray-700">
-                        Supernumerary Tooth (Select tooth)
+                        Supernumerary Tooth
                       </h3>
+
+                      {/* Yes/No Buttons */}
                       <div className="mb-4">
-                        <TeethSelector
-                          onTeethSelect={handleSupernumeraryToothSelection}
-                          selectedTeeth={formData.supernumeraryToothTeeth}
-                        />
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Does the patient have supernumerary teeth?
+                        </label>
+                        <div className="flex space-x-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSupernumeraryToothToggle(true)}
+                            className={`rounded-md px-4 py-2 font-medium transition-colors ${
+                              formData.hasSupernumeraryTooth
+                                ? "bg-green-600 text-white"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            }`}
+                          >
+                            Yes
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleSupernumeraryToothToggle(false)
+                            }
+                            className={`rounded-md px-4 py-2 font-medium transition-colors ${
+                              !formData.hasSupernumeraryTooth &&
+                              formData.hasSupernumeraryTooth !== undefined
+                                ? "bg-red-600 text-white"
+                                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                            }`}
+                          >
+                            No
+                          </button>
+                        </div>
                       </div>
-                      <div className="rounded-md bg-white p-3"></div>
+
+                      {/* Description Box - Only visible when Yes is selected */}
+                      {formData.hasSupernumeraryTooth && (
+                        <div className="mb-4">
+                          <label className="mb-2 block text-sm font-medium text-gray-700">
+                            Description of supernumerary teeth:
+                          </label>
+                          <textarea
+                            name="supernumeraryToothDescription"
+                            value={formData.supernumeraryToothDescription}
+                            onChange={handleInputChange}
+                            placeholder="Describe the supernumerary teeth, their location, and any relevant details..."
+                            rows="3"
+                            maxLength={500}
+                            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                          />
+                          <div className="mt-2 text-sm text-gray-500">
+                            Character limit: 500
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Teeth Selector - Only visible when Yes is selected */}
+                      {formData.hasSupernumeraryTooth && (
+                        <div className="mb-4">
+                          <label className="mb-2 block text-sm font-medium text-gray-700">
+                            Select affected teeth:
+                          </label>
+                          <TeethSelector
+                            onTeethSelect={handleSupernumeraryToothSelection}
+                            selectedTeeth={formData.supernumeraryToothTeeth}
+                          />
+                        </div>
+                      )}
                     </div>
 
                     {/* Endodontically Treated Tooth Section */}
@@ -3572,7 +3699,6 @@ const DentalExaminationForm = () => {
                           }
                         />
                       </div>
-                      <div className="rounded-md bg-white p-3"></div>
                     </div>
 
                     {/* Occlusal Wear Section */}
@@ -3586,7 +3712,6 @@ const DentalExaminationForm = () => {
                           selectedTeeth={formData.occlusalWearTeeth}
                         />
                       </div>
-                      <div className="rounded-md bg-white p-3"></div>
                     </div>
 
                     {/* Prosthesis Section */}
@@ -3600,7 +3725,6 @@ const DentalExaminationForm = () => {
                           selectedTeeth={formData.prosthesisTeeth}
                         />
                       </div>
-                      <div className="rounded-md bg-white p-3"></div>
 
                       {/* Prosthesis Comments */}
                       <div className="mt-4">
@@ -3793,40 +3917,73 @@ const DentalExaminationForm = () => {
                       <label className="mb-2 block text-sm font-medium text-gray-700">
                         Shape:
                       </label>
-                      <textarea
-                        name="mandibularArcShape"
-                        value={formData.mandibularArcShape}
-                        onChange={handleInputChange}
-                        placeholder="Describe the shape of the mandibular arch..."
-                        rows="3"
-                        maxLength={1500}
-                        className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                          formData.mandibularArcShape &&
-                          formData.mandibularArcShape.length > 1500
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        }`}
-                      />
-                      <div className="mt-2 flex justify-between text-sm">
-                        <span className="text-gray-500">
-                          Character limit: 1500
-                        </span>
-                        <span
-                          className={`font-medium ${
-                            formData.mandibularArcShape &&
-                            formData.mandibularArcShape.length > 1500
-                              ? "text-red-600"
-                              : formData.mandibularArcShape &&
-                                  formData.mandibularArcShape.length > 1400
-                                ? "text-orange-500"
-                                : "text-gray-600"
-                          }`}
-                        >
-                          {formData.mandibularArcShape
-                            ? formData.mandibularArcShape.length
-                            : 0}
-                          /1500
-                        </span>
+                      <div className="space-y-3">
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.mandibularArcShape.includes(
+                              "U-Shaped Arch (Broad Arch)",
+                            )}
+                            onChange={() =>
+                              handleMandibularArcShapeChange(
+                                "U-Shaped Arch (Broad Arch)",
+                              )
+                            }
+                            className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="ml-3 text-sm font-medium text-gray-700">
+                            U-Shaped Arch (Broad Arch)
+                          </span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.mandibularArcShape.includes(
+                              "V-Shaped Arch (Narrow Arch)",
+                            )}
+                            onChange={() =>
+                              handleMandibularArcShapeChange(
+                                "V-Shaped Arch (Narrow Arch)",
+                              )
+                            }
+                            className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="ml-3 text-sm font-medium text-gray-700">
+                            V-Shaped Arch (Narrow Arch)
+                          </span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.mandibularArcShape.includes(
+                              "Square-shaped Arch",
+                            )}
+                            onChange={() =>
+                              handleMandibularArcShapeChange(
+                                "Square-shaped Arch",
+                              )
+                            }
+                            className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="ml-3 text-sm font-medium text-gray-700">
+                            Square-shaped Arch
+                          </span>
+                        </label>
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            checked={formData.mandibularArcShape.includes(
+                              "Ovoid Arch",
+                            )}
+                            onChange={() =>
+                              handleMandibularArcShapeChange("Ovoid Arch")
+                            }
+                            className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="ml-3 text-sm font-medium text-gray-700">
+                            Ovoid Arch
+                          </span>
+                        </label>
                       </div>
                     </div>
 
@@ -4640,77 +4797,83 @@ const DentalExaminationForm = () => {
 
                 {/* How to Gain Space Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-6 text-2xl font-semibold text-gray-700">
                     How to Gain Space
                   </h2>
-                  <p className="mb-6 text-sm text-gray-500 italic">
-                    (Select Yes/No for each option and choose teeth if
-                    applicable)
-                  </p>
-
                   <div className="space-y-8">
                     {/* IPR */}
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <label className="text-lg font-medium text-gray-700">
-                          IPR:
-                        </label>
-                        <div className="flex items-center space-x-4">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="gainSpaceIPR"
-                              value="yes"
-                              checked={formData.gainSpaceIPR === "yes"}
-                              onChange={handleInputChange}
-                              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm font-medium text-gray-700">
-                              Yes
-                            </span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="gainSpaceIPR"
-                              value="no"
-                              checked={formData.gainSpaceIPR === "no"}
-                              onChange={handleInputChange}
-                              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm font-medium text-gray-700">
-                              No
-                            </span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="gainSpaceIPR"
-                              value="Plan as required"
-                              checked={
-                                formData.gainSpaceIPR === "Plan as required"
-                              }
-                              onChange={handleInputChange}
-                              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm font-medium text-gray-700">
-                              Plan as required
-                            </span>
-                          </label>
+                    <div className="flex flex-wrap justify-between space-y-6 pr-20">
+                      {/* IPR Type Section */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-gray-700">
+                          IPR/Interproximal Reduction
+                        </h3>
+                        <div className="space-y-3">
+                          {interproximalReductionOptions.map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="iprType"
+                                value={option}
+                                checked={formData.iprType === option}
+                                onChange={handleInputChange}
+                                className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="ml-3 text-sm font-medium text-gray-700">
+                                {option}
+                              </span>
+                            </label>
+                          ))}
                         </div>
                       </div>
 
-                      {formData.gainSpaceIPR === "yes" && (
-                        <div className="space-y-4">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Select Teeth for IPR (Select tooth):
-                          </label>
-                          <TeethSelector
-                            onTeethSelect={handleGainSpaceIPRSelection}
-                            selectedTeeth={formData.gainSpaceIPRTeeth}
-                          />
+                      {/* Measure of IPR Section */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-gray-700">
+                          Measure of IPR (preference)
+                        </h3>
+                        <div className="space-y-3">
+                          {measureOfIPROptions.map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="iprMeasure"
+                                value={option}
+                                checked={formData.iprMeasure === option}
+                                onChange={handleInputChange}
+                                className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="ml-3 text-sm font-medium text-gray-700">
+                                {option}
+                              </span>
+                            </label>
+                          ))}
                         </div>
-                      )}
+                      </div>
+
+                      {/* Expansion */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-gray-700">
+                          Expansion
+                        </h3>
+                        <div className="space-y-3">
+                          {extractionOptions.map((option) => (
+                            <label key={option} className="flex items-center">
+                              <input
+                                type="radio"
+                                name="expansionType"
+                                value={option}
+                                checked={formData.expansionType === option}
+                                onChange={handleInputChange}
+                                className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="ml-3 text-sm font-medium text-gray-700">
+                                {option}
+                              </span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
                     </div>
 
                     {/* Extraction */}
@@ -4907,71 +5070,6 @@ const DentalExaminationForm = () => {
                           <TeethSelector
                             onTeethSelect={handleGainSpaceProclinationSelection}
                             selectedTeeth={formData.gainSpaceProclinationTeeth}
-                          />
-                        </div>
-                      )} */}
-                    </div>
-
-                    {/* Expansion */}
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <label className="text-lg font-medium text-gray-700">
-                          Expansion:
-                        </label>
-                        <div className="flex items-center space-x-4">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="gainSpaceExpansion"
-                              value="yes"
-                              checked={formData.gainSpaceExpansion === "yes"}
-                              onChange={handleInputChange}
-                              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm font-medium text-gray-700">
-                              Yes
-                            </span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="gainSpaceExpansion"
-                              value="no"
-                              checked={formData.gainSpaceExpansion === "no"}
-                              onChange={handleInputChange}
-                              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm font-medium text-gray-700">
-                              No
-                            </span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="gainSpaceExpansion"
-                              value="Plan as required"
-                              checked={
-                                formData.gainSpaceExpansion ===
-                                "Plan as required"
-                              }
-                              onChange={handleInputChange}
-                              className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span className="ml-2 text-sm font-medium text-gray-700">
-                              Plan as required
-                            </span>
-                          </label>
-                        </div>
-                      </div>
-
-                      {/* {formData.gainSpaceExpansion === "yes" && (
-                        <div className="space-y-4">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Select Teeth for Expansion (Select tooth):
-                          </label>
-                          <TeethSelector
-                            onTeethSelect={handleGainSpaceExpansionSelection}
-                            selectedTeeth={formData.gainSpaceExpansionTeeth}
                           />
                         </div>
                       )} */}

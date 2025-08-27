@@ -1,20 +1,30 @@
 "use client";
-import FileUploadModal, { ViewFilesModal } from '@/components/admin/patients/FileUploadModal';
+import FileUploadModal, {
+  ViewFilesModal,
+} from "@/components/admin/patients/FileUploadModal";
 import UploadModal from "@/components/admin/patients/UploadModal";
 import ViewCommentsModal from "@/components/admin/patients/ViewCommentsModal";
 import Input from "@/components/form/input/InputField";
 import Select from "@/components/form/select/SelectField";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { caseTypes, genders, treatmentForOptions } from "@/constants/data";
 import { EyeIcon, PlusIcon } from "@/icons";
-import { setLoading } from '@/store/features/uiSlice';
-import { fetchWithError } from '@/utils/apiErrorHandler';
+import { setLoading } from "@/store/features/uiSlice";
+import { fetchWithError } from "@/utils/apiErrorHandler";
 import { countriesData } from "@/utils/countries";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import * as XLSX from "xlsx";
+import { toast } from "react-toastify";
 
 const countries = Object.keys(countriesData);
 
@@ -35,7 +45,8 @@ export default function PlannerPatientRecords() {
   const [fileUploadPatient, setFileUploadPatient] = useState(null);
   const [showViewFilesModal, setShowViewFilesModal] = useState(false);
   const [viewFilesPatient, setViewFilesPatient] = useState(null);
-  const [modificationModalPatient, setModificationModalPatient] = useState(null);
+  const [modificationModalPatient, setModificationModalPatient] =
+    useState(null);
   const dispatch = useDispatch();
 
   // Filter state
@@ -43,14 +54,8 @@ export default function PlannerPatientRecords() {
     gender: "",
     country: "",
     state: "",
-    city: "",
-    caseCategory: "",
-    caseType: "",
-    treatmentFor: "",
-    selectedPrice: "",
     startDate: "",
     endDate: "",
-    caseStatus: "",
   });
 
   const [caseCategories, setCaseCategories] = useState([]);
@@ -61,7 +66,7 @@ export default function PlannerPatientRecords() {
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: "10",
-        sort: 'latest',
+        sort: "latest",
         search: searchTerm,
         ...filters,
       });
@@ -88,9 +93,12 @@ export default function PlannerPatientRecords() {
     const fetchCaseCategories = async () => {
       dispatch(setLoading(true));
       try {
-        const result = await fetchWithError('/api/case-categories?active=true', {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {},
-        });
+        const result = await fetchWithError(
+          "/api/case-categories?active=true",
+          {
+            headers: token ? { Authorization: `Bearer ${token}` } : {},
+          },
+        );
         setCaseCategories(result.data || []);
       } catch (err) {
         // fetchWithError already toasts
@@ -112,16 +120,16 @@ export default function PlannerPatientRecords() {
 
   // Use a stable date formatter for patient data only
   const formatDate = (dateString) => {
-    if (!dateString) return '';
+    if (!dateString) return "";
     try {
       return new Date(dateString).toLocaleDateString();
     } catch {
-      return '';
+      return "";
     }
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setFilters((prev) => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
 
@@ -130,35 +138,321 @@ export default function PlannerPatientRecords() {
       gender: "",
       country: "",
       state: "",
-      city: "",
-      caseCategory: "",
-      caseType: "",
-      selectedPrice: "",
-      treatmentFor: "",
       startDate: "",
       endDate: "",
-      caseStatus: "",
     });
     setCurrentPage(1);
   };
 
+  const exportToExcel = () => {
+    const exportData = patients.map((patient) => ({
+      // Basic Patient Information
+      "Case ID": patient.caseId,
+      "Patient Name": patient.patientName,
+      Age: patient.age,
+      Gender: patient.gender,
+      "Treatment For": patient.treatmentFor,
+
+      // Location Information
+      Country: patient.country,
+      State: patient.state,
+      City: patient.city,
+
+      // Case Information
+      "Case Category": patient.caseCategory,
+      "Case Type": patient.caseType,
+      "Single Arch Type": patient.singleArchType || "N/A",
+      Package: patient.selectedPrice || "Not specified",
+      "Case Status": patient.caseStatus || "Not specified",
+      "Case Approval": patient.caseApproval ? "Yes" : "No",
+
+      // Medical Information
+      "Chief Complaint": patient.chiefComplaint || "Not specified",
+      "Case Category Comments": patient.caseCategoryDetails || "Not specified",
+      "Treatment Plan": patient.treatmentPlan || "Not specified",
+
+      // Dental Examination - Hard Tissue
+      "Caries Teeth":
+        patient.dentalExamination?.cariesTeeth?.join(", ") || "None",
+      "Missing Tooth Teeth":
+        patient.dentalExamination?.missingToothTeeth?.join(", ") || "None",
+      "Impacted Tooth Teeth":
+        patient.dentalExamination?.impactedToothTeeth?.join(", ") || "None",
+      "Supernumerary Tooth": patient.dentalExamination?.hasSupernumeraryTooth
+        ? "Yes"
+        : "No",
+      "Supernumerary Description":
+        patient.dentalExamination?.supernumeraryToothDescription || "N/A",
+      "Supernumerary Teeth":
+        patient.dentalExamination?.supernumeraryToothTeeth?.join(", ") || "N/A",
+      "Endodontically Treated Teeth":
+        patient.dentalExamination?.endodonticallyTreatedToothTeeth?.join(
+          ", ",
+        ) || "None",
+      "Occlusal Wear Teeth":
+        patient.dentalExamination?.occlusalWearTeeth?.join(", ") || "None",
+      "Prosthesis Teeth":
+        patient.dentalExamination?.prosthesisTeeth?.join(", ") || "None",
+      "Prosthesis Comments":
+        patient.dentalExamination?.prosthesisComments || "N/A",
+
+      // Dental Examination - Soft Tissue
+      Mucosa: patient.dentalExamination?.mucosa || "Not specified",
+      Gingiva: patient.dentalExamination?.gingiva || "Not specified",
+      Tongue: patient.dentalExamination?.tongue || "Not specified",
+      Palate: patient.dentalExamination?.palate || "Not specified",
+      "Floor of Mouth":
+        patient.dentalExamination?.floorOfMouth || "Not specified",
+      Lips: patient.dentalExamination?.lips || "Not specified",
+      Cheeks: patient.dentalExamination?.cheeks || "Not specified",
+      Tonsils: patient.dentalExamination?.tonsils || "Not specified",
+      Throat: patient.dentalExamination?.throat || "Not specified",
+
+      // Dental Examination - Functional Analysis
+      "Mouth Opening":
+        patient.dentalExamination?.mouthOpening || "Not specified",
+      "Lateral Movement Right":
+        patient.dentalExamination?.lateralMovementRight || "Not specified",
+      "Lateral Movement Left":
+        patient.dentalExamination?.lateralMovementLeft || "Not specified",
+      Protrusion: patient.dentalExamination?.protrusion || "Not specified",
+      Retrusion: patient.dentalExamination?.retrusion || "Not specified",
+      "TMJ Clicking": patient.dentalExamination?.tmjClicking || "Not specified",
+      "TMJ Pain": patient.dentalExamination?.tmjPain || "Not specified",
+      "TMJ Tenderness":
+        patient.dentalExamination?.tmjTenderness || "Not specified",
+
+      // Dental Examination - Skeletal Analysis
+      "Facial Form": patient.dentalExamination?.facialForm || "Not specified",
+      "Facial Profile":
+        patient.dentalExamination?.facialProfile || "Not specified",
+      "Facial Symmetry":
+        patient.dentalExamination?.facialSymmetry || "Not specified",
+      "Nasolabial Angle":
+        patient.dentalExamination?.nasolabialAngle || "Not specified",
+      "Mentolabial Sulcus":
+        patient.dentalExamination?.mentolabialSulcus || "Not specified",
+      "Lip Competency":
+        patient.dentalExamination?.lipCompetency || "Not specified",
+      "Gingival Display":
+        patient.dentalExamination?.gingivalDisplay || "Not specified",
+      "Smile Arc": patient.dentalExamination?.smileArc || "Not specified",
+
+      // Dental Examination - Dental Analysis
+      Overjet: patient.dentalExamination?.overjet || "Not specified",
+      Overbite: patient.dentalExamination?.overbite || "Not specified",
+      Crossbite: patient.dentalExamination?.crossbite || "Not specified",
+      "Open Bite": patient.dentalExamination?.openBite || "Not specified",
+      "Midline Shift":
+        patient.dentalExamination?.midlineShift || "Not specified",
+      Crowding: patient.dentalExamination?.crowding || "Not specified",
+      Spacing: patient.dentalExamination?.spacing || "Not specified",
+
+      // Space Analysis
+      "Space Required":
+        patient.dentalExamination?.spaceRequired || "Not specified",
+      "Space Available":
+        patient.dentalExamination?.spaceAvailable || "Not specified",
+      "Space Deficit":
+        patient.dentalExamination?.spaceDeficit || "Not specified",
+      "Space Surplus":
+        patient.dentalExamination?.spaceSurplus || "Not specified",
+
+      // How to Gain Space
+      "IPR Type": patient.dentalExamination?.iprType || "Not specified",
+      "IPR Measure": patient.dentalExamination?.iprMeasure || "Not specified",
+      "Expansion Type":
+        patient.dentalExamination?.expansionType || "Not specified",
+      "Gain Space Extraction":
+        patient.dentalExamination?.gainSpaceExtraction || "Not specified",
+      "Extraction Type": patient.dentalExamination?.extractionType || "N/A",
+      "Extraction Teeth":
+        patient.dentalExamination?.gainSpaceExtractionTeeth?.join(", ") ||
+        "N/A",
+      "Gain Space Distalization":
+        patient.dentalExamination?.gainSpaceDistalization || "Not specified",
+      "Distalization Teeth":
+        patient.dentalExamination?.gainSpaceDistalizationTeeth?.join(", ") ||
+        "N/A",
+      "Gain Space Proclination":
+        patient.dentalExamination?.gainSpaceProclination || "Not specified",
+      "Proclination Teeth":
+        patient.dentalExamination?.gainSpaceProclinationTeeth?.join(", ") ||
+        "N/A",
+
+      // Extraction Details
+      "Extraction Required": patient.dentalExamination?.extraction?.required
+        ? "Yes"
+        : "No",
+      "Extraction Comments":
+        patient.dentalExamination?.extraction?.comments || "N/A",
+
+      // Additional Information
+      "Nature of Availability":
+        patient.dentalExamination?.natureOfAvailability || "Not specified",
+      "Follow-up Months": patient.dentalExamination?.followUpMonths || "N/A",
+      "Oral Habits": patient.dentalExamination?.oralHabits || "Not specified",
+      "Other Habit Specification":
+        patient.dentalExamination?.otherHabitSpecification || "N/A",
+      "Family History":
+        patient.dentalExamination?.familyHistory ||
+        patient.familyHistory ||
+        "Not specified",
+
+      // File Information
+      "Intraoral Photos":
+        (patient.dentalExaminationFiles?.img1?.length || 0) +
+        (patient.dentalExaminationFiles?.img2?.length || 0) +
+        (patient.dentalExaminationFiles?.img3?.length || 0) +
+        (patient.dentalExaminationFiles?.img4?.length || 0) +
+        (patient.dentalExaminationFiles?.img5?.length || 0) +
+        (patient.dentalExaminationFiles?.img6?.length || 0),
+      "Facial Photos":
+        (patient.dentalExaminationFiles?.img7?.length || 0) +
+        (patient.dentalExaminationFiles?.img8?.length || 0) +
+        (patient.dentalExaminationFiles?.img9?.length || 0),
+      "X-ray Files":
+        (patient.dentalExaminationFiles?.img10?.length || 0) +
+        (patient.dentalExaminationFiles?.img11?.length || 0),
+      "3D Models":
+        (patient.dentalExaminationFiles?.model1?.length || 0) +
+        (patient.dentalExaminationFiles?.model2?.length || 0),
+      "Total Files":
+        (patient.dentalExaminationFiles?.img1?.length || 0) +
+        (patient.dentalExaminationFiles?.img2?.length || 0) +
+        (patient.dentalExaminationFiles?.img3?.length || 0) +
+        (patient.dentalExaminationFiles?.img4?.length || 0) +
+        (patient.dentalExaminationFiles?.img5?.length || 0) +
+        (patient.dentalExaminationFiles?.img6?.length || 0) +
+        (patient.dentalExaminationFiles?.img7?.length || 0) +
+        (patient.dentalExaminationFiles?.img8?.length || 0) +
+        (patient.dentalExaminationFiles?.img9?.length || 0) +
+        (patient.dentalExaminationFiles?.img10?.length || 0) +
+        (patient.dentalExaminationFiles?.img11?.length || 0) +
+        (patient.dentalExaminationFiles?.model1?.length || 0) +
+        (patient.dentalExaminationFiles?.model2?.length || 0),
+
+      // Timestamps
+      "Created Date": new Date(patient.createdAt).toLocaleDateString(),
+      "Last Updated": new Date(
+        patient.updatedAt || patient.createdAt,
+      ).toLocaleDateString(),
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Patients");
+
+    // Auto-size columns
+    const colWidths = [
+      { wch: 20 }, // Case ID
+      { wch: 20 }, // Patient Name
+      { wch: 8 }, // Age
+      { wch: 10 }, // Gender
+      { wch: 15 }, // Treatment For
+      { wch: 15 }, // Country
+      { wch: 15 }, // State
+      { wch: 15 }, // City
+      { wch: 15 }, // Case Category
+      { wch: 20 }, // Case Type
+      { wch: 20 }, // Single Arch Type
+      { wch: 20 }, // Package
+      { wch: 15 }, // Case Status
+      { wch: 15 }, // Case Approval
+      { wch: 30 }, // Chief Complaint
+      { wch: 25 }, // Case Category Comments
+      { wch: 25 }, // Treatment Plan
+      { wch: 20 }, // Caries Teeth
+      { wch: 20 }, // Missing Tooth Teeth
+      { wch: 20 }, // Impacted Tooth Teeth
+      { wch: 20 }, // Supernumerary Tooth
+      { wch: 25 }, // Supernumerary Description
+      { wch: 20 }, // Supernumerary Teeth
+      { wch: 25 }, // Endodontically Treated Teeth
+      { wch: 20 }, // Occlusal Wear Teeth
+      { wch: 20 }, // Prosthesis Teeth
+      { wch: 25 }, // Prosthesis Comments
+      { wch: 20 }, // Mucosa
+      { wch: 20 }, // Gingiva
+      { wch: 20 }, // Tongue
+      { wch: 20 }, // Palate
+      { wch: 20 }, // Floor of Mouth
+      { wch: 20 }, // Lips
+      { wch: 20 }, // Cheeks
+      { wch: 20 }, // Tonsils
+      { wch: 20 }, // Throat
+      { wch: 20 }, // Mouth Opening
+      { wch: 20 }, // Lateral Movement Right
+      { wch: 20 }, // Lateral Movement Left
+      { wch: 20 }, // Protrusion
+      { wch: 20 }, // Retrusion
+      { wch: 20 }, // TMJ Clicking
+      { wch: 20 }, // TMJ Pain
+      { wch: 20 }, // TMJ Tenderness
+      { wch: 20 }, // Facial Form
+      { wch: 20 }, // Facial Profile
+      { wch: 20 }, // Facial Symmetry
+      { wch: 20 }, // Nasolabial Angle
+      { wch: 20 }, // Mentolabial Sulcus
+      { wch: 20 }, // Lip Competency
+      { wch: 20 }, // Gingival Display
+      { wch: 20 }, // Smile Arc
+      { wch: 20 }, // Overjet
+      { wch: 20 }, // Overbite
+      { wch: 20 }, // Crossbite
+      { wch: 20 }, // Open Bite
+      { wch: 20 }, // Midline Shift
+      { wch: 20 }, // Crowding
+      { wch: 20 }, // Spacing
+      { wch: 20 }, // Space Required
+      { wch: 20 }, // Space Available
+      { wch: 20 }, // Space Deficit
+      { wch: 20 }, // Space Surplus
+      { wch: 20 }, // IPR Type
+      { wch: 20 }, // IPR Measure
+      { wch: 20 }, // Expansion Type
+      { wch: 20 }, // Gain Space Extraction
+      { wch: 20 }, // Extraction Type
+      { wch: 20 }, // Extraction Teeth
+      { wch: 20 }, // Gain Space Distalization
+      { wch: 20 }, // Distalization Teeth
+      { wch: 20 }, // Gain Space Proclination
+      { wch: 20 }, // Proclination Teeth
+      { wch: 20 }, // Extraction Required
+      { wch: 30 }, // Extraction Comments
+      { wch: 25 }, // Nature of Availability
+      { wch: 15 }, // Follow-up Months
+      { wch: 20 }, // Oral Habits
+      { wch: 25 }, // Other Habit Specification
+      { wch: 25 }, // Family History
+      { wch: 15 }, // Intraoral Photos
+      { wch: 15 }, // Facial Photos
+      { wch: 15 }, // X-ray Files
+      { wch: 15 }, // 3D Models
+      { wch: 15 }, // Total Files
+      { wch: 15 }, // Created Date
+      { wch: 15 }, // Last Updated
+    ];
+    ws["!cols"] = colWidths;
+
+    XLSX.writeFile(
+      wb,
+      `planner_patients_${new Date().toISOString().split("T")[0]}.xlsx`,
+    );
+    toast.success("Patient data exported successfully!");
+  };
+
   const getFilterCount = () => {
-    return Object.values(filters).filter(value => value !== "").length;
+    return Object.values(filters).filter((value) => value !== "").length;
   };
 
   // Helper to get filter label
   const filterLabels = {
-    gender: 'Gender',
-    country: 'Country',
-    state: 'State',
-    city: 'City',
-    caseCategory: 'Case Category',
-    caseType: 'Case Type',
-    selectedPrice: 'Package',
-    treatmentFor: 'Treatment For',
-    startDate: 'Start Date',
-    endDate: 'End Date',
-    caseStatus: 'Case Status',
+    gender: "Gender",
+    country: "Country",
+    state: "State",
+    startDate: "Start Date",
+    endDate: "End Date",
   };
 
   const handleOpenUploadModal = (patient) => {
@@ -194,19 +488,10 @@ export default function PlannerPatientRecords() {
         </div>
         <div className="flex gap-3">
           <Button
-            onClick={() => {}}
+            onClick={exportToExcel}
             className="rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 py-2 font-semibold text-white shadow-md transition-transform hover:scale-105"
           >
             Export to Excel
-          </Button>
-          <Button
-            onClick={() =>
-              router.push("/planner/patients/create-patient-record/step-1")
-            }
-            className="rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 py-2 font-semibold text-white shadow-md transition-transform hover:scale-105"
-          >
-            <PlusIcon className="mr-2 h-4 w-4" />
-            Add Patient
           </Button>
         </div>
       </div>
@@ -260,7 +545,7 @@ export default function PlannerPatientRecords() {
           className={`transition-all duration-300 ${showFilters ? "mt-4 max-h-[2000px] opacity-100" : "max-h-0 overflow-hidden opacity-0"} rounded-lg border-l-4 border-blue-200 bg-white/80 p-6 shadow-lg backdrop-blur-md dark:border-blue-800 dark:bg-gray-900/80`}
         >
           <form
-            className="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+            className="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3"
             onSubmit={handleSearch}
           >
             <Select
@@ -268,17 +553,6 @@ export default function PlannerPatientRecords() {
               onChange={(e) => handleFilterChange("gender", e.target.value)}
               options={[...genders.map((g) => ({ label: g, value: g }))]}
               label="Gender"
-              className="w-full"
-            />
-            <Select
-              value={filters.treatmentFor}
-              onChange={(e) =>
-                handleFilterChange("treatmentFor", e.target.value)
-              }
-              options={[
-                ...treatmentForOptions.map((t) => ({ label: t, value: t })),
-              ]}
-              label="Treatment For"
               className="w-full"
             />
             <Select
@@ -305,38 +579,6 @@ export default function PlannerPatientRecords() {
               label="State"
               className="w-full"
               disabled={!filters.country}
-            />
-            <Select
-              value={filters.caseCategory}
-              onChange={(e) => {
-                handleFilterChange("caseCategory", e.target.value);
-                handleFilterChange("selectedPrice", "");
-              }}
-              options={caseCategories.map((c) => ({
-                label: c.category,
-                value: c.category,
-              }))}
-              label="Case Category"
-              className="w-full"
-            />
-            <Select
-              value={filters.caseType}
-              onChange={(e) => handleFilterChange("caseType", e.target.value)}
-              options={[...caseTypes.map((c) => ({ label: c, value: c }))]}
-              label="Case Type"
-              className="w-full"
-            />
-            <Select
-              value={filters.caseStatus}
-              onChange={(e) => handleFilterChange("caseStatus", e.target.value)}
-              options={[
-                { label: "Setup Pending", value: "setup pending" },
-                { label: "Approval Pending", value: "approval pending" },
-                { label: "Approved", value: "approved" },
-                { label: "Rejected", value: "rejected" },
-              ]}
-              label="Case Status"
-              className="w-full"
             />
 
             <div className="col-span-2 flex w-full flex-col gap-1">
@@ -662,7 +904,7 @@ export default function PlannerPatientRecords() {
           </div>
           <Button
             onClick={() =>
-              router.push("/planner/patients/create-patient-record/step-1")
+              router.push("/planner/patients/create-patient-record")
             }
             className="rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform hover:scale-105"
           >
@@ -712,4 +954,4 @@ export default function PlannerPatientRecords() {
       />
     </div>
   );
-} 
+}

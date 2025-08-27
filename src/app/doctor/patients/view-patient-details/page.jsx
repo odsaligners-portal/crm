@@ -760,7 +760,7 @@ export default function ViewPatientDetails() {
                             ? "Traveling – Available every " +
                               (patientData.dentalExamination?.followUpMonths ||
                                 "___") +
-                              " for follow-up"
+                              " months for follow-up"
                             : "Not specified"}
                       </span>
                     </div>
@@ -842,9 +842,9 @@ export default function ViewPatientDetails() {
                         Case Type
                       </label>
                       <div className="rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900">
-                        {patientData.caseType != "Single Arch"
-                          ? patientData.caseType
-                          : patientData.singleArchType || "Not specified"}
+                        {patientData.caseType === "Single Arch"
+                          ? patientData.singleArchType || "Not specified"
+                          : patientData.caseType || "Not specified"}
                       </div>
                     </div>
 
@@ -1011,17 +1011,6 @@ export default function ViewPatientDetails() {
                     </div>
                     <div>
                       <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Protrusion:{" "}
-                        {patientData.dentalExamination?.protrusion || "___"} mm,
-                        Right Excursion:{" "}
-                        {patientData.dentalExamination?.rightExcursion || "___"}{" "}
-                        mm, Left Excursion:{" "}
-                        {patientData.dentalExamination?.leftExcursion || "___"}{" "}
-                        mm
-                      </label>
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">
                         Any Other Comments
                       </label>
                       <div className="min-h-[60px] rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900">
@@ -1132,7 +1121,7 @@ export default function ViewPatientDetails() {
                     {/* Caries Section */}
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                       <h3 className="mb-4 text-lg font-medium text-gray-700">
-                        Caries
+                        Caries (Select tooth)
                       </h3>
                       <div className="rounded-md bg-white p-3">
                         <TeethSelector
@@ -1147,7 +1136,7 @@ export default function ViewPatientDetails() {
                     {/* Missing Tooth Section */}
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                       <h3 className="mb-4 text-lg font-medium text-gray-700">
-                        Missing Tooth
+                        Missing Tooth (Select tooth)
                       </h3>
                       <div className="rounded-md bg-white p-3">
                         <TeethSelector
@@ -1163,7 +1152,7 @@ export default function ViewPatientDetails() {
                     {/* Impacted Tooth Section */}
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                       <h3 className="mb-4 text-lg font-medium text-gray-700">
-                        Impacted Tooth
+                        Impacted Tooth (Select tooth)
                       </h3>
                       <div className="rounded-md bg-white p-3">
                         <TeethSelector
@@ -1181,21 +1170,55 @@ export default function ViewPatientDetails() {
                       <h3 className="mb-4 text-lg font-medium text-gray-700">
                         Supernumerary Tooth
                       </h3>
-                      <div className="rounded-md bg-white p-3">
-                        <TeethSelector
-                          selectedTeeth={
-                            patientData.dentalExamination
-                              ?.supernumeraryToothTeeth || []
-                          }
-                          onTeethSelect={() => {}} // Read-only mode
-                        />
+                      <div className="space-y-4">
+                        <div className="rounded-md bg-white p-3">
+                          <span className="text-sm font-medium text-gray-700">
+                            {patientData.dentalExamination
+                              ?.hasSupernumeraryTooth
+                              ? "Yes"
+                              : patientData.dentalExamination
+                                    ?.hasSupernumeraryTooth === false
+                                ? "No"
+                                : "Not specified"}
+                          </span>
+                        </div>
+
+                        {patientData.dentalExamination
+                          ?.hasSupernumeraryTooth && (
+                          <>
+                            <div>
+                              <label className="mb-2 block text-sm font-medium text-gray-700">
+                                Description of supernumerary teeth:
+                              </label>
+                              <div className="min-h-[60px] rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900">
+                                {patientData.dentalExamination
+                                  ?.supernumeraryToothDescription ||
+                                  "Not specified"}
+                              </div>
+                            </div>
+                            <div>
+                              <label className="mb-2 block text-sm font-medium text-gray-700">
+                                Select affected teeth:
+                              </label>
+                              <div className="rounded-md bg-white p-3">
+                                <TeethSelector
+                                  selectedTeeth={
+                                    patientData.dentalExamination
+                                      ?.supernumeraryToothTeeth || []
+                                  }
+                                  onTeethSelect={() => {}} // Read-only mode
+                                />
+                              </div>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </div>
 
                     {/* Endodontically Treated Tooth Section */}
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                       <h3 className="mb-4 text-lg font-medium text-gray-700">
-                        Endodontically Treated Tooth
+                        Endodontically Treated Tooth (Select tooth)
                       </h3>
                       <div className="rounded-md bg-white p-3">
                         <TeethSelector
@@ -1211,7 +1234,7 @@ export default function ViewPatientDetails() {
                     {/* Occlusal Wear Section */}
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                       <h3 className="mb-4 text-lg font-medium text-gray-700">
-                        Occlusal Wear
+                        Occlusal Wear (Select tooth)
                       </h3>
                       <div className="rounded-md bg-white p-3">
                         <TeethSelector
@@ -1227,7 +1250,7 @@ export default function ViewPatientDetails() {
                     {/* Prosthesis Section */}
                     <div className="rounded-lg border border-gray-200 bg-gray-50 p-4">
                       <h3 className="mb-4 text-lg font-medium text-gray-700">
-                        Prosthesis (Crown, Bridge, Implant)
+                        Prosthesis (Crown, Bridge, Implant - Select tooth)
                       </h3>
                       <div className="rounded-md bg-white p-3">
                         <TeethSelector
@@ -1306,8 +1329,17 @@ export default function ViewPatientDetails() {
                         Shape:
                       </label>
                       <div className="min-h-[60px] rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900">
-                        {patientData.dentalExamination?.mandibularArcShape ||
-                          "Not specified"}
+                        {patientData.dentalExamination?.mandibularArcShape &&
+                        Array.isArray(
+                          patientData.dentalExamination.mandibularArcShape,
+                        ) &&
+                        patientData.dentalExamination.mandibularArcShape
+                          .length > 0
+                          ? patientData.dentalExamination.mandibularArcShape.join(
+                              ", ",
+                            )
+                          : patientData.dentalExamination?.mandibularArcShape ||
+                            "Not specified"}
                       </div>
                     </div>
 
@@ -1598,52 +1630,154 @@ export default function ViewPatientDetails() {
 
                 {/* How to Gain Space Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-6 text-2xl font-semibold text-gray-700">
                     How to Gain Space
                   </h2>
-                  <p className="mb-6 text-sm text-gray-500 italic">
-                    Selected options and teeth for each method:
-                  </p>
-
                   <div className="space-y-8">
                     {/* IPR */}
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <label className="text-lg font-medium text-gray-700">
-                          IPR:
-                        </label>
+                    <div className="flex flex-wrap justify-between space-y-6 pr-20">
+                      {/* IPR Type Section */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-gray-700">
+                          IPR/Interproximal Reduction
+                        </h3>
                         <div className="rounded-md bg-gray-50 px-3 py-2">
                           <span className="text-sm font-medium text-gray-700">
-                            {patientData.dentalExamination?.gainSpaceIPR
-                              ? patientData.dentalExamination.gainSpaceIPR
-                                  .charAt(0)
-                                  .toUpperCase() +
-                                patientData.dentalExamination.gainSpaceIPR.slice(
-                                  1,
-                                )
-                              : "Not specified"}
+                            {patientData.dentalExamination?.iprType ||
+                              "Not specified"}
                           </span>
                         </div>
                       </div>
 
-                      {patientData.dentalExamination?.gainSpaceIPR ===
-                        "yes" && (
-                        <div className="space-y-4">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Selected Teeth for IPR:
-                          </label>
-                          <div className="rounded-md bg-white p-3">
-                            <TeethSelector
-                              selectedTeeth={
-                                patientData.dentalExamination
-                                  ?.gainSpaceIPRTeeth || []
-                              }
-                              onTeethSelect={() => {}} // Read-only mode
-                            />
+                      {/* Measure of IPR Section */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-gray-700">
+                          Measure of IPR (preference)
+                        </h3>
+                        <div className="rounded-md bg-gray-50 px-3 py-2">
+                          <span className="text-sm font-medium text-gray-700">
+                            {patientData.dentalExamination?.iprMeasure ||
+                              "Not specified"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Expansion */}
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-gray-700">
+                          Expansion
+                        </h3>
+                        <div className="rounded-md bg-gray-50 px-3 py-2">
+                          <span className="text-sm font-medium text-gray-700">
+                            {patientData.dentalExamination?.expansionType ||
+                              "Not specified"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Interproximal Reduction Details */}
+                    {patientData.dentalExamination?.interproximalReduction && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-gray-700">
+                          Interproximal Reduction Details
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Detail 1:
+                            </label>
+                            <div className="rounded-md bg-gray-50 px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                {patientData.dentalExamination
+                                  ?.interproximalReduction?.detail1 ||
+                                  "Not specified"}
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Detail 2:
+                            </label>
+                            <div className="rounded-md bg-gray-50 px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                {patientData.dentalExamination
+                                  ?.interproximalReduction?.detail2 ||
+                                  "Not specified"}
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Detail 3:
+                            </label>
+                            <div className="rounded-md bg-gray-50 px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                {patientData.dentalExamination
+                                  ?.interproximalReduction?.detail3 ||
+                                  "Not specified"}
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Detail 4:
+                            </label>
+                            <div className="rounded-md bg-gray-50 px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                {patientData.dentalExamination
+                                  ?.interproximalReduction?.detail4 ||
+                                  "Not specified"}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+
+                    {/* Measure of IPR Details */}
+                    {patientData.dentalExamination?.measureOfIPR && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-gray-700">
+                          Measure of IPR Details
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Detail A:
+                            </label>
+                            <div className="rounded-md bg-gray-50 px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                {patientData.dentalExamination?.measureOfIPR
+                                  ?.detailA || "Not specified"}
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Detail B:
+                            </label>
+                            <div className="rounded-md bg-gray-50 px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                {patientData.dentalExamination?.measureOfIPR
+                                  ?.detailB || "Not specified"}
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Detail C:
+                            </label>
+                            <div className="rounded-md bg-gray-50 px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                {patientData.dentalExamination?.measureOfIPR
+                                  ?.detailC || "Not specified"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Extraction */}
                     <div className="space-y-4">
@@ -1665,24 +1799,76 @@ export default function ViewPatientDetails() {
                         </div>
                       </div>
 
+                      {/* Extraction Type */}
                       {patientData.dentalExamination?.gainSpaceExtraction ===
                         "yes" && (
                         <div className="space-y-4">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Selected Teeth for Extraction:
-                          </label>
-                          <div className="rounded-md bg-white p-3">
-                            <TeethSelector
-                              selectedTeeth={
-                                patientData.dentalExamination
-                                  ?.gainSpaceExtractionTeeth || []
-                              }
-                              onTeethSelect={() => {}} // Read-only mode
-                            />
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Extraction Type:
+                            </label>
+                            <div className="rounded-md bg-gray-50 px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                {patientData.dentalExamination
+                                  ?.extractionType || "Not specified"}
+                              </span>
+                            </div>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700">
+                              Select Teeth for Extraction (Select tooth):
+                            </label>
+                            <div className="rounded-md bg-white p-3">
+                              <TeethSelector
+                                selectedTeeth={
+                                  patientData.dentalExamination
+                                    ?.gainSpaceExtractionTeeth || []
+                                }
+                                onTeethSelect={() => {}} // Read-only mode
+                              />
+                            </div>
                           </div>
                         </div>
                       )}
                     </div>
+
+                    {/* Extraction Details */}
+                    {patientData.dentalExamination?.extraction && (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium text-gray-700">
+                          Extraction Details
+                        </h3>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="mb-2 block text-sm font-medium text-gray-700">
+                              Required:
+                            </label>
+                            <div className="rounded-md bg-gray-50 px-3 py-2">
+                              <span className="text-sm font-medium text-gray-700">
+                                {patientData.dentalExamination?.extraction
+                                  ?.required
+                                  ? "Yes"
+                                  : "No"}
+                              </span>
+                            </div>
+                          </div>
+                          {patientData.dentalExamination?.extraction
+                            ?.comments && (
+                            <div>
+                              <label className="mb-2 block text-sm font-medium text-gray-700">
+                                Comments:
+                              </label>
+                              <div className="min-h-[60px] rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900">
+                                {
+                                  patientData.dentalExamination.extraction
+                                    .comments
+                                }
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Distalization */}
                     <div className="space-y-4">
@@ -1709,7 +1895,7 @@ export default function ViewPatientDetails() {
                         "yes" && (
                         <div className="space-y-4">
                           <label className="block text-sm font-medium text-gray-700">
-                            Selected Teeth for Distalization:
+                            Select Teeth for Distalization (Select tooth):
                           </label>
                           <div className="rounded-md bg-white p-3">
                             <TeethSelector
@@ -1749,52 +1935,13 @@ export default function ViewPatientDetails() {
                         "yes" && (
                         <div className="space-y-4">
                           <label className="block text-sm font-medium text-gray-700">
-                            Selected Teeth for Proclination:
+                            Select Teeth for Proclination (Select tooth):
                           </label>
                           <div className="rounded-md bg-white p-3">
                             <TeethSelector
                               selectedTeeth={
                                 patientData.dentalExamination
                                   ?.gainSpaceProclinationTeeth || []
-                              }
-                              onTeethSelect={() => {}} // Read-only mode
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Expansion */}
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-4">
-                        <label className="text-lg font-medium text-gray-700">
-                          Expansion:
-                        </label>
-                        <div className="rounded-md bg-gray-50 px-3 py-2">
-                          <span className="text-sm font-medium text-gray-700">
-                            {patientData.dentalExamination?.gainSpaceExpansion
-                              ? patientData.dentalExamination.gainSpaceExpansion
-                                  .charAt(0)
-                                  .toUpperCase() +
-                                patientData.dentalExamination.gainSpaceExpansion.slice(
-                                  1,
-                                )
-                              : "Not specified"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {patientData.dentalExamination?.gainSpaceExpansion ===
-                        "yes" && (
-                        <div className="space-y-4">
-                          <label className="block text-sm font-medium text-gray-700">
-                            Selected Teeth for Expansion:
-                          </label>
-                          <div className="rounded-md bg-white p-3">
-                            <TeethSelector
-                              selectedTeeth={
-                                patientData.dentalExamination
-                                  ?.gainSpaceExpansionTeeth || []
                               }
                               onTeethSelect={() => {}} // Read-only mode
                             />
@@ -1856,175 +2003,41 @@ export default function ViewPatientDetails() {
                 </p>
               </div>
 
-              {/* <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={selectedFiles.size === 13}
-                      onChange={() => {
-                        if (selectedFiles.size === 13) {
-                          setSelectedFiles(new Set());
-                        } else {
-                          setSelectedFiles(
-                            new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]),
-                          );
-                        }
-                      }}
-                      className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-sm font-medium text-blue-800">
-                      Select All ({selectedFiles.size}/13)
-                    </span>
-                  </div>
-
-                  <button
-                    onClick={async () => {
-                      try {
-                        if (selectedFiles.size === 0) return;
-
-                        const selectedFileList = Array.from(selectedFiles)
-                          .map((idx) => {
-                            const fileData = getFileDataForDownload(idx);
-                            if (!fileData) return null;
-                            return {
-                              ...fileData,
-                              id: idx,
-                              fileUrl: fileData.fileUrl,
-                              fileName: `file_${idx + 1}.pdf`,
-                            };
-                          })
-                          .filter(Boolean);
-
-                        if (selectedFileList.length === 0) {
-                          toast.error("No valid files selected for download.");
-                          return;
-                        }
-
-                        toast.info(
-                          `Starting download of ${selectedFileList.length} files...`,
-                        );
-
-                        // Use the helper function for each file to handle Firebase Storage CORS
-                        const results = selectedFileList.map((file) => {
-                          return downloadSingleFile(
-                            file.fileUrl,
-                            file.fileName,
-                          );
-                        });
-
-                        const successful = results.filter(
-                          (r) => r.success,
-                        ).length;
-
-                        if (successful > 0) {
-                          toast.success(
-                            `✅ Successfully initiated download of ${successful} files!`,
-                          );
-                        }
-                      } catch (error) {
-                        toast.error(
-                          `❌ Bulk download failed: ${error.message}`,
-                        );
-                      }
-                    }}
-                    disabled={selectedFiles.size === 0}
-                    className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-400"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Download Selected ({selectedFiles.size})
-                  </button>
-
-                  <button
-                    onClick={async () => {
-                      try {
-                        const allFileList = [
-                          0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
-                        ]
-                          .map((idx) => {
-                            const fileData = getFileDataForDownload(idx);
-                            if (!fileData) return null;
-                            return {
-                              ...fileData,
-                              id: idx,
-                              fileUrl: fileData.fileUrl,
-                              fileName: `file_${idx + 1}.pdf`,
-                            };
-                          })
-                          .filter(Boolean);
-
-                        if (allFileList.length === 0) {
-                          toast.error("No valid files found for download.");
-                          return;
-                        }
-
-
-
-                        // Use the helper function for each file to handle Firebase Storage CORS
-                        const results = allFileList.map((file) => {
-                          return downloadSingleFile(
-                            file.fileUrl,
-                            file.fileName,
-                          );
-                        });
-
-                        const successful = results.filter(
-                          (r) => r.success,
-                        ).length;
-
-                        if (successful > 0) {
-                          toast.success(
-                            `✅ Successfully initiated download of ${successful} files!`,
-                          );
-                        }
-                      } catch (error) {
-                        toast.error(
-                          `❌ Bulk download failed: ${error.message}`,
-                        );
-                      }
-                    }}
-                    className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                  >
-                    <svg
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                      />
-                    </svg>
-                    Download All Files
-                  </button>
-                </div>
-              </div> */}
-
               <div className="space-y-8">
                 {/* Intraoral Photo Section - First 6 uploads (slots 0-5) */}
-                <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
-                  <h2 className="mb-4 border-b border-blue-300 pb-2 text-xl font-semibold text-blue-800">
-                    📸 Intraoral Photo
-                  </h2>
-                  <p className="mb-4 text-sm text-blue-700">
-                    Photos of the patient's teeth and oral cavity
-                  </p>
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                <div className="rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-8 shadow-lg">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="rounded-xl bg-blue-200 p-3">
+                      <svg
+                        className="h-6 w-6 text-blue-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-blue-800">
+                        📸 Intraoral Photo
+                      </h2>
+                      <p className="text-blue-600">
+                        Upload photos of the patient's teeth and oral cavity
+                      </p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                     {[0, 1, 2, 3, 4, 5].map((idx) => (
                       <FileDisplayComponent
                         key={idx}
@@ -2036,13 +2049,33 @@ export default function ViewPatientDetails() {
                 </div>
 
                 {/* Facial Section - Next 3 uploads (slots 6-8) */}
-                <div className="rounded-lg border border-green-200 bg-green-50 p-6">
-                  <h2 className="mb-4 border-b border-green-300 pb-2 text-xl font-semibold text-green-800">
-                    👤 Facial
-                  </h2>
-                  <p className="mb-4 text-sm text-green-700">
-                    Photos showing the patient's facial features and profile
-                  </p>
+                <div className="rounded-2xl border-2 border-green-200 bg-gradient-to-br from-green-50 to-green-100 p-8 shadow-lg">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="rounded-xl bg-green-200 p-3">
+                      <svg
+                        className="h-6 w-6 text-green-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-green-800">
+                        👤 Facial
+                      </h2>
+                      <p className="text-green-600">
+                        Upload photos showing the patient's facial features and
+                        profile
+                      </p>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     {[6, 7, 8].map((idx) => (
                       <FileDisplayComponent
@@ -2055,13 +2088,32 @@ export default function ViewPatientDetails() {
                 </div>
 
                 {/* X-ray Section - Remaining 2 uploads (slots 9-10) */}
-                <div className="rounded-lg border border-purple-200 bg-purple-50 p-6">
-                  <h2 className="mb-4 border-b border-purple-300 pb-2 text-xl font-semibold text-purple-800">
-                    🔬 X-ray
-                  </h2>
-                  <p className="mb-4 text-sm text-purple-700">
-                    Radiographic images for diagnostic purposes
-                  </p>
+                <div className="rounded-2xl border-2 border-purple-200 bg-gradient-to-br from-purple-50 to-purple-100 p-8 shadow-lg">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="rounded-xl bg-purple-200 p-3">
+                      <svg
+                        className="h-6 w-6 text-purple-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-purple-800">
+                        🔬 X-ray
+                      </h2>
+                      <p className="text-purple-600">
+                        Upload radiographic images for diagnostic purposes
+                      </p>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {[9, 10].map((idx) => (
                       <FileDisplayComponent
@@ -2074,13 +2126,32 @@ export default function ViewPatientDetails() {
                 </div>
 
                 {/* 3D Models Section */}
-                <div className="rounded-lg border border-orange-200 bg-orange-50 p-6">
-                  <h2 className="mb-4 border-b border-orange-300 pb-2 text-xl font-semibold text-orange-800">
-                    🎯 3D Models (PLY/STL)
-                  </h2>
-                  <p className="mb-4 text-sm text-orange-700">
-                    3D model files for treatment planning and visualization
-                  </p>
+                <div className="rounded-2xl border-2 border-orange-200 bg-gradient-to-br from-orange-50 to-orange-100 p-8 shadow-lg">
+                  <div className="mb-6 flex items-center gap-3">
+                    <div className="rounded-xl bg-orange-200 p-3">
+                      <svg
+                        className="h-6 w-6 text-orange-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 3l9 4.5v9L12 21l-9-4.5v-9L12 3z"
+                        />
+                      </svg>
+                    </div>
+                    <div>
+                      <h2 className="text-2xl font-bold text-orange-800">
+                        🎯 3D Models (PLY/STL)
+                      </h2>
+                      <p className="text-orange-600">
+                        3D model files for treatment planning and visualization
+                      </p>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                     {[11, 12].map((idx) => (
                       <FileDisplayComponent
@@ -2303,181 +2374,6 @@ export default function ViewPatientDetails() {
                 </div>
               ) : (
                 <>
-                  {/* <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
-                    <div className="flex flex-wrap items-center gap-4">
-                      <div className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={
-                            scanFilesSelected.size === patientFiles.length
-                          }
-                          onChange={() => {
-                            if (
-                              scanFilesSelected.size === patientFiles.length
-                            ) {
-                              setScanFilesSelected(new Set());
-                            } else {
-                              setScanFilesSelected(
-                                new Set(patientFiles.map((_, index) => index)),
-                              );
-                            }
-                          }}
-                          className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm font-medium text-blue-800">
-                          Select All ({scanFilesSelected.size}/
-                          {patientFiles.length})
-                        </span>
-                      </div>
-
-                      <button
-                        onClick={async () => {
-                          try {
-                            if (scanFilesSelected.size === 0) return;
-
-                            const selectedFileList = Array.from(
-                              scanFilesSelected,
-                            )
-                              .map((index) => {
-                                const file = patientFiles[index];
-
-                                if (!file.fileUrl) {
-                                  console.error(
-                                    `File ${index} has no fileUrl:`,
-                                    file,
-                                  );
-                                  return null;
-                                }
-
-                                const fileData = {
-                                  ...file,
-                                  id: index,
-                                  fileUrl: file.fileUrl,
-                                  fileName: `scan_file_${index + 1}.${file.fileType || "pdf"}`,
-                                };
-
-                                return fileData;
-                              })
-                              .filter(Boolean); // Remove any null entries
-
-                            if (selectedFileList.length === 0) {
-                              toast.error(
-                                "No valid files selected for download.",
-                              );
-                              return;
-                            }
-
-                            if (!downloadMultipleFiles) {
-                              toast.error(
-                                "Download functionality not available",
-                              );
-                              return;
-                            }
-
-
-
-                            const results = await downloadMultipleFiles(
-                              selectedFileList,
-                              200,
-                            );
-
-                            const successful = results.filter(
-                              (r) => r.success,
-                            ).length;
-                            const failed = results.filter(
-                              (r) => !r.success,
-                            ).length;
-
-                            if (successful > 0) {
-                              toast.success(
-                                `✅ Successfully downloaded ${successful} files!`,
-                              );
-                            }
-                            if (failed > 0) {
-                              toast.warning(
-                                `⚠️ ${failed} files may require manual download`,
-                              );
-                            }
-                          } catch (error) {
-                            toast.error(
-                              `❌ Bulk download failed: ${error.message}`,
-                            );
-                          }
-                        }}
-                        disabled={scanFilesSelected.size === 0}
-                        className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:bg-gray-400"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                        Download Selected ({scanFilesSelected.size})
-                      </button>
-
-                      <button
-                        onClick={async () => {
-                          try {
-                            const allFileList = patientFiles
-                              .map((file, index) => {
-                                if (!file.fileUrl) {
-                                  return null;
-                                }
-
-                                return {
-                                  ...file,
-                                  id: index,
-                                  fileUrl: file.fileUrl,
-                                  fileName: `scan_file_${index + 1}.${file.fileType || "pdf"}`,
-                                };
-                              })
-                              .filter(Boolean); // Remove any null entries
-
-                            if (allFileList.length === 0) {
-                              alert("No valid files found for download.");
-                              return;
-                            }
-
-                            if (!downloadMultipleFiles) {
-                              return;
-                            }
-
-                            const results = await downloadMultipleFiles(
-                              allFileList,
-                              200,
-                            );
-                          } catch (error) {
-                            // Error handled silently
-                          }
-                        }}
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      >
-                        <svg
-                          className="h-4 w-4"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                        Download All Files
-                      </button>
-                    </div>
-                  </div> */}
-
                   <div className="space-y-4">
                     {patientFiles.map((file, index) => {
                       const displayFileName =

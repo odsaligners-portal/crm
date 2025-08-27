@@ -1,44 +1,44 @@
-import { admin } from '@/app/api/middleware/authMiddleware';
-import dbConnect from '@/app/api/config/db';
-import Patient from '@/app/api/models/Patient';
-import mongoose from 'mongoose';
-import { NextResponse } from 'next/server';
+import { admin } from "@/app/api/middleware/authMiddleware";
+import dbConnect from "@/app/api/config/db";
+import Patient from "@/app/api/models/Patient";
+import mongoose from "mongoose";
+import { NextResponse } from "next/server";
 
 export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
-   
-    const id = searchParams.get('id');
+
+    const id = searchParams.get("id");
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid patient ID" },
+        { status: 400 },
+      );
     }
     // Verify admin authentication
     const authResult = await admin(req);
     if (!authResult.success) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    
+
     await dbConnect();
 
     // Find patient (no userId restriction for admin)
-    const patient = await Patient.findOne({ _id: id }).populate('userId').lean();
+    const patient = await Patient.findOne({ _id: id })
+      .populate("userId", "name email")
+      .populate("plannerId", "name email")
+      .lean();
 
     if (!patient) {
-      return NextResponse.json(
-        { error: 'Patient not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Patient not found" }, { status: 404 });
     }
 
     return NextResponse.json(patient);
   } catch (error) {
-    console.error('Error in GET patient:', error);
+    console.error("Error in GET patient:", error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { error: error.message || "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -46,13 +46,16 @@ export async function GET(req) {
 export async function PUT(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = searchParams.get("id");
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid patient ID" },
+        { status: 400 },
+      );
     }
     const authResult = await admin(req);
     if (!authResult.success) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await dbConnect();
@@ -97,7 +100,7 @@ export async function PUT(req) {
         // Step-4 field
         scanFiles: body.scanFiles,
         userId: body.userId,
-      }).filter(([v]) => v !== undefined)
+      }).filter(([v]) => v !== undefined),
     );
 
     const updatedPatient = await Patient.findOneAndUpdate(
@@ -105,22 +108,19 @@ export async function PUT(req) {
         _id: id,
       },
       { $set: fieldsToUpdate },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true },
     );
 
     if (!updatedPatient) {
-      return NextResponse.json(
-        { error: 'Patient not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Patient not found" }, { status: 404 });
     }
 
     return NextResponse.json(updatedPatient);
   } catch (error) {
-    console.error('Error in PUT patient:', error);
+    console.error("Error in PUT patient:", error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { error: error.message || "Internal server error" },
+      { status: 500 },
     );
   }
 }
@@ -128,22 +128,22 @@ export async function PUT(req) {
 export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = searchParams.get("id");
     if (!id || !mongoose.Types.ObjectId.isValid(id)) {
-      return NextResponse.json({ error: 'Invalid patient ID' }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid patient ID" },
+        { status: 400 },
+      );
     }
     // Verify admin authentication
     const authResult = await admin(req);
     if (!authResult.success) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     if (!authResult.user.userDeleteAccess) {
       return NextResponse.json(
-        { error: 'You do not have permission to delete patients.' },
-        { status: 403 }
+        { error: "You do not have permission to delete patients." },
+        { status: 403 },
       );
     }
 
@@ -153,18 +153,15 @@ export async function DELETE(req) {
     const patient = await Patient.findOneAndDelete({ _id: id });
 
     if (!patient) {
-      return NextResponse.json(
-        { error: 'Patient not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Patient not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ message: 'Patient deleted successfully' });
+    return NextResponse.json({ message: "Patient deleted successfully" });
   } catch (error) {
-    console.error('Error in DELETE patient:', error);
+    console.error("Error in DELETE patient:", error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { error: error.message || "Internal server error" },
+      { status: 500 },
     );
   }
-} 
+}
