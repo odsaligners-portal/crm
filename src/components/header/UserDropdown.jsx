@@ -138,7 +138,7 @@ export default function UserDropdown() {
         </div>
 
         <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">
-         {user.role!=="distributer"  && <li>
+         {user?.role!=="distributer"  && <li>
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"

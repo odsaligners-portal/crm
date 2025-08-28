@@ -4090,73 +4090,190 @@ const DentalExaminationForm = () => {
                       <label className="mb-2 block text-sm font-medium text-gray-700">
                         Shape:
                       </label>
-                      <div className="space-y-3">
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={formData.mandibularArcShape.includes(
+                      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                        {/* U-Shaped Arch */}
+                        <div
+                          className={`relative cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-md ${
+                            formData.mandibularArcShape.includes(
                               "U-Shaped Arch (Broad Arch)",
+                            )
+                              ? "border-blue-500 bg-white"
+                              : "border-gray-200 bg-white hover:border-gray-300"
+                          }`}
+                          onClick={() =>
+                            handleMandibularArcShapeChange(
+                              "U-Shaped Arch (Broad Arch)",
+                            )
+                          }
+                        >
+                          <div className="relative mb-2">
+                            <img
+                              src="/images/teeth-shape/u-shape.jpeg"
+                              alt="U-Shaped Arch"
+                              className="h-24 w-full rounded-md object-cover"
+                            />
+                            {formData.mandibularArcShape.includes(
+                              "U-Shaped Arch (Broad Arch)",
+                            ) && (
+                              <div className="absolute inset-0 flex items-center justify-center rounded-md mix-blend-multiply">
+                                <div className="rounded-full bg-blue-500 p-1 shadow-lg">
+                                  <svg
+                                    className="h-4 w-4 text-white"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
                             )}
-                            onChange={() =>
-                              handleMandibularArcShapeChange(
-                                "U-Shaped Arch (Broad Arch)",
-                              )
-                            }
-                            className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="ml-3 text-sm font-medium text-gray-700">
-                            U-Shaped Arch (Broad Arch)
-                          </span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={formData.mandibularArcShape.includes(
+                          </div>
+                          <p className="text-center text-xs font-medium text-gray-700">
+                            U-Shaped Arch
+                          </p>
+                          <p className="text-center text-xs text-gray-500">
+                            (Broad Arch)
+                          </p>
+                        </div>
+
+                        {/* V-Shaped Arch */}
+                        <div
+                          className={`relative cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-md ${
+                            formData.mandibularArcShape.includes(
                               "V-Shaped Arch (Narrow Arch)",
+                            )
+                              ? "border-blue-500 bg-white"
+                              : "border-gray-200 bg-white hover:border-gray-300"
+                          }`}
+                          onClick={() =>
+                            handleMandibularArcShapeChange(
+                              "V-Shaped Arch (Narrow Arch)",
+                            )
+                          }
+                        >
+                          <div className="relative mb-2">
+                            <img
+                              src="/images/teeth-shape/v-shape.jpeg"
+                              alt="V-Shaped Arch"
+                              className="h-24 w-full rounded-md object-cover"
+                            />
+                            {formData.mandibularArcShape.includes(
+                              "V-Shaped Arch (Narrow Arch)",
+                            ) && (
+                              <div className="absolute inset-0 flex items-center justify-center rounded-md mix-blend-multiply">
+                                <div className="rounded-full bg-blue-500 p-1 shadow-lg">
+                                  <svg
+                                    className="h-4 w-4 text-white"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
                             )}
-                            onChange={() =>
-                              handleMandibularArcShapeChange(
-                                "V-Shaped Arch (Narrow Arch)",
-                              )
-                            }
-                            className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="ml-3 text-sm font-medium text-gray-700">
-                            V-Shaped Arch (Narrow Arch)
-                          </span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={formData.mandibularArcShape.includes(
+                          </div>
+                          <p className="text-center text-xs font-medium text-gray-700">
+                            V-Shaped Arch
+                          </p>
+                          <p className="text-center text-xs text-gray-500">
+                            (Narrow Arch)
+                          </p>
+                        </div>
+
+                        {/* Square-shaped Arch */}
+                        <div
+                          className={`relative cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-md ${
+                            formData.mandibularArcShape.includes(
                               "Square-shaped Arch",
+                            )
+                              ? "border-blue-500 bg-white"
+                              : "border-gray-200 bg-white hover:border-gray-300"
+                          }`}
+                          onClick={() =>
+                            handleMandibularArcShapeChange("Square-shaped Arch")
+                          }
+                        >
+                          <div className="relative mb-2">
+                            <img
+                              src="/images/teeth-shape/square-shape.jpeg"
+                              alt="Square-shaped Arch"
+                              className="h-24 w-full rounded-md object-cover"
+                            />
+                            {formData.mandibularArcShape.includes(
+                              "Square-shaped Arch",
+                            ) && (
+                              <div className="absolute inset-0 flex items-center justify-center rounded-md mix-blend-multiply">
+                                <div className="rounded-full bg-blue-500 p-1 shadow-lg">
+                                  <svg
+                                    className="h-4 w-4 text-white"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
                             )}
-                            onChange={() =>
-                              handleMandibularArcShapeChange(
-                                "Square-shaped Arch",
-                              )
-                            }
-                            className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="ml-3 text-sm font-medium text-gray-700">
+                          </div>
+                          <p className="text-center text-xs font-medium text-gray-700">
                             Square-shaped Arch
-                          </span>
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={formData.mandibularArcShape.includes(
+                          </p>
+                        </div>
+
+                        {/* Ovoid Arch */}
+                        <div
+                          className={`relative cursor-pointer rounded-lg border-2 p-3 transition-all hover:shadow-md ${
+                            formData.mandibularArcShape.includes("Ovoid Arch")
+                              ? "border-blue-500 bg-white"
+                              : "border-gray-200 bg-white hover:border-gray-300"
+                          }`}
+                          onClick={() =>
+                            handleMandibularArcShapeChange("Ovoid Arch")
+                          }
+                        >
+                          <div className="relative mb-2">
+                            <img
+                              src="/images/teeth-shape/ovoid-shape.jpeg"
+                              alt="Ovoid Arch"
+                              className="h-24 w-full rounded-md object-cover"
+                            />
+                            {formData.mandibularArcShape.includes(
                               "Ovoid Arch",
+                            ) && (
+                              <div className="absolute inset-0 flex items-center justify-center rounded-md mix-blend-multiply">
+                                <div className="rounded-full bg-blue-500 p-1 shadow-lg">
+                                  <svg
+                                    className="h-4 w-4 text-white"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
                             )}
-                            onChange={() =>
-                              handleMandibularArcShapeChange("Ovoid Arch")
-                            }
-                            className="h-4 w-4 border-gray-300 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="ml-3 text-sm font-medium text-gray-700">
+                          </div>
+                          <p className="text-center text-xs font-medium text-gray-700">
                             Ovoid Arch
-                          </span>
-                        </label>
+                          </p>
+                        </div>
                       </div>
                     </div>
 

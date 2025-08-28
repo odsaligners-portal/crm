@@ -99,6 +99,12 @@ export async function PUT(req) {
         plannerId: body.plannerId,
         // Step-4 field
         scanFiles: body.scanFiles,
+        // Dental Examination fields
+        dentalExamination: body.dentalExamination,
+        dentalExaminationFiles: body.dentalExaminationFiles,
+        // Clinic Images fields
+        middleClinicImages: body.middleClinicImages,
+        postClinicImages: body.postClinicImages,
         userId: body.userId,
       }).filter(([v]) => v !== undefined),
     );

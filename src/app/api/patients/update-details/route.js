@@ -172,6 +172,9 @@ export async function PUT(req) {
         // Dental Examination fields
         dentalExamination: body.dentalExamination,
         dentalExaminationFiles: body.dentalExaminationFiles,
+        // Clinic Images fields
+        middleClinicImages: body.middleClinicImages,
+        postClinicImages: body.postClinicImages,
       }).filter(([v]) => v !== undefined),
     );
 

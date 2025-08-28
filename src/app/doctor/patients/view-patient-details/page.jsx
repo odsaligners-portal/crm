@@ -8,6 +8,8 @@ import { setLoading } from "@/store/features/uiSlice";
 
 import TeethSelector from "@/components/all/TeethSelector";
 import { imageLabels } from "@/constants/data";
+import ClinicImagesModal from "@/components/common/ClinicImagesModal";
+import ClinicImagesDisplay from "@/components/common/ClinicImagesDisplay";
 import {
   DocumentTextIcon,
   FolderIcon,
@@ -188,6 +190,14 @@ export default function ViewPatientDetails() {
   const [comments, setComments] = useState([]);
   const [patientFiles, setPatientFiles] = useState([]);
 
+  // Clinic Images Modal States
+  const [isClinicImagesModalOpen, setIsClinicImagesModalOpen] = useState(false);
+  const [clinicImageType, setClinicImageType] = useState(null); // "middle" or "post"
+  const [clinicImageAction, setClinicImageAction] = useState(null); // "add" or "update"
+
+  // Clinic Images Section States
+  const [expandedSection, setExpandedSection] = useState(null); // "middle", "post", or null
+
   // Load patient data when component mounts
   useEffect(() => {
     const loadPatientData = async () => {
@@ -306,6 +316,58 @@ export default function ViewPatientDetails() {
       toast.error(errorMsg);
       setComments([]);
     }
+  };
+
+  // Clinic Images Modal Functions
+  const openClinicImagesModal = (type, action) => {
+    setClinicImageType(type);
+    setClinicImageAction(action);
+    setIsClinicImagesModalOpen(true);
+  };
+
+  const closeClinicImagesModal = () => {
+    setIsClinicImagesModalOpen(false);
+    // Add a small delay before clearing the state to ensure the modal closes properly
+    setTimeout(() => {
+      setClinicImageType(null);
+      setClinicImageAction(null);
+    }, 100);
+  };
+
+  const toggleClinicSection = (sectionId) => {
+    if (expandedSection === sectionId) {
+      // If clicking the same section, collapse it
+      setExpandedSection(null);
+    } else {
+      // If clicking a different section, expand it and collapse others
+      setExpandedSection(sectionId);
+    }
+  };
+
+  const handleClinicImagesUpdated = () => {
+    // Refresh patient data to get updated images
+    const loadPatientData = async () => {
+      const patientId = searchParams.get("id");
+      if (patientId) {
+        try {
+          const response = await fetch(
+            `/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
+          if (response.ok) {
+            const data = await response.json();
+            setPatientData(data);
+          }
+        } catch (error) {
+          console.error("Error refreshing patient data:", error);
+        }
+      }
+    };
+    loadPatientData();
   };
 
   if (loading) {
@@ -1334,12 +1396,152 @@ export default function ViewPatientDetails() {
                           patientData.dentalExamination.mandibularArcShape,
                         ) &&
                         patientData.dentalExamination.mandibularArcShape
-                          .length > 0
-                          ? patientData.dentalExamination.mandibularArcShape.join(
-                              ", ",
-                            )
-                          : patientData.dentalExamination?.mandibularArcShape ||
-                            "Not specified"}
+                          .length > 0 ? (
+                          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                            {/* U-Shaped Arch */}
+                            {patientData.dentalExamination.mandibularArcShape.includes(
+                              "U-Shaped Arch (Broad Arch)",
+                            ) && (
+                              <div className="rounded-lg border-2 border-blue-500 bg-white p-3">
+                                <div className="relative mb-2">
+                                  <img
+                                    src="/images/teeth-shape/u-shape.jpeg"
+                                    alt="U-Shaped Arch"
+                                    className="h-24 w-full rounded-md object-cover"
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center rounded-md mix-blend-multiply">
+                                    <div className="rounded-full bg-blue-500 p-1 shadow-lg">
+                                      <svg
+                                        className="h-4 w-4 text-white"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </div>
+                                <p className="text-center text-xs font-medium text-gray-700">
+                                  U-Shaped Arch
+                                </p>
+                                <p className="text-center text-xs text-gray-500">
+                                  (Broad Arch)
+                                </p>
+                              </div>
+                            )}
+
+                            {/* V-Shaped Arch */}
+                            {patientData.dentalExamination.mandibularArcShape.includes(
+                              "V-Shaped Arch (Narrow Arch)",
+                            ) && (
+                              <div className="rounded-lg border-2 border-blue-500 bg-white p-3">
+                                <div className="relative mb-2">
+                                  <img
+                                    src="/images/teeth-shape/v-shape.jpeg"
+                                    alt="V-Shaped Arch"
+                                    className="h-24 w-full rounded-md object-cover"
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center rounded-md mix-blend-multiply">
+                                    <div className="rounded-full bg-blue-500 p-1 shadow-lg">
+                                      <svg
+                                        className="h-4 w-4 text-white"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </div>
+                                <p className="text-center text-xs font-medium text-gray-700">
+                                  V-Shaped Arch
+                                </p>
+                                <p className="text-center text-xs text-gray-500">
+                                  (Narrow Arch)
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Square-shaped Arch */}
+                            {patientData.dentalExamination.mandibularArcShape.includes(
+                              "Square-shaped Arch",
+                            ) && (
+                              <div className="rounded-lg border-2 border-blue-500 bg-white p-3">
+                                <div className="relative mb-2">
+                                  <img
+                                    src="/images/teeth-shape/square-shape.jpeg"
+                                    alt="Square-shaped Arch"
+                                    className="h-24 w-full rounded-md object-cover"
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center rounded-md mix-blend-multiply">
+                                    <div className="rounded-full bg-blue-500 p-1 shadow-lg">
+                                      <svg
+                                        className="h-4 w-4 text-white"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </div>
+                                <p className="text-center text-xs font-medium text-gray-700">
+                                  Square-shaped Arch
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Ovoid Arch */}
+                            {patientData.dentalExamination.mandibularArcShape.includes(
+                              "Ovoid Arch",
+                            ) && (
+                              <div className="rounded-lg border-2 border-blue-500 bg-white p-3">
+                                <div className="relative mb-2">
+                                  <img
+                                    src="/images/teeth-shape/ovoid-shape.jpeg"
+                                    alt="Ovoid Arch"
+                                    className="h-24 w-full rounded-md object-cover"
+                                  />
+                                  <div className="absolute inset-0 flex items-center justify-center rounded-md mix-blend-multiply">
+                                    <div className="rounded-full bg-blue-500 p-1 shadow-lg">
+                                      <svg
+                                        className="h-4 w-4 text-white"
+                                        fill="currentColor"
+                                        viewBox="0 0 20 20"
+                                      >
+                                        <path
+                                          fillRule="evenodd"
+                                          d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                                          clipRule="evenodd"
+                                        />
+                                      </svg>
+                                    </div>
+                                  </div>
+                                </div>
+                                <p className="text-center text-xs font-medium text-gray-700">
+                                  Ovoid Arch
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="min-h-[60px] rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900">
+                            {patientData.dentalExamination
+                              ?.mandibularArcShape || "Not specified"}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1992,6 +2194,102 @@ export default function ViewPatientDetails() {
                 </p>
               </div>
 
+              {/* Clinic Images Management Buttons */}
+              <div className="mb-8 flex flex-wrap justify-center gap-4">
+                <div className="flex flex-col items-center gap-2">
+                  {patientData.middleClinicImages &&
+                  Object.values(patientData.middleClinicImages).some(
+                    (imgArray) => imgArray && imgArray.length > 0,
+                  ) ? (
+                    <button
+                      onClick={() => openClinicImagesModal("middle", "update")}
+                      className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-amber-700 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                      Update Middle Clinic Images
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => openClinicImagesModal("middle", "add")}
+                      className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-amber-600 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      Add Middle Clinic Images
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-col items-center gap-2">
+                  {patientData.postClinicImages &&
+                  Object.values(patientData.postClinicImages).some(
+                    (imgArray) => imgArray && imgArray.length > 0,
+                  ) ? (
+                    <button
+                      onClick={() => openClinicImagesModal("post", "update")}
+                      className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                      Update Post Clinic Images
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => openClinicImagesModal("post", "add")}
+                      className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                        />
+                      </svg>
+                      Add Post Clinic Images
+                    </button>
+                  )}
+                </div>
+              </div>
+
               <div className="space-y-8">
                 {/* Intraoral Photo Section - First 6 uploads (slots 0-5) */}
                 <div className="rounded-2xl border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-8 shadow-lg">
@@ -2150,6 +2448,46 @@ export default function ViewPatientDetails() {
                       />
                     ))}
                   </div>
+                </div>
+
+                {/* Middle Clinic Images Section */}
+                <div className="mb-8">
+                  <ClinicImagesDisplay
+                    images={patientData.middleClinicImages}
+                    title="🔄 Middle Clinic Images"
+                    description="Images taken during the treatment process"
+                    colorScheme={{
+                      border: "border-amber-200",
+                      bg: "bg-gradient-to-br from-amber-50 to-amber-100",
+                      iconBg: "bg-amber-200",
+                      iconColor: "text-amber-700",
+                      titleColor: "text-amber-800",
+                      descriptionColor: "text-amber-600",
+                    }}
+                    isExpanded={expandedSection === "middle"}
+                    onToggle={toggleClinicSection}
+                    sectionId="middle"
+                  />
+                </div>
+
+                {/* Post Clinic Images Section */}
+                <div className="mb-8">
+                  <ClinicImagesDisplay
+                    images={patientData.postClinicImages}
+                    title="✅ Post Clinic Images"
+                    description="Images taken after treatment completion"
+                    colorScheme={{
+                      border: "border-green-200",
+                      bg: "bg-gradient-to-br from-green-50 to-green-100",
+                      iconBg: "bg-green-200",
+                      iconColor: "text-green-700",
+                      titleColor: "text-green-800",
+                      descriptionColor: "text-green-600",
+                    }}
+                    isExpanded={expandedSection === "post"}
+                    onToggle={toggleClinicSection}
+                    sectionId="post"
+                  />
                 </div>
               </div>
             </div>
@@ -2579,6 +2917,21 @@ export default function ViewPatientDetails() {
           )}
         </div>
       </div>
+
+      {/* Clinic Images Modal */}
+      <ClinicImagesModal
+        key={`${clinicImageType}-${clinicImageAction}`}
+        isOpen={isClinicImagesModalOpen}
+        onClose={closeClinicImagesModal}
+        patientId={searchParams.get("id")}
+        imageType={clinicImageType}
+        existingImages={
+          clinicImageType === "middle"
+            ? patientData?.middleClinicImages
+            : patientData?.postClinicImages
+        }
+        onImagesUpdated={handleClinicImagesUpdated}
+      />
     </div>
   );
 }
