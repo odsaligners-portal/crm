@@ -364,7 +364,7 @@ const AppSidebar = () => {
                 >
                   {nav.icon}
                   {nav.name === "Notifications" && unreadCount > 0 && (
-                    <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white">
+                    <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white subpixel-antialiased">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
@@ -403,12 +403,12 @@ const AppSidebar = () => {
                         <span>{subItem.name}</span>
                         <span className="flex gap-1">
                           {subItem.new && (
-                            <span className="rounded bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 dark:bg-green-900 dark:text-green-300">
+                            <span className="rounded bg-green-100 px-2 py-1 text-xs font-semibold text-green-800 subpixel-antialiased dark:bg-green-900 dark:text-green-300">
                               NEW
                             </span>
                           )}
                           {subItem.pro && (
-                            <span className="rounded bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-800 dark:bg-orange-900 dark:text-orange-300">
+                            <span className="rounded bg-orange-100 px-2 py-1 text-xs font-semibold text-orange-800 subpixel-antialiased dark:bg-orange-900 dark:text-orange-300">
                               PRO
                             </span>
                           )}
@@ -463,7 +463,7 @@ const AppSidebar = () => {
               className={`mb-6 ${!isExpanded && !isHovered ? "flex justify-center" : ""}`}
             >
               {isExpanded || isHovered || isMobileOpen ? (
-                <h2 className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                <h2 className="text-xs font-semibold tracking-wide text-gray-500 uppercase subpixel-antialiased dark:text-gray-400">
                   Navigation
                 </h2>
               ) : (

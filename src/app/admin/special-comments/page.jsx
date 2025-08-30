@@ -249,7 +249,7 @@ export default function SpecialCommentsPage() {
   const getStatusBadge = (isRead) => {
     return (
       <span
-        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold subpixel-antialiased ${
           isRead
             ? "border border-green-200 bg-green-100 text-green-800"
             : "border border-yellow-200 bg-yellow-100 text-yellow-800"
@@ -279,7 +279,7 @@ export default function SpecialCommentsPage() {
       <div className="mb-8 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 p-6 dark:from-gray-800 dark:to-gray-700">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-semibold text-gray-900 dark:text-white">
+            <h1 className="text-3xl font-semibold text-gray-900 subpixel-antialiased dark:text-white">
               Production Comments
             </h1>
             <p className="mt-2 text-gray-600 dark:text-gray-300">
@@ -310,7 +310,7 @@ export default function SpecialCommentsPage() {
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Total Comments
               </p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+              <p className="text-2xl font-semibold text-gray-900 subpixel-antialiased dark:text-white">
                 {pagination.totalItems || 0}
               </p>
             </div>
@@ -326,7 +326,7 @@ export default function SpecialCommentsPage() {
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Unread
               </p>
-              <p className="text-2xl font-semibold text-gray-900 dark:text-white">
+              <p className="text-2xl font-semibold text-gray-900 subpixel-antialiased dark:text-white">
                 {totalUnread}
               </p>
             </div>
@@ -340,22 +340,22 @@ export default function SpecialCommentsPage() {
           <Table className="min-w-full">
             <TableHeader>
               <TableRow className="bg-gray-50 dark:bg-gray-700">
-                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 dark:text-white">
+                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 subpixel-antialiased dark:text-white">
                   Patient
                 </TableCell>
-                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 dark:text-white">
+                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 subpixel-antialiased dark:text-white">
                   Doctor
                 </TableCell>
-                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 dark:text-white">
+                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 subpixel-antialiased dark:text-white">
                   Status
                 </TableCell>
-                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 dark:text-white">
+                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 subpixel-antialiased dark:text-white">
                   Read Time
                 </TableCell>
-                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 dark:text-white">
+                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 subpixel-antialiased dark:text-white">
                   Created
                 </TableCell>
-                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 dark:text-white">
+                <TableCell className="px-6 py-4 font-semibold whitespace-nowrap text-gray-900 subpixel-antialiased dark:text-white">
                   Actions
                 </TableCell>
               </TableRow>
@@ -552,7 +552,7 @@ export default function SpecialCommentsPage() {
             <div className="sticky top-0 z-10 border-b border-gray-200 bg-white px-8 py-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="text-2xl font-semibold text-gray-900 dark:text-white">
+                  <h3 className="text-2xl font-semibold text-gray-900 subpixel-antialiased dark:text-white">
                     {selectedComment.title}
                   </h3>
                   <div className="mt-3 flex flex-wrap items-center justify-between gap-4 text-sm text-gray-600 dark:text-gray-400">
@@ -646,7 +646,7 @@ export default function SpecialCommentsPage() {
         <div className="p-6">
           <div className="mb-6 text-center">
             <MdDelete className="mx-auto mb-4 h-16 w-16 text-red-500" />
-            <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+            <h3 className="mb-2 text-xl font-semibold text-gray-900 subpixel-antialiased dark:text-white">
               Delete Production Comment
             </h3>
             <p className="text-gray-600 dark:text-gray-400">

@@ -58,7 +58,7 @@ const ClinicImagesDisplay = ({
         </div>
         <div>
           <h3
-            className={`text-xl font-semibold ${colorScheme.titleColor} transition-all duration-300 ${isExpanded ? "text-2xl" : ""}`}
+            className={`text-xl font-semibold subpixel-antialiased ${colorScheme.titleColor} transition-all duration-300 ${isExpanded ? "text-2xl" : ""}`}
           >
             {title}
           </h3>
@@ -115,7 +115,7 @@ const ClinicImagesDisplay = ({
           <div className="space-y-8">
             {/* Intraoral Photo Section - First 6 uploads */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-4 text-lg font-semibold text-gray-700">
+              <h3 className="mb-4 text-lg font-semibold text-gray-700 subpixel-antialiased">
                 📸 Intraoral Photo
               </h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -222,7 +222,7 @@ const ClinicImagesDisplay = ({
 
             {/* Facial Section - Next 3 uploads */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-4 text-lg font-semibold text-gray-700">
+              <h3 className="mb-4 text-lg font-semibold text-gray-700 subpixel-antialiased">
                 👤 Facial
               </h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -329,7 +329,7 @@ const ClinicImagesDisplay = ({
 
             {/* X-ray Section - Remaining 2 uploads */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-              <h3 className="mb-4 text-lg font-semibold text-gray-700">
+              <h3 className="mb-4 text-lg font-semibold text-gray-700 subpixel-antialiased">
                 🔬 X-ray
               </h3>
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

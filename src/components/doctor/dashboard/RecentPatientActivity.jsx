@@ -24,7 +24,7 @@ const RecentPatientActivity = ({ activities }) => {
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
-      <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
+      <h3 className="mb-4 text-xl font-semibold text-gray-800 subpixel-antialiased dark:text-white">
         Recent Patient Activity
       </h3>
       <ul className="space-y-4">

@@ -489,7 +489,7 @@ export default function PlannerPatientRecords() {
         <div className="flex gap-3">
           <Button
             onClick={exportToExcel}
-            className="rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 py-2 font-semibold text-white shadow-md transition-transform hover:scale-105"
+            className="rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 py-2 font-semibold text-white subpixel-antialiased shadow-md transition-transform hover:scale-105"
           >
             Export to Excel
           </Button>
@@ -525,14 +525,14 @@ export default function PlannerPatientRecords() {
           <Button
             type="button"
             variant="primary"
-            className="h-10 w-1/4 rounded-lg bg-gradient-to-r from-blue-100 to-blue-300 px-4 font-semibold text-blue-800 shadow-md transition-transform hover:scale-105"
+            className="h-10 w-1/4 rounded-lg bg-gradient-to-r from-blue-100 to-blue-300 px-4 font-semibold text-blue-800 subpixel-antialiased shadow-md transition-transform hover:scale-105"
             onClick={() => setShowFilters((prev) => !prev)}
           >
             {showFilters ? "Hide Filters" : "Filters"}
           </Button>
           <Button
             type="button"
-            className="h-10 rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 font-semibold text-white shadow-md transition-transform hover:scale-105"
+            className="h-10 rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 font-semibold text-white subpixel-antialiased shadow-md transition-transform hover:scale-105"
             onClick={() => {
               setCurrentPage(1);
               fetchPatients();
@@ -608,7 +608,7 @@ export default function PlannerPatientRecords() {
             <div className="col-span-full mt-2 flex w-full justify-end gap-2">
               <Button
                 type="submit"
-                className="h-10 rounded-lg bg-blue-500 px-4 font-semibold text-white shadow transition-transform hover:scale-105"
+                className="h-10 rounded-lg bg-blue-500 px-4 font-semibold text-white subpixel-antialiased shadow transition-transform hover:scale-105"
               >
                 Apply Filters
               </Button>
@@ -617,7 +617,7 @@ export default function PlannerPatientRecords() {
                 onClick={clearFilters}
                 variant="outline"
                 size="sm"
-                className="h-10 rounded-lg bg-white px-4 font-semibold text-blue-700 shadow transition-transform hover:scale-105"
+                className="h-10 rounded-lg bg-white px-4 font-semibold text-blue-700 subpixel-antialiased shadow transition-transform hover:scale-105"
               >
                 Reset
               </Button>
@@ -641,7 +641,7 @@ export default function PlannerPatientRecords() {
                 color="info"
                 className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
               >
-                <span className="font-semibold text-blue-700 dark:text-blue-200">
+                <span className="font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
                   {filterLabels[key] || key}:
                 </span>
                 <span className="text-blue-900 dark:text-blue-100">
@@ -692,37 +692,37 @@ export default function PlannerPatientRecords() {
                 <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Case ID
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Patient Name
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Location
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Comments
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Files
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Actions
                   </TableCell>
@@ -737,7 +737,7 @@ export default function PlannerPatientRecords() {
                       animationDelay: `${idx * 30}ms`,
                     }}
                   >
-                    <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 dark:text-blue-300">
+                    <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
                       {patient.caseId}
                     </TableCell>
                     <TableCell className="flex h-10 items-center justify-center gap-2 px-2 py-1 text-center font-medium">
@@ -805,7 +805,7 @@ export default function PlannerPatientRecords() {
                           </>
                         ) : (
                           <span
-                            className={`${patient.caseStatus === "approved" ? "bg-green-400" : "bg-red-400"} items-center rounded-3xl px-2 py-1 text-xs font-semibold text-white capitalize`}
+                            className={`${patient.caseStatus === "approved" ? "bg-green-400" : "bg-red-400"} items-center rounded-3xl px-2 py-1 text-xs font-semibold text-white capitalize subpixel-antialiased`}
                           >
                             {patient.caseStatus}
                           </span>
@@ -896,7 +896,7 @@ export default function PlannerPatientRecords() {
             />
             <circle cx="60" cy="54" r="10" fill="#22c55e" />
           </svg>
-          <div className="mb-2 text-2xl font-semibold text-blue-700 dark:text-blue-200">
+          <div className="mb-2 text-2xl font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
             No patients found
           </div>
           <div className="mb-6 text-gray-500">
@@ -906,7 +906,7 @@ export default function PlannerPatientRecords() {
             onClick={() =>
               router.push("/planner/patients/create-patient-record")
             }
-            className="rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-6 py-3 font-semibold text-white shadow-lg transition-transform hover:scale-105"
+            className="rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-6 py-3 font-semibold text-white subpixel-antialiased shadow-lg transition-transform hover:scale-105"
           >
             Add your first patient
           </Button>

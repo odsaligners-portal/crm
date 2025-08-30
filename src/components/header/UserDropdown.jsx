@@ -94,7 +94,7 @@ export default function UserDropdown() {
               className="h-11 w-11 rounded-full object-cover"
             />
           ) : (
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-300 text-xl font-semibold text-white">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-blue-300 text-xl font-semibold text-white subpixel-antialiased">
               {getInitials(user?.name)}
             </span>
           )}

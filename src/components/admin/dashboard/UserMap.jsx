@@ -11,7 +11,7 @@ const VectorMap = dynamic(
 const UserMap = ({ markers = [] }) => {
   return (
     <div className="rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl dark:bg-gray-800">
-      <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
+      <h3 className="mb-4 text-xl font-semibold text-gray-800 subpixel-antialiased dark:text-white">
         Global User Distribution
       </h3>
       <div style={{ height: 400 }}>

@@ -105,7 +105,7 @@ export default function PlannersList() {
   if (hasPlannerAccess === false) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <span className="text-lg font-semibold text-red-600 dark:text-red-400">
+        <span className="text-lg font-semibold text-red-600 subpixel-antialiased dark:text-red-400">
           Access Denied
         </span>
         <span className="mt-2 text-gray-600 dark:text-gray-300">
@@ -120,7 +120,7 @@ export default function PlannersList() {
 
   return (
     <div className="mx-auto max-w-4xl p-8">
-      <h2 className="mb-4 text-2xl font-semibold text-blue-800 dark:text-white">
+      <h2 className="mb-4 text-2xl font-semibold text-blue-800 subpixel-antialiased dark:text-white">
         All Planners
       </h2>
       <div className="before:border-gradient-to-r before:animate-border-glow relative mx-auto w-full overflow-x-auto rounded-xl border border-transparent bg-white/90 shadow-xl backdrop-blur-md before:pointer-events-none before:absolute before:inset-0 before:rounded-xl before:border-2 before:from-blue-200 before:via-purple-100 before:to-blue-100 dark:bg-gray-900/80">
@@ -129,31 +129,31 @@ export default function PlannersList() {
             <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 S.N.
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Name
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Email
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Phone
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 text-center font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 text-center font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Delete
               </TableCell>
@@ -182,10 +182,10 @@ export default function PlannersList() {
                     animationDelay: `${idx * 30}ms`,
                   }}
                 >
-                  <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 dark:text-gray-300">
+                  <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
                     {idx + 1}
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 dark:text-blue-300">
+                  <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
                     {planner.name}
                   </TableCell>
                   <TableCell className="px-2 py-1 text-center font-medium">

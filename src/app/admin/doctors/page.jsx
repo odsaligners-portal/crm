@@ -48,11 +48,13 @@ export default function AdminDoctorsPage() {
       </h1>
       {error ? (
         <div className="flex h-40 items-center justify-center">
-          <span className="text-lg font-semibold text-red-600">{error}</span>
+          <span className="text-lg font-semibold text-red-600 subpixel-antialiased">
+            {error}
+          </span>
         </div>
       ) : doctors.length === 0 ? (
         <div className="flex h-40 items-center justify-center">
-          <span className="text-lg font-semibold text-gray-600">
+          <span className="text-lg font-semibold text-gray-600 subpixel-antialiased">
             No doctors found.
           </span>
         </div>
@@ -90,12 +92,12 @@ export default function AdminDoctorsPage() {
                 </div>
               )}
               {/* Name */}
-              <div className="mb-1 text-center text-2xl font-semibold text-blue-800 drop-shadow-sm dark:text-blue-200">
+              <div className="mb-1 text-center text-2xl font-semibold text-blue-800 subpixel-antialiased drop-shadow-sm dark:text-blue-200">
                 {doc.name}
               </div>
               {/* Type Badge */}
               <div className="mb-6">
-                <span className="inline-block rounded-full border border-blue-200 bg-blue-100 px-4 py-1 text-xs font-semibold tracking-wide text-blue-700 shadow-sm dark:border-blue-700 dark:bg-blue-800 dark:text-blue-200">
+                <span className="inline-block rounded-full border border-blue-200 bg-blue-100 px-4 py-1 text-xs font-semibold tracking-wide text-blue-700 subpixel-antialiased shadow-sm dark:border-blue-700 dark:bg-blue-800 dark:text-blue-200">
                   {doc.doctorType || "-"}
                 </span>
               </div>
@@ -133,7 +135,7 @@ export default function AdminDoctorsPage() {
                   className="mb-2 h-32 w-32 rounded-full border-4 border-blue-400 object-cover shadow-lg"
                 />
               ) : (
-                <div className="mb-2 flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-blue-500 to-blue-300 text-4xl font-semibold text-white dark:border-gray-900 dark:from-blue-800 dark:to-blue-500">
+                <div className="mb-2 flex h-32 w-32 items-center justify-center rounded-full border-4 border-white bg-gradient-to-br from-blue-500 to-blue-300 text-4xl font-semibold text-white subpixel-antialiased dark:border-gray-900 dark:from-blue-800 dark:to-blue-500">
                   {getInitials(selectedDoctor.name)}
                 </div>
               )}

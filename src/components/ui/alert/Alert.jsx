@@ -113,7 +113,7 @@ const Alert = ({
         </div>
 
         <div>
-          <h4 className="mb-1 text-sm font-semibold text-gray-800 dark:text-white/90">
+          <h4 className="mb-1 text-sm font-semibold text-gray-800 subpixel-antialiased dark:text-white/90">
             {title}
           </h4>
 
@@ -122,7 +122,7 @@ const Alert = ({
           {showLink && (
             <Link
               href={linkHref}
-              className="inline-block mt-3 text-sm font-medium text-gray-500 underline dark:text-gray-400"
+              className="mt-3 inline-block text-sm font-medium text-gray-500 underline dark:text-gray-400"
             >
               {linkText}
             </Link>

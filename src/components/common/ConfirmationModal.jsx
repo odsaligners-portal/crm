@@ -27,7 +27,7 @@ const ConfirmationModal = ({
           </div>
           <div className="mt-0 text-left">
             <h3
-              className="text-lg leading-6 font-semibold text-gray-900 dark:text-white"
+              className="text-lg leading-6 font-semibold text-gray-900 subpixel-antialiased dark:text-white"
               id="modal-title"
             >
               {title}

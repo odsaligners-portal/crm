@@ -138,7 +138,7 @@ export default function AssignPlanner() {
   if (hasPlannerAccess === false) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <span className="text-lg font-semibold text-red-600 dark:text-red-400">
+        <span className="text-lg font-semibold text-red-600 subpixel-antialiased dark:text-red-400">
           Access Denied
         </span>
         <span className="mt-2 text-gray-600 dark:text-gray-300">
@@ -155,7 +155,7 @@ export default function AssignPlanner() {
     <div className="mx-auto max-w-7xl p-8">
       <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h2 className="mb-2 text-2xl font-semibold text-blue-800 dark:text-white">
+          <h2 className="mb-2 text-2xl font-semibold text-blue-800 subpixel-antialiased dark:text-white">
             Assign Planner to Patients
           </h2>
           <p className="text-gray-600 dark:text-gray-400">
@@ -194,31 +194,31 @@ export default function AssignPlanner() {
             <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 S.N.
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Case ID
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Patient Name
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Doctor Name
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Planner
               </TableCell>
@@ -241,13 +241,13 @@ export default function AssignPlanner() {
                     animationDelay: `${idx * 30}ms`,
                   }}
                 >
-                  <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 dark:text-gray-300">
+                  <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
                     {idx + 1}
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 dark:text-blue-300">
+                  <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
                     {patient.caseId}
                   </TableCell>
-                  <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 dark:text-blue-300">
+                  <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
                     {patient.patientName}
                   </TableCell>
                   <TableCell className="px-2 py-1 text-center font-medium">

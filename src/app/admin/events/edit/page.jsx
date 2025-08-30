@@ -284,7 +284,7 @@ const EditPage = () => {
   if (hasEventUpdateAccess === false) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <span className="text-lg font-semibold text-red-600 dark:text-red-400">
+        <span className="text-lg font-semibold text-red-600 subpixel-antialiased dark:text-red-400">
           Access Denied
         </span>
         <span className="mt-2 text-gray-600 dark:text-gray-300">
@@ -299,7 +299,9 @@ const EditPage = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="mb-4 text-2xl font-semibold">Edit Event</h1>
+      <h1 className="mb-4 text-2xl font-semibold subpixel-antialiased">
+        Edit Event
+      </h1>
       <form
         onSubmit={handleFinalSubmit}
         className="space-y-6 rounded-lg bg-white p-6 shadow-md"

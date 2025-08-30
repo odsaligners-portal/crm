@@ -336,7 +336,7 @@ export default function Step4Page() {
             Case Id: {formData?.caseId || patientId}
           </div>
         </div>
-        <h1 className="mb-2 text-3xl font-semibold text-gray-800">
+        <h1 className="mb-2 text-3xl font-semibold text-gray-800 subpixel-antialiased">
           Step 4: File Upload
         </h1>
         <p className="mb-8 text-gray-500">
@@ -344,7 +344,7 @@ export default function Step4Page() {
         </p>
         <form className="space-y-8" onSubmit={(e) => e.preventDefault()}>
           <div>
-            <h2 className="mb-4 border-b pb-2 text-xl font-semibold text-gray-700">
+            <h2 className="mb-4 border-b pb-2 text-xl font-semibold text-gray-700 subpixel-antialiased">
               Patient Images
             </h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
@@ -354,7 +354,7 @@ export default function Step4Page() {
             </div>
           </div>
           <div>
-            <h2 className="mb-4 border-b pb-2 text-xl font-semibold text-gray-700">
+            <h2 className="mb-4 border-b pb-2 text-xl font-semibold text-gray-700 subpixel-antialiased">
               3D Models (PLY/STL)
             </h2>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">

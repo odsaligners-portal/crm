@@ -73,12 +73,12 @@ const EventsPage = () => {
                 </div>
                 <div className="flex flex-1 flex-col justify-between p-6">
                   <div>
-                    <p className="mb-2 text-sm font-semibold text-indigo-500 dark:text-indigo-400">
+                    <p className="mb-2 text-sm font-semibold text-indigo-500 subpixel-antialiased dark:text-indigo-400">
                       {new Date(event.eventDate) > new Date()
                         ? "Upcoming Event"
                         : "Successful Event"}
                     </p>
-                    <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+                    <h3 className="mb-2 text-xl font-semibold text-gray-900 subpixel-antialiased dark:text-white">
                       {event.name}
                     </h3>
                     <div className="mb-3 flex items-center text-sm text-gray-500 dark:text-gray-400">
@@ -107,7 +107,7 @@ const EventsPage = () => {
           </div>
         ) : (
           <div className="rounded-xl bg-white py-20 text-center shadow-md dark:bg-gray-800">
-            <h2 className="text-2xl font-semibold text-gray-700 dark:text-white">
+            <h2 className="text-2xl font-semibold text-gray-700 subpixel-antialiased dark:text-white">
               No Events Scheduled
             </h2>
             <p className="text-md mt-2 text-gray-500 dark:text-gray-400">

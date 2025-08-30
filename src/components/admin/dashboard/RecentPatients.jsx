@@ -65,7 +65,7 @@ export default function RecentPatients() {
     <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white px-4 pt-4 pb-3 sm:px-6 dark:border-gray-800 dark:bg-white/[0.03]">
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
+          <h3 className="text-lg font-semibold text-gray-800 subpixel-antialiased dark:text-white/90">
             Recent Patients
           </h3>
         </div>
@@ -209,7 +209,7 @@ export default function RecentPatients() {
                         </div>
                       </div>
 
-                      <hr className="my-1 border-t border-gray-100 mr-8" />
+                      <hr className="my-1 mr-8 border-t border-gray-100" />
 
                       {/* Assignment Status Summary */}
 
@@ -275,7 +275,7 @@ export default function RecentPatients() {
           </p>
           <Button
             onClick={() => router.push("/admin/patients")}
-            className="rounded-lg bg-gradient-to-r from-green-400 to-green-600 px-4 py-2 font-semibold text-white shadow-md transition-transform hover:scale-105"
+            className="rounded-lg bg-gradient-to-r from-green-400 to-green-600 px-4 py-2 font-semibold text-white subpixel-antialiased shadow-md transition-transform hover:scale-105"
           >
             <PlusIcon className="mr-2 h-4 w-4" />
             View Patients

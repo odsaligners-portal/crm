@@ -56,7 +56,7 @@ const FileDisplayComponent = ({ idx, patientData }) => {
   if (!fileData) {
     return (
       <div className="group text-center">
-        <label className="mb-3 block text-sm font-semibold text-gray-700">
+        <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased">
           {idx < 11
             ? imageLabels[idx]
             : idx === 11
@@ -87,7 +87,7 @@ const FileDisplayComponent = ({ idx, patientData }) => {
 
   return (
     <div className="group text-center">
-      <label className="mb-3 block text-sm font-semibold text-gray-700">
+      <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased">
         {idx < 11
           ? imageLabels[idx]
           : idx === 11
@@ -151,7 +151,7 @@ const FileDisplayComponent = ({ idx, patientData }) => {
                   />
                 </svg>
               </div>
-              <p className="mb-2 text-center text-sm font-semibold break-all text-gray-700">
+              <p className="mb-2 text-center text-sm font-semibold break-all text-gray-700 subpixel-antialiased">
                 3D Model {idx + 1}
               </p>
               <div className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
@@ -399,7 +399,7 @@ export default function ViewPatientDetails() {
         <div className="sticky top-20 z-10 border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-md">
           <div className="mx-auto max-w-7xl px-6 py-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-semibold text-gray-800">
+              <h1 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
                 {patientData.patientName}
               </h1>
               <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 px-6 py-3 text-white shadow-lg">
@@ -416,7 +416,7 @@ export default function ViewPatientDetails() {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <span className="font-semibold tracking-wide">
+                <span className="font-semibold tracking-wide subpixel-antialiased">
                   Case ID: {patientData.caseId}
                 </span>
               </div>
@@ -434,7 +434,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("general");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold subpixel-antialiased transition-all duration-500 ${
                 activeTab === "general"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -457,7 +457,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("clinical");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold subpixel-antialiased transition-all duration-500 ${
                 activeTab === "clinical"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -498,7 +498,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("files");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold subpixel-antialiased transition-all duration-500 ${
                 activeTab === "files"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -521,7 +521,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("scanFiles");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold subpixel-antialiased transition-all duration-500 ${
                 activeTab === "scanFiles"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -544,7 +544,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("comments");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold subpixel-antialiased transition-all duration-500 ${
                 activeTab === "comments"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -587,7 +587,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-blue-800 to-indigo-800 bg-clip-text text-4xl font-semibold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-blue-800 to-indigo-800 bg-clip-text text-4xl font-semibold text-transparent subpixel-antialiased">
                   General Information
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -614,13 +614,13 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-semibold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
                       Patient Information
                     </h2>
                   </div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     <div className="group">
-                      <label className="mb-3 block text-sm font-semibold text-gray-700">
+                      <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased">
                         Patient Name
                       </label>
                       <div className="rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-900">
@@ -628,7 +628,7 @@ export default function ViewPatientDetails() {
                       </div>
                     </div>
                     <div className="group">
-                      <label className="mb-3 block text-sm font-semibold text-gray-700">
+                      <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased">
                         Age
                       </label>
                       <div className="rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-900">
@@ -636,7 +636,7 @@ export default function ViewPatientDetails() {
                       </div>
                     </div>
                     <div className="group">
-                      <label className="mb-3 block text-sm font-semibold text-gray-700">
+                      <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased">
                         Gender
                       </label>
                       <div className="rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-900">
@@ -670,13 +670,13 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-semibold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
                       Location Information
                     </h2>
                   </div>
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     <div className="group">
-                      <label className="mb-3 block text-sm font-semibold text-gray-700">
+                      <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased">
                         Country
                       </label>
                       <div className="rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-900">
@@ -684,7 +684,7 @@ export default function ViewPatientDetails() {
                       </div>
                     </div>
                     <div className="group">
-                      <label className="mb-3 block text-sm font-semibold text-gray-700">
+                      <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased">
                         State/Province
                       </label>
                       <div className="rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-900">
@@ -692,7 +692,7 @@ export default function ViewPatientDetails() {
                       </div>
                     </div>
                     <div className="group">
-                      <label className="mb-3 block text-sm font-semibold text-gray-700">
+                      <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased">
                         City
                       </label>
                       <div className="rounded-xl border-2 border-gray-200 bg-gray-50 px-4 py-3 text-gray-900">
@@ -720,7 +720,7 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-semibold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
                       Address Information
                     </h2>
                   </div>
@@ -769,12 +769,12 @@ export default function ViewPatientDetails() {
 
                 {/* Medical History Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-4 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Medical History
                   </h2>
                   <div className="space-y-4">
                     <div className="group">
-                      <label className="mb-3 block text-sm font-semibold text-gray-700">
+                      <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased">
                         Chief Complaint
                       </label>
                       <div className="min-h-[80px] rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-900">
@@ -808,7 +808,7 @@ export default function ViewPatientDetails() {
 
                 {/* Nature of Availability Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-4 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Nature of Availability
                   </h2>
                   <div className="space-y-3">
@@ -831,7 +831,7 @@ export default function ViewPatientDetails() {
 
                 {/* Any Existing Oral Habits Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-4 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Any Existing Oral Habits
                   </h2>
                   <div className="space-y-3">
@@ -859,7 +859,7 @@ export default function ViewPatientDetails() {
 
                 {/* Family History Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-4 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Family History
                   </h2>
                   <div>
@@ -893,7 +893,7 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-semibold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
                       Case Information
                     </h2>
                   </div>
@@ -985,7 +985,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-green-800 to-emerald-800 bg-clip-text text-4xl font-semibold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-green-800 to-emerald-800 bg-clip-text text-4xl font-semibold text-transparent subpixel-antialiased">
                   Clinical Information
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -996,7 +996,7 @@ export default function ViewPatientDetails() {
               <div className="space-y-8">
                 {/* Facial Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-4 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Facial
                   </h2>
                   <div className="space-y-4">
@@ -1032,7 +1032,7 @@ export default function ViewPatientDetails() {
 
                 {/* Lip Posture & Tonicity Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-4 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Lip Posture & Tonicity
                   </h2>
                   <div>
@@ -1045,7 +1045,7 @@ export default function ViewPatientDetails() {
 
                 {/* Lip Competence Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-4 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Lip Competence
                   </h2>
                   <div>
@@ -1058,7 +1058,7 @@ export default function ViewPatientDetails() {
 
                 {/* TMJ Examination Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-4 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     TMJ Examination
                   </h2>
                   <div className="space-y-4">
@@ -1085,7 +1085,7 @@ export default function ViewPatientDetails() {
 
                 {/* Soft Tissue Examination Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-4 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-4 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Soft Tissue Examination
                   </h2>
                   <div className="space-y-4">
@@ -1172,7 +1172,7 @@ export default function ViewPatientDetails() {
 
                 {/* Detailed Hard Tissue Examination Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-6 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Detailed Hard Tissue Examination
                   </h2>
                   <p className="mb-6 text-sm text-gray-500 italic">
@@ -1340,7 +1340,7 @@ export default function ViewPatientDetails() {
 
                 {/* Maxillary Arc Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-6 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Maxillary Arc
                   </h2>
                   <div className="space-y-6">
@@ -1381,7 +1381,7 @@ export default function ViewPatientDetails() {
 
                 {/* Mandibular Arch Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-6 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Mandibular Arch
                   </h2>
                   <div className="space-y-6">
@@ -1571,7 +1571,7 @@ export default function ViewPatientDetails() {
 
                 {/* Midline Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-6 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Midline
                   </h2>
                   <div className="space-y-6">
@@ -1630,7 +1630,7 @@ export default function ViewPatientDetails() {
 
                 {/* Anterio Posterior Relationship Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-6 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Anterio Posterior Relationship
                   </h2>
                   <div className="space-y-6">
@@ -1715,7 +1715,7 @@ export default function ViewPatientDetails() {
 
                 {/* Transverse Relationship Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-6 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Transverse Relationship
                   </h2>
                   <p className="mb-4 text-sm text-gray-500 italic">
@@ -1754,7 +1754,7 @@ export default function ViewPatientDetails() {
 
                 {/* Treatment Plan for Patient Concern Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-6 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Treatment Plan
                   </h2>
 
@@ -1832,7 +1832,7 @@ export default function ViewPatientDetails() {
 
                 {/* How to Gain Space Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-2xl font-semibold text-gray-700">
+                  <h2 className="mb-6 text-2xl font-semibold text-gray-700 subpixel-antialiased">
                     How to Gain Space
                   </h2>
                   <div className="space-y-8">
@@ -2145,7 +2145,7 @@ export default function ViewPatientDetails() {
 
                 {/* Any Other Comments Section */}
                 <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-                  <h2 className="mb-6 text-xl font-semibold text-gray-700">
+                  <h2 className="mb-6 text-xl font-semibold text-gray-700 subpixel-antialiased">
                     Any Other Comments
                   </h2>
                   <p className="mb-6 text-sm text-gray-500 italic">
@@ -2186,7 +2186,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent subpixel-antialiased">
                   Files Upload
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -2316,7 +2316,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-semibold text-blue-800">
+                      <h2 className="text-2xl font-semibold text-blue-800 subpixel-antialiased">
                         📸 Intraoral Photo
                       </h2>
                       <p className="text-blue-600">
@@ -2354,7 +2354,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-semibold text-green-800">
+                      <h2 className="text-2xl font-semibold text-green-800 subpixel-antialiased">
                         👤 Facial
                       </h2>
                       <p className="text-green-600">
@@ -2393,7 +2393,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-semibold text-purple-800">
+                      <h2 className="text-2xl font-semibold text-purple-800 subpixel-antialiased">
                         🔬 X-ray
                       </h2>
                       <p className="text-purple-600">
@@ -2431,7 +2431,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-semibold text-orange-800">
+                      <h2 className="text-2xl font-semibold text-orange-800 subpixel-antialiased">
                         🎯 3D Models (PLY/STL)
                       </h2>
                       <p className="text-orange-600">
@@ -2511,7 +2511,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent subpixel-antialiased">
                   Comments
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -2551,14 +2551,14 @@ export default function ViewPatientDetails() {
                       <div className="mb-4 flex items-start justify-between">
                         <div className="flex items-center gap-3">
                           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                            <span className="text-sm font-semibold text-blue-600">
+                            <span className="text-sm font-semibold text-blue-600 subpixel-antialiased">
                               {comment.commentedBy?.name
                                 ?.charAt(0)
                                 ?.toUpperCase() || "U"}
                             </span>
                           </div>
                           <div>
-                            <h4 className="font-semibold text-gray-900">
+                            <h4 className="font-semibold text-gray-900 subpixel-antialiased">
                               {comment.commentedBy?.name || "Unknown User"}
                             </h4>
                             <p className="text-sm text-gray-500">
@@ -2597,7 +2597,7 @@ export default function ViewPatientDetails() {
 
               {/* Comment Summary */}
               <div className="mt-8 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-rose-50 p-6 shadow-lg">
-                <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold text-pink-800">
+                <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold text-pink-800 subpixel-antialiased">
                   <svg
                     className="h-5 w-5"
                     fill="none"
@@ -2615,7 +2615,7 @@ export default function ViewPatientDetails() {
                 </h4>
                 <div className="grid grid-cols-2 gap-6 text-sm md:grid-cols-3">
                   <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-                    <div className="mb-1 text-3xl font-semibold text-blue-600">
+                    <div className="mb-1 text-3xl font-semibold text-blue-600 subpixel-antialiased">
                       {comments.length}
                     </div>
                     <div className="font-medium text-blue-700">
@@ -2623,7 +2623,7 @@ export default function ViewPatientDetails() {
                     </div>
                   </div>
                   <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-                    <div className="mb-1 text-3xl font-semibold text-green-600">
+                    <div className="mb-1 text-3xl font-semibold text-green-600 subpixel-antialiased">
                       {
                         comments.filter(
                           (c) => c.commentedBy?.userType === "User",
@@ -2635,7 +2635,7 @@ export default function ViewPatientDetails() {
                     </div>
                   </div>
                   <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-                    <div className="mb-1 text-3xl font-semibold text-purple-600">
+                    <div className="mb-1 text-3xl font-semibold text-purple-600 subpixel-antialiased">
                       {
                         comments.filter(
                           (c) => c.commentedBy?.userType === "Distributer",
@@ -2669,7 +2669,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent subpixel-antialiased">
                   Scan Files
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -2783,7 +2783,7 @@ export default function ViewPatientDetails() {
                               <div className="mb-2 flex items-start justify-between gap-6 text-justify">
                                 <div>
                                   <h4
-                                    className="text-lg font-semibold break-words text-gray-900"
+                                    className="text-lg font-semibold break-words text-gray-900 subpixel-antialiased"
                                     dangerouslySetInnerHTML={{
                                       __html: displayFileName,
                                     }}
@@ -2877,18 +2877,18 @@ export default function ViewPatientDetails() {
 
               {/* Scan Files Summary */}
               <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50 p-6">
-                <h4 className="mb-3 text-lg font-semibold text-blue-800">
+                <h4 className="mb-3 text-lg font-semibold text-blue-800 subpixel-antialiased">
                   Scan Files Summary
                 </h4>
                 <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                   <div className="text-center">
-                    <div className="text-2xl font-semibold text-blue-600">
+                    <div className="text-2xl font-semibold text-blue-600 subpixel-antialiased">
                       {patientFiles.length}
                     </div>
                     <div className="text-blue-700">Total Files</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-semibold text-green-600">
+                    <div className="text-2xl font-semibold text-green-600 subpixel-antialiased">
                       {
                         patientFiles.filter((f) => f.fileType === "image")
                           .length
@@ -2897,7 +2897,7 @@ export default function ViewPatientDetails() {
                     <div className="text-green-700">Images</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-semibold text-purple-600">
+                    <div className="text-2xl font-semibold text-purple-600 subpixel-antialiased">
                       {
                         patientFiles.filter((f) => f.fileType === "video")
                           .length
@@ -2906,7 +2906,7 @@ export default function ViewPatientDetails() {
                     <div className="text-purple-600">Videos</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-semibold text-orange-600">
+                    <div className="text-2xl font-semibold text-orange-600 subpixel-antialiased">
                       {patientFiles.filter((f) => f.fileType === "pdf").length}
                     </div>
                     <div className="text-orange-700">PDFs</div>

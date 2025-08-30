@@ -5,7 +5,7 @@ import { MdCalendarToday } from "react-icons/md";
 const UpcomingEvents = ({ events }) => {
   return (
     <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
-      <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
+      <h3 className="mb-4 text-xl font-semibold text-gray-800 subpixel-antialiased dark:text-white">
         Upcoming Events
       </h3>
       <ul className="space-y-4">
@@ -16,7 +16,7 @@ const UpcomingEvents = ({ events }) => {
                 <MdCalendarToday className="h-5 w-5 text-blue-500" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                <p className="truncate text-sm font-semibold text-gray-900 subpixel-antialiased dark:text-white">
                   {event.name}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">

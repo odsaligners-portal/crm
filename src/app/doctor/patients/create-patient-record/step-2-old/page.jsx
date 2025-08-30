@@ -242,7 +242,7 @@ export default function Step2Page() {
         </div>
         <div className="mb-8">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-semibold text-blue-600">
+            <span className="text-xs font-semibold text-blue-600 subpixel-antialiased">
               Step 2 of 4
             </span>
             <span className="text-xs text-gray-400">
@@ -257,7 +257,7 @@ export default function Step2Page() {
           </div>
         </div>
         {/* Heading & Description */}
-        <h1 className="mb-1 text-3xl font-semibold tracking-tight text-blue-700 dark:text-white">
+        <h1 className="mb-1 text-3xl font-semibold tracking-tight text-blue-700 subpixel-antialiased dark:text-white">
           Step 2: Chief Complaint & Case
         </h1>
         <p className="mb-8 text-sm text-gray-500 dark:text-gray-300">
@@ -451,7 +451,7 @@ export default function Step2Page() {
             </div>
             {/* IPR Section */}
             <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold subpixel-antialiased">
                 <AdjustmentsHorizontalIcon className="h-5 w-5 text-blue-400" />
                 Interproximal Reduction (IPR)
               </h3>
@@ -487,7 +487,7 @@ export default function Step2Page() {
 
             {/* Measure of IPR Section */}
             <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold subpixel-antialiased">
                 <ArrowsRightLeftIcon className="h-5 w-5 text-blue-400" />
                 Measure of IPR
               </h3>

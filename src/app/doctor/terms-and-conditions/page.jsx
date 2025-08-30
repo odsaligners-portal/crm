@@ -21,7 +21,7 @@ const TermsAndConditionsPage = () => {
               className="transform overflow-hidden rounded-2xl border border-gray-200/50 bg-white shadow-lg transition-shadow duration-300 ease-in-out hover:-translate-y-1 hover:shadow-2xl dark:border-gray-700/50 dark:bg-gray-800/50"
             >
               <div className="p-8">
-                <h2 className="mb-4 text-2xl font-semibold text-gray-900 dark:text-white">
+                <h2 className="mb-4 text-2xl font-semibold text-gray-900 subpixel-antialiased dark:text-white">
                   {term.title}
                 </h2>
                 <p className="leading-relaxed whitespace-pre-line text-gray-600 dark:text-gray-300">

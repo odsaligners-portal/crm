@@ -71,7 +71,7 @@ export default function Profile() {
         >
           <FaEdit size={22} />
         </Link>
-        <h3 className="mb-5 text-lg font-semibold text-gray-800 lg:mb-7 dark:text-white/90">
+        <h3 className="mb-5 text-lg font-semibold text-gray-800 subpixel-antialiased lg:mb-7 dark:text-white/90">
           Profile
         </h3>
         <div className="mb-8 flex flex-col items-center">
@@ -82,7 +82,7 @@ export default function Profile() {
               className="mb-2 h-32 w-32 rounded-full border-4 border-blue-400 object-cover shadow-lg"
             />
           ) : (
-            <div className="mb-2 flex h-32 w-32 items-center justify-center rounded-full border-4 border-blue-200 bg-gradient-to-br from-blue-400 to-blue-200 text-4xl font-semibold text-white shadow-lg">
+            <div className="mb-2 flex h-32 w-32 items-center justify-center rounded-full border-4 border-blue-200 bg-gradient-to-br from-blue-400 to-blue-200 text-4xl font-semibold text-white subpixel-antialiased shadow-lg">
               {userData.name
                 ? userData.name
                     .split(" ")

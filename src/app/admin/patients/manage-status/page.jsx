@@ -117,31 +117,31 @@ export default function ManagePatientStatusPage() {
             <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 S.N.
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 CaseId
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Name
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 City
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Status
               </TableCell>
@@ -157,13 +157,13 @@ export default function ManagePatientStatusPage() {
                   animationDelay: `${idx * 30}ms`,
                 }}
               >
-                <TableCell className="px-1 py-0.5 text-center font-semibold text-gray-700 dark:text-gray-300">
+                <TableCell className="px-1 py-0.5 text-center font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
                   {idx + 1}
                 </TableCell>
-                <TableCell className="px-1 py-0.5 text-center font-semibold text-blue-600 dark:text-blue-300">
+                <TableCell className="px-1 py-0.5 text-center font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
                   {patient.caseId}
                 </TableCell>
-                <TableCell className="px-1 py-0.5 text-center font-semibold text-blue-600 dark:text-blue-300">
+                <TableCell className="px-1 py-0.5 text-center font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
                   {patient.patientName || patient.name}
                 </TableCell>
                 <TableCell className="px-1 py-0.5 text-center font-medium">

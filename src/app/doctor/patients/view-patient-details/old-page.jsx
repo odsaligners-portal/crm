@@ -215,7 +215,7 @@ export default function ViewPatientDetails() {
 
   if (error)
     return (
-      <div className="py-8 text-center text-xl font-semibold text-red-500">
+      <div className="py-8 text-center text-xl font-semibold text-red-500 subpixel-antialiased">
         {error}
       </div>
     );
@@ -270,7 +270,7 @@ export default function ViewPatientDetails() {
           <div className="rounded-xl bg-blue-100 p-3">
             <UserIcon className="h-6 w-6 text-blue-600" />
           </div>
-          <h2 className="text-2xl font-semibold text-gray-800">
+          <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
             Patient Information
           </h2>
         </div>
@@ -332,7 +332,7 @@ export default function ViewPatientDetails() {
             {["Clear Aligners", "Invisalign", "Braces"].map((opt) => (
               <label
                 key={opt}
-                className={`flex items-center gap-2 ${data.treatmentFor === opt ? "font-semibold text-blue-700" : "text-gray-500"}`}
+                className={`flex items-center gap-2 ${data.treatmentFor === opt ? "font-semibold text-blue-700 subpixel-antialiased" : "text-gray-500"}`}
               >
                 <input
                   type="radio"
@@ -375,7 +375,7 @@ export default function ViewPatientDetails() {
               </span>
             </Label>
             <div className="relative rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/80 via-white/60 to-blue-100/60 shadow-xl backdrop-blur-md transition-all group-hover:border-blue-500 group-hover:shadow-blue-200/60">
-              <div className="flex min-h-[44px] w-full items-center rounded-xl border-none bg-transparent px-4 py-3 pr-10 text-base font-semibold text-gray-900">
+              <div className="flex min-h-[44px] w-full items-center rounded-xl border-none bg-transparent px-4 py-3 pr-10 text-base font-semibold text-gray-900 subpixel-antialiased">
                 <GlobeAltIcon className="mr-2 h-6 w-6 text-blue-400 transition-transform group-hover:scale-125" />
                 <span>{data.country || "-"}</span>
               </div>
@@ -389,7 +389,7 @@ export default function ViewPatientDetails() {
               </span>
             </Label>
             <div className="relative rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/80 via-white/60 to-blue-100/60 shadow-xl backdrop-blur-md transition-all group-hover:border-blue-500 group-hover:shadow-blue-200/60">
-              <div className="flex min-h-[44px] w-full items-center rounded-xl border-none bg-transparent px-4 py-3 pr-10 text-base font-semibold text-gray-900">
+              <div className="flex min-h-[44px] w-full items-center rounded-xl border-none bg-transparent px-4 py-3 pr-10 text-base font-semibold text-gray-900 subpixel-antialiased">
                 <MapIcon className="mr-2 h-6 w-6 text-blue-400 transition-transform group-hover:scale-125" />
                 <span>{data.state || "-"}</span>
               </div>
@@ -433,7 +433,7 @@ export default function ViewPatientDetails() {
           <div className="rounded-xl bg-green-100 p-3">
             <MapPinIcon className="h-6 w-6 text-green-600" />
           </div>
-          <h2 className="text-2xl font-semibold text-gray-800">
+          <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
             Location Information
           </h2>
         </div>
@@ -446,7 +446,7 @@ export default function ViewPatientDetails() {
               </span>
             </Label>
             <div className="relative rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/80 via-white/60 to-blue-100/60 shadow-xl backdrop-blur-md transition-all group-hover:border-blue-500 group-hover:shadow-blue-200/60">
-              <div className="flex min-h-[44px] w-full items-center rounded-xl border-none bg-transparent px-4 py-3 pr-10 text-base font-semibold text-gray-900">
+              <div className="flex min-h-[44px] w-full items-center rounded-xl border-none bg-transparent px-4 py-3 pr-10 text-base font-semibold text-gray-900 subpixel-antialiased">
                 <GlobeAltIcon className="mr-2 h-6 w-6 text-blue-400 transition-transform group-hover:scale-125" />
                 <span>{data.country || "-"}</span>
               </div>
@@ -460,7 +460,7 @@ export default function ViewPatientDetails() {
               </span>
             </Label>
             <div className="relative rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50/80 via-white/60 to-blue-100/60 shadow-xl backdrop-blur-md transition-all group-hover:border-blue-500 group-hover:shadow-blue-200/60">
-              <div className="flex min-h-[44px] w-full items-center rounded-xl border-none bg-transparent px-4 py-3 pr-10 text-base font-semibold text-gray-900">
+              <div className="flex min-h-[44px] w-full items-center rounded-xl border-none bg-transparent px-4 py-3 pr-10 text-base font-semibold text-gray-900 subpixel-antialiased">
                 <GlobeAltIcon className="mr-2 h-6 w-6 text-blue-400 transition-transform group-hover:scale-125" />
                 <span>{data.state || "-"}</span>
               </div>
@@ -514,7 +514,7 @@ export default function ViewPatientDetails() {
           <div className="rounded-xl bg-purple-100 p-3">
             <MapPinIcon className="h-6 w-6 text-purple-600" />
           </div>
-          <h2 className="text-2xl font-semibold text-gray-800">
+          <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
             Address Information
           </h2>
         </div>
@@ -551,7 +551,7 @@ export default function ViewPatientDetails() {
           <div className="rounded-xl bg-orange-100 p-3">
             <ClipboardDocumentListIcon className="h-6 w-6 text-orange-600" />
           </div>
-          <h2 className="text-2xl font-semibold text-gray-800">
+          <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
             Case Information
           </h2>
         </div>
@@ -564,7 +564,7 @@ export default function ViewPatientDetails() {
             <Label>Case Type</Label>
             <div className="mt-2 flex gap-6">
               <label
-                className={`flex items-center gap-2 ${data.caseType && data.caseType.includes("Single") ? "font-semibold text-blue-700" : "text-gray-500"}`}
+                className={`flex items-center gap-2 ${data.caseType && data.caseType.includes("Single") ? "font-semibold text-blue-700 subpixel-antialiased" : "text-gray-500"}`}
               >
                 <input
                   type="radio"
@@ -583,7 +583,7 @@ export default function ViewPatientDetails() {
                 </span>
               </label>
               <label
-                className={`flex items-center gap-2 ${data.caseType === "Double Arch" ? "font-semibold text-blue-700" : "text-gray-500"}`}
+                className={`flex items-center gap-2 ${data.caseType === "Double Arch" ? "font-semibold text-blue-700 subpixel-antialiased" : "text-gray-500"}`}
               >
                 <input
                   type="radio"
@@ -632,7 +632,7 @@ export default function ViewPatientDetails() {
             {["Yes", "No"].map((opt) => (
               <label
                 key={opt}
-                className={`flex items-center gap-2 ${data.extraction?.required === (opt === "Yes") ? "font-semibold text-blue-700" : "text-gray-500"}`}
+                className={`flex items-center gap-2 ${data.extraction?.required === (opt === "Yes") ? "font-semibold text-blue-700 subpixel-antialiased" : "text-gray-500"}`}
               >
                 <input
                   type="radio"
@@ -673,7 +673,7 @@ export default function ViewPatientDetails() {
             ].map((opt) => (
               <label
                 key={opt}
-                className={`flex items-center gap-2 ${data.midline === opt ? "font-semibold text-blue-700" : "text-gray-500"}`}
+                className={`flex items-center gap-2 ${data.midline === opt ? "font-semibold text-blue-700 subpixel-antialiased" : "text-gray-500"}`}
               >
                 <input
                   type="radio"
@@ -704,7 +704,7 @@ export default function ViewPatientDetails() {
             ].map((opt) => (
               <label
                 key={opt}
-                className={`flex items-center gap-2 ${data.archExpansion === opt ? "font-semibold text-blue-700" : "text-gray-500"}`}
+                className={`flex items-center gap-2 ${data.archExpansion === opt ? "font-semibold text-blue-700 subpixel-antialiased" : "text-gray-500"}`}
               >
                 <input
                   type="radio"
@@ -738,7 +738,7 @@ export default function ViewPatientDetails() {
           <div className="rounded-xl bg-blue-100 p-3">
             <CogIcon className="h-6 w-6 text-blue-600" />
           </div>
-          <h2 className="text-2xl font-semibold text-gray-800">
+          <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
             IPR, Midline & Arch Expansion
           </h2>
         </div>
@@ -756,7 +756,7 @@ export default function ViewPatientDetails() {
                 <path d="M12 4v16m8-8H4" />
               </svg>
             </span>
-            <span className="text-xl font-semibold text-blue-700">
+            <span className="text-xl font-semibold text-blue-700 subpixel-antialiased">
               Interproximal Reduction (IPR)
             </span>
           </div>
@@ -775,7 +775,7 @@ export default function ViewPatientDetails() {
                   aria-checked={checked}
                   className={`flex items-center gap-2 rounded-full border px-5 py-2 shadow-sm transition-all select-none ${
                     checked
-                      ? "border-blue-600 bg-gradient-to-r from-blue-500 to-blue-400 font-semibold text-white"
+                      ? "border-blue-600 bg-gradient-to-r from-blue-500 to-blue-400 font-semibold text-white subpixel-antialiased"
                       : "border-gray-300 bg-gray-50 text-gray-500"
                   } ${!checked ? "hover:bg-blue-50" : ""} cursor-default`}
                 >
@@ -820,7 +820,7 @@ export default function ViewPatientDetails() {
                 <path d="M4 12h16" />
               </svg>
             </span>
-            <span className="text-xl font-semibold text-blue-700">
+            <span className="text-xl font-semibold text-blue-700 subpixel-antialiased">
               Measure of IPR
             </span>
           </div>
@@ -838,7 +838,7 @@ export default function ViewPatientDetails() {
                   aria-checked={checked}
                   className={`flex items-center gap-2 rounded-full border px-5 py-2 shadow-sm transition-all select-none ${
                     checked
-                      ? "border-blue-600 bg-gradient-to-r from-blue-500 to-blue-400 font-semibold text-white"
+                      ? "border-blue-600 bg-gradient-to-r from-blue-500 to-blue-400 font-semibold text-white subpixel-antialiased"
                       : "border-gray-300 bg-gray-50 text-gray-500"
                   } ${!checked ? "hover:bg-blue-50" : ""} cursor-default`}
                 >
@@ -885,7 +885,7 @@ export default function ViewPatientDetails() {
             ].map((opt) => (
               <label
                 key={opt}
-                className={`flex items-center gap-2 ${data.midline === opt ? "font-semibold text-blue-700" : "text-gray-500"}`}
+                className={`flex items-center gap-2 ${data.midline === opt ? "font-semibold text-blue-700 subpixel-antialiased" : "text-gray-500"}`}
               >
                 <input
                   type="radio"
@@ -916,7 +916,7 @@ export default function ViewPatientDetails() {
             ].map((opt) => (
               <label
                 key={opt}
-                className={`flex items-center gap-2 ${data.archExpansion === opt ? "font-semibold text-blue-700" : "text-gray-500"}`}
+                className={`flex items-center gap-2 ${data.archExpansion === opt ? "font-semibold text-blue-700 subpixel-antialiased" : "text-gray-500"}`}
               >
                 <input
                   type="radio"
@@ -949,9 +949,13 @@ export default function ViewPatientDetails() {
             <Label>Privacy Accepted</Label>
             <div>
               {data.privacyAccepted ? (
-                <span className="font-semibold text-green-600">Yes</span>
+                <span className="font-semibold text-green-600 subpixel-antialiased">
+                  Yes
+                </span>
               ) : (
-                <span className="font-semibold text-red-600">No</span>
+                <span className="font-semibold text-red-600 subpixel-antialiased">
+                  No
+                </span>
               )}
             </div>
           </div>
@@ -959,9 +963,13 @@ export default function ViewPatientDetails() {
             <Label>Declaration Accepted</Label>
             <div>
               {data.declarationAccepted ? (
-                <span className="font-semibold text-green-600">Yes</span>
+                <span className="font-semibold text-green-600 subpixel-antialiased">
+                  Yes
+                </span>
               ) : (
-                <span className="font-semibold text-red-600">No</span>
+                <span className="font-semibold text-red-600 subpixel-antialiased">
+                  No
+                </span>
               )}
             </div>
           </div>
@@ -988,7 +996,7 @@ export default function ViewPatientDetails() {
           <div>
             <Label>Status</Label>
             <div
-              className={`font-semibold ${
+              className={`font-semibold subpixel-antialiased ${
                 data.status === "active"
                   ? "text-green-600"
                   : data.status === "inactive"
@@ -1122,7 +1130,7 @@ export default function ViewPatientDetails() {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-semibold text-gray-800">
+          <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
             Patient Files
           </h2>
         </div>
@@ -1138,7 +1146,7 @@ export default function ViewPatientDetails() {
                   onChange={handleSelectAll}
                   className="h-5 w-5 rounded border-gray-300 text-blue-600 focus:ring-2 focus:ring-blue-500"
                 />
-                <span className="text-sm font-semibold text-blue-800">
+                <span className="text-sm font-semibold text-blue-800 subpixel-antialiased">
                   Select All ({selectedFiles.size}/{allFiles.length})
                 </span>
               </div>
@@ -1146,7 +1154,7 @@ export default function ViewPatientDetails() {
               <button
                 onClick={handleDownloadSelected}
                 disabled={selectedFiles.size === 0}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 focus:ring-4 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:hover:scale-100"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-6 py-3 text-sm font-semibold text-white subpixel-antialiased shadow-lg transition-all duration-300 hover:scale-105 focus:ring-4 focus:ring-green-500/20 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:hover:scale-100"
               >
                 <svg
                   className="h-5 w-5"
@@ -1166,7 +1174,7 @@ export default function ViewPatientDetails() {
 
               <button
                 onClick={handleDownloadAll}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 focus:ring-4 focus:ring-blue-500/20"
+                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-3 text-sm font-semibold text-white subpixel-antialiased shadow-lg transition-all duration-300 hover:scale-105 focus:ring-4 focus:ring-blue-500/20"
               >
                 <svg
                   className="h-5 w-5"
@@ -1191,7 +1199,7 @@ export default function ViewPatientDetails() {
         <div className="space-y-8">
           {/* Intraoral Photo Section - First 5 uploads (slots 0-4) */}
           <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
-            <h3 className="mb-4 border-b border-blue-300 pb-2 text-xl font-semibold text-blue-800">
+            <h3 className="mb-4 border-b border-blue-300 pb-2 text-xl font-semibold text-blue-800 subpixel-antialiased">
               📸 Intraoral Photo
             </h3>
             <p className="mb-4 text-sm text-blue-700">
@@ -1302,7 +1310,7 @@ export default function ViewPatientDetails() {
 
           {/* Facial Section - Next 3 uploads (slots 5-7) */}
           <div className="rounded-lg border border-green-200 bg-green-50 p-6">
-            <h3 className="mb-4 border-b border-green-300 pb-2 text-xl font-semibold text-green-800">
+            <h3 className="mb-4 border-b border-green-300 pb-2 text-xl font-semibold text-green-800 subpixel-antialiased">
               👤 Facial
             </h3>
             <p className="mb-4 text-sm text-green-700">
@@ -1414,7 +1422,7 @@ export default function ViewPatientDetails() {
 
           {/* X-ray Section - Remaining 3 uploads (slots 8-10) */}
           <div className="rounded-lg border border-purple-200 bg-purple-50 p-6">
-            <h3 className="mb-4 border-b border-purple-300 pb-2 text-xl font-semibold text-purple-800">
+            <h3 className="mb-4 border-b border-purple-300 pb-2 text-xl font-semibold text-purple-800 subpixel-antialiased">
               🔬 X-ray
             </h3>
             <p className="mb-4 text-sm text-purple-700">
@@ -1527,7 +1535,7 @@ export default function ViewPatientDetails() {
 
         {/* 3D Models */}
         <div className="rounded-lg border border-orange-200 bg-orange-50 p-6">
-          <h3 className="mb-4 border-b border-orange-300 pb-2 text-xl font-semibold text-orange-800">
+          <h3 className="mb-4 border-b border-orange-300 pb-2 text-xl font-semibold text-orange-800 subpixel-antialiased">
             🎯 3D Models (PLY/STL)
           </h3>
           <p className="mb-4 text-sm text-orange-700">
@@ -1598,12 +1606,12 @@ export default function ViewPatientDetails() {
 
         {/* File Summary */}
         <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50 p-6">
-          <h4 className="mb-3 text-lg font-semibold text-blue-800">
+          <h4 className="mb-3 text-lg font-semibold text-blue-800 subpixel-antialiased">
             File Summary
           </h4>
           <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
             <div className="text-center">
-              <div className="text-2xl font-semibold text-blue-600">
+              <div className="text-2xl font-semibold text-blue-600 subpixel-antialiased">
                 {
                   Object.values(scanFiles).filter(
                     (arr) => Array.isArray(arr) && arr.length > 0,
@@ -1613,7 +1621,7 @@ export default function ViewPatientDetails() {
               <div className="text-blue-700">Total Files</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-semibold text-green-600">
+              <div className="text-2xl font-semibold text-green-600 subpixel-antialiased">
                 {
                   Object.entries(scanFiles).filter(
                     ([key, arr]) =>
@@ -1626,7 +1634,7 @@ export default function ViewPatientDetails() {
               <div className="text-green-700">Images</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-semibold text-purple-600">
+              <div className="text-2xl font-semibold text-purple-600 subpixel-antialiased">
                 {
                   Object.entries(scanFiles).filter(
                     ([key, arr]) =>
@@ -1639,7 +1647,7 @@ export default function ViewPatientDetails() {
               <div className="text-purple-700">3D Models</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-semibold text-orange-600">
+              <div className="text-2xl font-semibold text-orange-600 subpixel-antialiased">
                 {
                   Object.entries(scanFiles).filter(
                     ([key, arr]) => Array.isArray(arr) && arr.length === 0,
@@ -1803,7 +1811,9 @@ export default function ViewPatientDetails() {
               />
             </svg>
           </div>
-          <h2 className="text-2xl font-semibold text-gray-800">Scan Files</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
+            Scan Files
+          </h2>
         </div>
 
         {/* Download Controls for Scan Files */}
@@ -2054,7 +2064,7 @@ export default function ViewPatientDetails() {
                     <div className="min-w-0 flex-1">
                       <div className="mb-2 flex items-start justify-between">
                         <div>
-                          <h4 className="text-lg font-semibold break-words text-gray-900">
+                          <h4 className="text-lg font-semibold break-words text-gray-900 subpixel-antialiased">
                             {fileName}
                           </h4>
                           <p className="text-sm font-medium text-blue-600">
@@ -2146,30 +2156,30 @@ export default function ViewPatientDetails() {
 
         {/* Scan Files Summary */}
         <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50 p-6">
-          <h4 className="mb-3 text-lg font-semibold text-blue-800">
+          <h4 className="mb-3 text-lg font-semibold text-blue-800 subpixel-antialiased">
             Scan Files Summary
           </h4>
           <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
             <div className="text-center">
-              <div className="text-2xl font-semibold text-blue-600">
+              <div className="text-2xl font-semibold text-blue-600 subpixel-antialiased">
                 {allFiles.length}
               </div>
               <div className="text-blue-700">Total Files</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-semibold text-green-600">
+              <div className="text-2xl font-semibold text-green-600 subpixel-antialiased">
                 {allFiles.filter((f) => f.fileType === "image").length}
               </div>
               <div className="text-green-700">Images</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-semibold text-purple-600">
+              <div className="text-2xl font-semibold text-purple-600 subpixel-antialiased">
                 {allFiles.filter((f) => f.fileType === "video").length}
               </div>
               <div className="text-purple-600">Videos</div>
             </div>
             <div className="text-center">
-              <div className="text-2xl font-semibold text-orange-600">
+              <div className="text-2xl font-semibold text-orange-600 subpixel-antialiased">
                 {allFiles.filter((f) => f.fileType === "pdf").length}
               </div>
               <div className="text-orange-700">PDFs</div>
@@ -2203,7 +2213,7 @@ export default function ViewPatientDetails() {
             />
           </svg>
         </div>
-        <h2 className="text-2xl font-semibold text-gray-800">
+        <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
           Patient Comments
         </h2>
       </div>
@@ -2228,13 +2238,13 @@ export default function ViewPatientDetails() {
               <div className="mb-4 flex items-start justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                    <span className="text-sm font-semibold text-blue-600">
+                    <span className="text-sm font-semibold text-blue-600 subpixel-antialiased">
                       {comment.commentedBy?.name?.charAt(0)?.toUpperCase() ||
                         "U"}
                     </span>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-gray-900">
+                    <h4 className="font-semibold text-gray-900 subpixel-antialiased">
                       {comment.commentedBy?.name || "Unknown User"}
                     </h4>
                     <p className="text-sm text-gray-500">
@@ -2273,7 +2283,7 @@ export default function ViewPatientDetails() {
 
       {/* Comment Summary */}
       <div className="mt-8 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-rose-50 p-6 shadow-lg">
-        <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold text-pink-800">
+        <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold text-pink-800 subpixel-antialiased">
           <svg
             className="h-5 w-5"
             fill="none"
@@ -2291,13 +2301,13 @@ export default function ViewPatientDetails() {
         </h4>
         <div className="grid grid-cols-2 gap-6 text-sm md:grid-cols-3">
           <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-            <div className="mb-1 text-3xl font-semibold text-blue-600">
+            <div className="mb-1 text-3xl font-semibold text-blue-600 subpixel-antialiased">
               {comments.length}
             </div>
             <div className="font-medium text-blue-700">Total Comments</div>
           </div>
           <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-            <div className="mb-1 text-3xl font-semibold text-green-600">
+            <div className="mb-1 text-3xl font-semibold text-green-600 subpixel-antialiased">
               {
                 comments.filter((c) => c.commentedBy?.userType === "User")
                   .length
@@ -2306,7 +2316,7 @@ export default function ViewPatientDetails() {
             <div className="font-medium text-green-700">From Doctors</div>
           </div>
           <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-            <div className="mb-1 text-3xl font-semibold text-purple-600">
+            <div className="mb-1 text-3xl font-semibold text-purple-600 subpixel-antialiased">
               {
                 comments.filter(
                   (c) => c.commentedBy?.userType === "Distributer",
@@ -2341,7 +2351,7 @@ export default function ViewPatientDetails() {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <span className="font-semibold tracking-wide">
+                <span className="font-semibold tracking-wide subpixel-antialiased">
                   Case ID: {data.caseId}
                 </span>
               </div>
@@ -2360,7 +2370,7 @@ export default function ViewPatientDetails() {
             <div className="mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-indigo-600 shadow-2xl">
               <UserIcon className="h-12 w-12 text-white" />
             </div>
-            <h1 className="mb-4 bg-gradient-to-r from-gray-800 via-blue-800 to-indigo-800 bg-clip-text text-5xl font-semibold text-transparent md:text-6xl">
+            <h1 className="mb-4 bg-gradient-to-r from-gray-800 via-blue-800 to-indigo-800 bg-clip-text text-5xl font-semibold text-transparent subpixel-antialiased md:text-6xl">
               {data.patientName}
             </h1>
             <p className="mb-6 text-xl text-gray-600">
@@ -2376,7 +2386,7 @@ export default function ViewPatientDetails() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`group flex items-center gap-3 rounded-2xl px-8 py-4 font-semibold transition-all duration-500 ${
+                className={`group flex items-center gap-3 rounded-2xl px-8 py-4 font-semibold subpixel-antialiased transition-all duration-500 ${
                   activeTab === tab.id
                     ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                     : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -2411,7 +2421,7 @@ export default function ViewPatientDetails() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="rounded-lg bg-blue-50 px-6 py-3 font-semibold text-blue-700 shadow transition hover:bg-blue-100"
+          className="rounded-lg bg-blue-50 px-6 py-3 font-semibold subpixel-antialiased text-blue-700 shadow transition hover:bg-blue-100"
         >
           Back
         </button>
@@ -2420,7 +2430,7 @@ export default function ViewPatientDetails() {
           onClick={() =>
             router.push(`/doctor/patients/edit-patient-details?id=${data._id}`)
           }
-          className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white shadow transition hover:bg-blue-700"
+          className="rounded-lg bg-blue-600 px-6 py-3 font-semibold subpixel-antialiased text-white shadow transition hover:bg-blue-700"
         >
           Edit
         </button>

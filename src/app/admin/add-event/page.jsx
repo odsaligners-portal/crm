@@ -225,7 +225,9 @@ const AddEventPage = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="mb-4 text-2xl font-semibold">Add New Event</h1>
+      <h1 className="mb-4 text-2xl font-semibold subpixel-antialiased">
+        Add New Event
+      </h1>
       <form
         onSubmit={handleFinalSubmit}
         className="space-y-6 rounded-lg bg-white p-6 shadow-md"

@@ -12,7 +12,7 @@ export default function Error404() {
     <div className="relative z-1 flex min-h-screen flex-col items-center justify-center overflow-hidden p-6">
       <GridShape />
       <div className="mx-auto w-full max-w-[242px] text-center sm:max-w-[472px]">
-        <h1 className="text-title-md xl:text-title-2xl mb-8 font-semibold text-gray-800 dark:text-white/90">
+        <h1 className="text-title-md xl:text-title-2xl mb-8 font-semibold text-gray-800 subpixel-antialiased dark:text-white/90">
           ERROR
         </h1>
 

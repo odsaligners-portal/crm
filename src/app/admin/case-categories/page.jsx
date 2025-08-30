@@ -254,7 +254,7 @@ const CaseCategoriesPage = () => {
                           <TagIcon className="h-6 w-6 text-blue-600 dark:text-blue-300" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h2 className="truncate text-2xl font-semibold text-gray-800 dark:text-white/90">
+                          <h2 className="truncate text-2xl font-semibold text-gray-800 subpixel-antialiased dark:text-white/90">
                             {category.category}
                           </h2>
                           <div className="mt-1 flex items-center gap-2">
@@ -311,13 +311,13 @@ const CaseCategoriesPage = () => {
                     )}
 
                     {!category.active && (
-                      <div className="mt-2 inline-block rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-500 uppercase dark:bg-red-900/50 dark:text-red-300">
+                      <div className="mt-2 inline-block rounded-full bg-red-100 px-2 py-1 text-xs font-semibold text-red-500 uppercase subpixel-antialiased dark:bg-red-900/50 dark:text-red-300">
                         Inactive
                       </div>
                     )}
                   </div>
                   <div className="space-y-4 p-6">
-                    <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-600 dark:text-gray-300">
+                    <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-600 subpixel-antialiased dark:text-gray-300">
                       <CircleStackIcon className="h-5 w-5" />
                       Available Packages
                     </h3>
@@ -343,7 +343,7 @@ const CaseCategoriesPage = () => {
           ) : (
             <div className="rounded-2xl border border-gray-200 bg-white/50 px-6 py-16 text-center shadow-md dark:border-gray-800 dark:bg-gray-900/50">
               <TagIcon className="mx-auto h-16 w-16 text-gray-400" />
-              <h3 className="mt-4 text-2xl font-semibold text-gray-700 dark:text-gray-200">
+              <h3 className="mt-4 text-2xl font-semibold text-gray-700 subpixel-antialiased dark:text-gray-200">
                 {categories.length === 0
                   ? "No Categories Found"
                   : "No Categories Match Filters"}

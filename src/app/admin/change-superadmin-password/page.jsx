@@ -28,7 +28,7 @@ export default function ChangeSuperAdminPasswordPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="rounded-xl bg-white p-8 text-center shadow-xl dark:bg-gray-900">
-          <h2 className="mb-2 text-2xl font-semibold text-red-600">
+          <h2 className="mb-2 text-2xl font-semibold text-red-600 subpixel-antialiased">
             Access Denied
           </h2>
           <p className="text-gray-700 dark:text-gray-300">
@@ -93,7 +93,7 @@ export default function ChangeSuperAdminPasswordPage() {
           Update your super admin account password below.
         </p>
         <div className="relative z-10 mb-6">
-          <label className="mb-1 block font-semibold text-gray-700 dark:text-gray-300">
+          <label className="mb-1 block font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
             Current Password
           </label>
           <div className="relative flex items-center">
@@ -115,7 +115,7 @@ export default function ChangeSuperAdminPasswordPage() {
           </div>
         </div>
         <div className="relative z-10 mb-6">
-          <label className="mb-1 block font-semibold text-gray-700 dark:text-gray-300">
+          <label className="mb-1 block font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
             New Password
           </label>
           <div className="relative flex items-center">
@@ -137,7 +137,7 @@ export default function ChangeSuperAdminPasswordPage() {
           </div>
         </div>
         <div className="relative z-10 mb-10">
-          <label className="mb-1 block font-semibold text-gray-700 dark:text-gray-300">
+          <label className="mb-1 block font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
             Confirm New Password
           </label>
           <div className="relative flex items-center">
@@ -160,7 +160,7 @@ export default function ChangeSuperAdminPasswordPage() {
         </div>
         <button
           type="submit"
-          className="relative z-10 w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3 text-lg font-semibold tracking-wide text-white shadow-lg transition-all duration-150 hover:from-blue-700 hover:to-blue-600"
+          className="relative z-10 w-full rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 px-4 py-3 text-lg font-semibold tracking-wide text-white subpixel-antialiased shadow-lg transition-all duration-150 hover:from-blue-700 hover:to-blue-600"
         >
           Update Password
         </button>

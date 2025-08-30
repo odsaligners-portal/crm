@@ -3,9 +3,9 @@ import React from "react";
 
 const PageBreadcrumb = ({ pageTitle }) => {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
       <h2
-        className="text-xl font-semibold text-gray-800 dark:text-white/90"
+        className="text-xl font-semibold text-gray-800 subpixel-antialiased dark:text-white/90"
         x-text="pageName"
       >
         {pageTitle}

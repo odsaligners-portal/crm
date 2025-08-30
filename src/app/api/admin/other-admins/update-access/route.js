@@ -37,6 +37,7 @@ export async function POST(req) {
       "addSalesPersonAccess",
       "distributerAccess",
       "plannerAccess",
+      "specialCommentAccess",
     ];
     const updateData = {};
     accessFields.forEach(field => {

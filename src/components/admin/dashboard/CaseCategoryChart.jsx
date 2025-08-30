@@ -34,7 +34,7 @@ const CaseCategoryChart = ({ series = [], labels = [] }) => {
         const value = series[seriesIndex];
         const color = w.globals.colors[seriesIndex];
 
-        return `<div class="p-3 text-white font-semibold rounded" style="background-color: ${color};">
+        return `<div class="p-3 text-white font-semibold subpixel-antialiased rounded" style="background-color: ${color};">
           <span>${label}: ${value} patients</span>
         </div>`;
       },
@@ -43,7 +43,7 @@ const CaseCategoryChart = ({ series = [], labels = [] }) => {
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl dark:bg-gray-800">
-      <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
+      <h3 className="mb-4 text-xl font-semibold text-gray-800 subpixel-antialiased dark:text-white">
         Case Category Breakdown
       </h3>
       <div className="flex h-full items-center justify-center">
@@ -61,7 +61,7 @@ const CaseCategoryChart = ({ series = [], labels = [] }) => {
               }}
             ></span>
             <span className="text-gray-600 dark:text-gray-400">{label}:</span>
-            <span className="ml-1.5 font-semibold text-gray-800 dark:text-white">
+            <span className="ml-1.5 font-semibold text-gray-800 subpixel-antialiased dark:text-white">
               {series[index]}
             </span>
           </div>

@@ -259,7 +259,7 @@ const ClinicImagesModal = ({
 
     return (
       <div className="group rounded-xl p-2 text-center transition-all duration-300 hover:bg-gray-50/50">
-        <label className="mb-3 block text-sm font-semibold text-gray-700 transition-colors duration-200 group-focus-within:text-blue-600">
+        <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased transition-colors duration-200 group-focus-within:text-blue-600">
           {imageLabels[idx] || `Image ${idx + 1}`}
         </label>
         {!fileUrl ? (
@@ -330,9 +330,9 @@ const ClinicImagesModal = ({
                   </svg>
                 </div>
                 <div className="mb-2 text-center">
-                  <span className="block text-sm font-semibold text-gray-800 group-hover/upload:text-gray-900">
+                  <span className="block text-sm font-semibold text-gray-800 subpixel-antialiased group-hover/upload:text-gray-900">
                     Drop file or{" "}
-                    <span className="font-semibold text-blue-600 underline group-hover/upload:text-blue-700">
+                    <span className="font-semibold text-blue-600 underline subpixel-antialiased group-hover/upload:text-blue-700">
                       browse
                     </span>
                   </span>
@@ -385,7 +385,7 @@ const ClinicImagesModal = ({
       <div className="max-h-[90vh] w-full max-w-7xl overflow-y-auto rounded-3xl border border-white/20 bg-white/95 p-8 shadow-2xl backdrop-blur-sm">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-semibold text-gray-800">
+            <h2 className="text-3xl font-semibold text-gray-800 subpixel-antialiased">
               {imageType === "middle" ? "Middle" : "Post"} Clinic Images
             </h2>
             <p className="mt-2 text-gray-600">
@@ -439,7 +439,7 @@ const ClinicImagesModal = ({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-blue-800">
+                <h3 className="text-xl font-semibold text-blue-800 subpixel-antialiased">
                   📸 Intraoral Photo
                 </h3>
                 <p className="text-blue-600">
@@ -473,7 +473,7 @@ const ClinicImagesModal = ({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-green-800">
+                <h3 className="text-xl font-semibold text-green-800 subpixel-antialiased">
                   👤 Facial
                 </h3>
                 <p className="text-green-600">
@@ -508,7 +508,7 @@ const ClinicImagesModal = ({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-purple-800">
+                <h3 className="text-xl font-semibold text-purple-800 subpixel-antialiased">
                   🔬 X-ray
                 </h3>
                 <p className="text-purple-600">
@@ -528,14 +528,14 @@ const ClinicImagesModal = ({
         <div className="mt-8 flex justify-end gap-4">
           <button
             onClick={onClose}
-            className="rounded-xl bg-gray-500 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-gray-600"
+            className="rounded-xl bg-gray-500 px-6 py-3 font-semibold text-white subpixel-antialiased transition-all duration-200 hover:bg-gray-600"
           >
             Cancel
           </button>
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white transition-all duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+            className="rounded-xl bg-blue-600 px-6 py-3 font-semibold text-white subpixel-antialiased transition-all duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
           >
             {isSubmitting ? "Updating..." : "Update Images"}
           </button>

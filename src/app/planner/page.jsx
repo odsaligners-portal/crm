@@ -68,7 +68,7 @@ export default function PlannerDashboard() {
         <div className="space-y-6 lg:col-span-2">
           {/* <PlannerAtAGlance data={atAGlanceData} /> */}
           <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
-            <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
+            <h3 className="mb-4 text-xl font-semibold text-gray-800 subpixel-antialiased dark:text-white">
               Planner Activity at a Glance
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
@@ -79,7 +79,7 @@ export default function PlannerDashboard() {
         <div className="space-y-6">
           {/* <PlannerQuickLinks /> */}
           <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
-            <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
+            <h3 className="mb-4 text-xl font-semibold text-gray-800 subpixel-antialiased dark:text-white">
               Quick Links
             </h3>
             <p className="text-gray-500 dark:text-gray-400">
@@ -88,7 +88,7 @@ export default function PlannerDashboard() {
           </div>
           {/* <PlannerUpcomingEvents events={events} /> */}
           <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
-            <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
+            <h3 className="mb-4 text-xl font-semibold text-gray-800 subpixel-antialiased dark:text-white">
               Upcoming Events
             </h3>
             <ul className="space-y-4">
@@ -99,7 +99,7 @@ export default function PlannerDashboard() {
                       <MdEvent className="h-5 w-5 text-green-500" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
+                      <p className="truncate text-sm font-semibold text-gray-900 subpixel-antialiased dark:text-white">
                         {event.name}
                       </p>
                       <p className="text-sm text-gray-500 dark:text-gray-400">

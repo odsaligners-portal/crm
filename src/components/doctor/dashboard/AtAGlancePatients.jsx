@@ -47,7 +47,7 @@ const AtAGlancePatients = ({ patients = [] }) => {
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-lg transition-all duration-300 hover:shadow-2xl dark:bg-gray-800">
-      <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
+      <h3 className="mb-4 text-xl font-semibold text-gray-800 subpixel-antialiased dark:text-white">
         Patient Activity at a Glance
       </h3>
       <div className="space-y-2">
@@ -59,7 +59,7 @@ const AtAGlancePatients = ({ patients = [] }) => {
             >
               <div className="flex cursor-pointer items-center justify-between rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-gray-700">
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-gray-900 dark:text-white">
+                  <p className="truncate font-semibold text-gray-900 subpixel-antialiased dark:text-white">
                     {patient.patientName || patient.name}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">

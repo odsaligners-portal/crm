@@ -63,7 +63,7 @@ const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
           </h2>
           <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
             For patient:{" "}
-            <span className="font-semibold text-purple-600 dark:text-purple-400">
+            <span className="font-semibold text-purple-600 subpixel-antialiased dark:text-purple-400">
               {patient?.patientName}
             </span>
           </p>
@@ -71,7 +71,7 @@ const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
             <>
               <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
                 Case ID:{" "}
-                <span className="font-semibold text-purple-600 dark:text-purple-400">
+                <span className="font-semibold text-purple-600 subpixel-antialiased dark:text-purple-400">
                   {caseId}
                 </span>
               </p>
@@ -109,9 +109,9 @@ const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
                     className="mb-4 rounded-lg border border-green-300 bg-green-50 p-4 shadow-sm dark:border-green-700 dark:bg-green-900/30"
                   >
                     <div className="mb-2 flex items-baseline justify-between">
-                      <p className="flex items-center gap-2 font-semibold text-gray-800 dark:text-white">
+                      <p className="flex items-center gap-2 font-semibold text-gray-800 subpixel-antialiased dark:text-white">
                         Commented By: {modComment.commentedBy.name}
-                        <span className="ml-2 rounded bg-green-200 px-2 py-0.5 text-xs font-semibold text-green-800">
+                        <span className="ml-2 rounded bg-green-200 px-2 py-0.5 text-xs font-semibold text-green-800 subpixel-antialiased">
                           Modification
                         </span>
                       </p>
@@ -133,7 +133,7 @@ const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
                     className="mb-4 rounded-lg border border-gray-200 bg-white/50 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800/50"
                   >
                     <div className="mb-2 flex items-baseline justify-between">
-                      <p className="flex items-center gap-2 font-semibold text-gray-800 dark:text-white">
+                      <p className="flex items-center gap-2 font-semibold text-gray-800 subpixel-antialiased dark:text-white">
                         Commented By: {comment.commentedBy.name}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">

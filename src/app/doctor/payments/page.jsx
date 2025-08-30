@@ -101,7 +101,7 @@ export default function PaymentStatus() {
           />
           <Button
             type="button"
-            className="h-10 rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 font-semibold text-white shadow-md transition-transform hover:scale-105"
+            className="h-10 rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 font-semibold text-white subpixel-antialiased shadow-md transition-transform hover:scale-105"
             onClick={() => fetchPatients()}
           >
             Search
@@ -109,7 +109,7 @@ export default function PaymentStatus() {
         </div>
       </div>
       <div className="mb-4 flex items-center gap-4">
-        <label className="flex items-center gap-2 font-semibold text-blue-700 dark:text-blue-200">
+        <label className="flex items-center gap-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
           <input
             type="checkbox"
             checked={pendingOnly}
@@ -127,31 +127,31 @@ export default function PaymentStatus() {
                 <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Case ID
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Patient Name
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Location
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Total Payment
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Remaining Payment
                   </TableCell>
@@ -173,7 +173,7 @@ export default function PaymentStatus() {
                       animationDelay: `${idx * 30}ms`,
                     }}
                   >
-                    <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 dark:text-blue-300">
+                    <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
                       {patient.caseId}
                     </TableCell>
                     <TableCell className="flex h-10 items-center justify-center gap-2 px-2 py-1 text-center font-medium">
@@ -189,10 +189,10 @@ export default function PaymentStatus() {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell className="px-2 py-1 text-center font-semibold text-green-700 dark:text-green-300">
+                    <TableCell className="px-2 py-1 text-center font-semibold text-green-700 subpixel-antialiased dark:text-green-300">
                       ₹{patient.amount?.total ?? 0}
                     </TableCell>
-                    <TableCell className="px-2 py-1 text-center font-semibold text-red-700 dark:text-red-300">
+                    <TableCell className="px-2 py-1 text-center font-semibold text-red-700 subpixel-antialiased dark:text-red-300">
                       ₹{patient.amount?.pending ?? 0}
                     </TableCell>
                   </TableRow>
@@ -271,7 +271,7 @@ export default function PaymentStatus() {
             />
             <circle cx="60" cy="54" r="10" fill="#6366f1" />
           </svg>
-          <div className="mb-2 text-2xl font-semibold text-blue-700 dark:text-blue-200">
+          <div className="mb-2 text-2xl font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
             No patients found
           </div>
           <div className="mb-6 text-gray-500">

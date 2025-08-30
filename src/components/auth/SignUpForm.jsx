@@ -227,7 +227,7 @@ export default function SignUpForm({
     >
       <div className="mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white/60 p-4 px-8 shadow-2xl backdrop-blur-xs dark:bg-gray-900/60">
         <div className="mb-2">
-          <h1 className="text-title-sm sm:text-title-md mb-2 text-center font-semibold text-gray-800 dark:text-white/90">
+          <h1 className="text-title-sm sm:text-title-md mb-2 text-center font-semibold text-gray-800 subpixel-antialiased dark:text-white/90">
             {heading}
           </h1>
           <p className="text-center text-sm text-gray-500 dark:text-gray-400">

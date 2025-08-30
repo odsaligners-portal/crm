@@ -134,7 +134,7 @@ export default function UpdateMprActualPricePage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="rounded-xl bg-white p-8 text-center shadow-xl dark:bg-gray-900">
-          <h2 className="mb-2 text-2xl font-semibold text-red-600">
+          <h2 className="mb-2 text-2xl font-semibold text-red-600 subpixel-antialiased">
             Access Denied
           </h2>
           <p className="text-gray-700 dark:text-gray-300">
@@ -190,49 +190,49 @@ export default function UpdateMprActualPricePage() {
             <TableRow>
               <TableCell
                 isHeader
-                className="px-2 py-1 text-center font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 text-center font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Case ID
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 text-center font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 text-center font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Patient Name
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 text-center font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 text-center font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Doctor Name
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 text-center font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 text-center font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Case Category
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 text-center font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 text-center font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Package
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 text-center font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 text-center font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 MRP
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 text-center font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 text-center font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Actual Price
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 text-center font-semibold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 text-center font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Actions
               </TableCell>
@@ -245,7 +245,7 @@ export default function UpdateMprActualPricePage() {
                 className={`group transition-all duration-300 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? "bg-blue-50/50 dark:bg-gray-900/30" : "bg-white/70 dark:bg-gray-900/50"} animate-fadeInUp`}
                 style={{ animationDelay: `${idx * 30}ms` }}
               >
-                <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 dark:text-gray-300">
+                <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
                   {p.caseId}
                 </TableCell>
                 <TableCell className="px-2 py-1 text-center font-medium">

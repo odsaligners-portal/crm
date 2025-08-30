@@ -69,37 +69,37 @@ export default function ViewAllComments() {
             <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
               <TableCell
                 isHeader
-                className="p-2 font-semibold text-blue-700 dark:text-blue-200"
+                className="p-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 S.N.
               </TableCell>
               <TableCell
                 isHeader
-                className="p-2 font-semibold text-blue-700 dark:text-blue-200"
+                className="p-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Case ID
               </TableCell>
               <TableCell
                 isHeader
-                className="p-2 font-semibold text-blue-700 dark:text-blue-200"
+                className="p-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Patient Name
               </TableCell>
               <TableCell
                 isHeader
-                className="w-2/5 p-2 font-semibold text-blue-700 dark:text-blue-200"
+                className="w-2/5 p-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Comment
               </TableCell>
               <TableCell
                 isHeader
-                className="p-2 font-semibold text-blue-700 dark:text-blue-200"
+                className="p-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Comment By
               </TableCell>
               <TableCell
                 isHeader
-                className="p-2 font-semibold text-blue-700 dark:text-blue-200"
+                className="p-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Date
               </TableCell>
@@ -114,7 +114,7 @@ export default function ViewAllComments() {
                 <TableCell className="p-2 text-center align-middle font-medium text-gray-700 dark:text-gray-300">
                   {idx + 1}
                 </TableCell>
-                <TableCell className="p-2 text-center align-middle font-semibold text-blue-600 dark:text-blue-300">
+                <TableCell className="p-2 text-center align-middle font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
                   {comment.caseId}
                 </TableCell>
                 <TableCell className="p-2 text-center align-middle font-medium">
@@ -170,12 +170,12 @@ export default function ViewAllComments() {
               fontFamily="Arial, sans-serif"
               fontSize="12"
               fill="#4338ca"
-              className="font-semibold"
+              className="font-semibold subpixel-antialiased"
             >
               No comments found
             </text>
           </svg>
-          <div className="mb-2 text-2xl font-semibold text-blue-700 dark:text-blue-200">
+          <div className="mb-2 text-2xl font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
             No Comments Found
           </div>
           <p className="mb-6 text-gray-500">

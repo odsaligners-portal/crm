@@ -5,16 +5,21 @@ import Label from "@/components/form/Label";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
 import React, { useState, useMemo } from "react";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { setLoading } from '@/store/features/uiSlice';
-import { toast } from 'react-toastify';
-import { fetchWithError } from '@/utils/apiErrorHandler';
-import Select from 'react-select';
-import { Country, State } from 'country-state-city';
-import { useDropzone } from 'react-dropzone';
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { app as firebaseApp } from '@/utils/firebase';
+import { setLoading } from "@/store/features/uiSlice";
+import { toast } from "react-toastify";
+import { fetchWithError } from "@/utils/apiErrorHandler";
+import Select from "react-select";
+import { Country, State } from "country-state-city";
+import { useDropzone } from "react-dropzone";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+} from "firebase/storage";
+import { app as firebaseApp } from "@/utils/firebase";
 
 export default function CreateAdminPage() {
   const heading = "Create New Admin";
@@ -24,34 +29,38 @@ export default function CreateAdminPage() {
   const [showPassword, setShowPassword] = useState(false);
   const { token } = useSelector((state) => state.auth) || {};
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    mobile: '',
-    gender: '',
+    name: "",
+    email: "",
+    mobile: "",
+    gender: "",
     country: null,
     state: null,
-    city: '',
-    experience: '',
-    doctorType: '', 
-    address: '',
-    password: '',
-    confirmPassword: '',
+    city: "",
+    experience: "",
+    doctorType: "",
+    address: "",
+    password: "",
+    confirmPassword: "",
   });
-  const [photoUrl, setPhotoUrl] = useState('');
-  const [photoFileKey, setPhotoFileKey] = useState('');
+  const [photoUrl, setPhotoUrl] = useState("");
+  const [photoFileKey, setPhotoFileKey] = useState("");
   const [photoUploadedAt, setPhotoUploadedAt] = useState(null);
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const countryOptions = useMemo(() => Country.getAllCountries().map(country => ({
-    value: country.isoCode,
-    label: country.name
-  })), []);
+  const countryOptions = useMemo(
+    () =>
+      Country.getAllCountries().map((country) => ({
+        value: country.isoCode,
+        label: country.name,
+      })),
+    [],
+  );
 
   const stateOptions = useMemo(() => {
     if (formData.country) {
-      return State.getStatesOfCountry(formData.country.value).map(state => ({
+      return State.getStatesOfCountry(formData.country.value).map((state) => ({
         value: state.isoCode,
-        label: state.name
+        label: state.name,
       }));
     }
     return [];
@@ -59,17 +68,17 @@ export default function CreateAdminPage() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleSelectChange = (name, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
       [name]: value,
-      ...(name === 'country' && { state: null })
+      ...(name === "country" && { state: null }),
     }));
   };
 
@@ -82,13 +91,16 @@ export default function CreateAdminPage() {
     const storage = getStorage(firebaseApp);
     const storageRef = ref(storage, fileKey);
     const uploadTask = uploadBytesResumable(storageRef, file);
-    uploadTask.on('state_changed',
+    uploadTask.on(
+      "state_changed",
       (snapshot) => {
-        setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        setUploadProgress(
+          (snapshot.bytesTransferred / snapshot.totalBytes) * 100,
+        );
       },
       (error) => {
         dispatch(setLoading(false));
-        toast.error('Upload failed: ' + error.message);
+        toast.error("Upload failed: " + error.message);
       },
       async () => {
         const url = await getDownloadURL(uploadTask.snapshot.ref);
@@ -96,29 +108,33 @@ export default function CreateAdminPage() {
         setPhotoFileKey(fileKey);
         setPhotoUploadedAt(new Date().toISOString());
         dispatch(setLoading(false));
-        toast.success('Profile picture uploaded successfully.');
-      }
+        toast.success("Profile picture uploaded successfully.");
+      },
     );
   };
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, accept: { 'image/*': [] }, multiple: false });
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: { "image/*": [] },
+    multiple: false,
+  });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Passwords do not match');
+      toast.error("Passwords do not match");
       return;
     }
-    
+
     dispatch(setLoading(true));
-    
+
     try {
       const payload = {
         ...formData,
         country: formData.country?.label,
         state: formData.state?.label,
         role: "admin",
-      }
+      };
       if (photoUrl && photoFileKey && photoUploadedAt) {
         payload.profilePicture = {
           url: photoUrl,
@@ -128,17 +144,17 @@ export default function CreateAdminPage() {
       }
       delete payload.confirmPassword;
 
-      const data = await fetchWithError('/api/admin/other-admins/create', {
-        method: 'POST',
+      const data = await fetchWithError("/api/admin/other-admins/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
 
-      toast.success('Admin created successfully!');
-      router.push('/admin/other-admins');
+      toast.success("Admin created successfully!");
+      router.push("/admin/other-admins");
     } catch (error) {
       // fetchWithError will handle toast
     } finally {
@@ -147,10 +163,10 @@ export default function CreateAdminPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-transparent">
-      <div className="w-full max-w-3xl flex flex-col justify-center">
+    <div className="flex min-h-screen items-center justify-center bg-transparent">
+      <div className="flex w-full max-w-3xl flex-col justify-center">
         <div className="mb-5 sm:mb-8">
-          <h1 className="mb-2 font-semibold text-gray-800 text-title-sm dark:text-white/90 sm:text-title-md">
+          <h1 className="text-title-sm sm:text-title-md mb-2 font-semibold text-gray-800 subpixel-antialiased dark:text-white/90">
             {heading}
           </h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -159,20 +175,29 @@ export default function CreateAdminPage() {
         </div>
         <div>
           <form onSubmit={handleSubmit}>
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-3 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 md:grid-cols-3">
               {/* <!-- Profile Picture --> */}
-              <div className="col-span-1 md:col-span-3 sm:col-span-3">
+              <div className="col-span-1 sm:col-span-3 md:col-span-3">
                 <Label>Profile Picture</Label>
-                <div {...getRootProps()} className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-4 cursor-pointer transition ${isDragActive ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-white dark:bg-gray-800'}`}>
+                <div
+                  {...getRootProps()}
+                  className={`flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-4 transition ${isDragActive ? "border-blue-400 bg-blue-50" : "border-gray-300 bg-white dark:bg-gray-800"}`}
+                >
                   <input {...getInputProps()} />
                   {photoUrl ? (
-                    <img src={photoUrl} alt="Profile Preview" className="w-24 h-24 rounded-full object-cover mb-2" />
+                    <img
+                      src={photoUrl}
+                      alt="Profile Preview"
+                      className="mb-2 h-24 w-24 rounded-full object-cover"
+                    />
+                  ) : uploadProgress > 0 && uploadProgress < 100 ? (
+                    <div className="mt-2 text-xs text-blue-600">
+                      Uploading... {Math.round(uploadProgress)}%
+                    </div>
                   ) : (
-                    uploadProgress > 0 && uploadProgress < 100 ? (
-                      <div className="text-xs text-blue-600 mt-2">Uploading... {Math.round(uploadProgress)}%</div>
-                    ) : (
-                      <span className="text-gray-500 dark:text-gray-400">Drop an image here, or click to select</span>
-                    )
+                    <span className="text-gray-500 dark:text-gray-400">
+                      Drop an image here, or click to select
+                    </span>
                   )}
                 </div>
               </div>
@@ -220,9 +245,7 @@ export default function CreateAdminPage() {
               </div>
               {/* <!-- Address --> */}
               <div>
-                <Label>
-                  Address
-                </Label>
+                <Label>Address</Label>
                 <Input
                   type="text"
                   id="address"
@@ -234,9 +257,7 @@ export default function CreateAdminPage() {
               </div>
               {/* <!-- City --> */}
               <div>
-                <Label>
-                  City
-                </Label>
+                <Label>City</Label>
                 <Input
                   type="text"
                   id="city"
@@ -248,42 +269,36 @@ export default function CreateAdminPage() {
               </div>
               {/* <!-- Country --> */}
               <div>
-                <Label>
-                  Country
-                </Label>
+                <Label>Country</Label>
                 <Select
                   id="country"
                   name="country"
                   options={countryOptions}
                   value={formData.country}
-                  onChange={(value) => handleSelectChange('country', value)}
+                  onChange={(value) => handleSelectChange("country", value)}
                 />
               </div>
               {/* <!-- State --> */}
               <div>
-                <Label>
-                  State
-                </Label>
+                <Label>State</Label>
                 <Select
                   id="state"
                   name="state"
                   options={stateOptions}
                   value={formData.state}
-                  onChange={(value) => handleSelectChange('state', value)}
+                  onChange={(value) => handleSelectChange("state", value)}
                   isDisabled={!formData.country}
                 />
               </div>
               {/* <!-- Gender --> */}
               <div>
-                <Label>
-                  Gender
-                </Label>
+                <Label>Gender</Label>
                 <select
                   id="gender"
                   name="gender"
                   value={formData.gender}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 text-sm border border-gray-200 rounded-lg outline-none bg-gray-50 focus:border-brand-500 focus:ring-brand-500 dark:bg-gray-800 dark:border-gray-700 dark:focus:border-brand-500"
+                  className="focus:border-brand-500 focus:ring-brand-500 dark:focus:border-brand-500 w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none dark:border-gray-700 dark:bg-gray-800"
                 >
                   <option value="">Select Gender</option>
                   <option value="male">Male</option>
@@ -293,9 +308,7 @@ export default function CreateAdminPage() {
               </div>
               {/* <!-- Experience --> */}
               <div>
-                <Label>
-                  Experience (in years)
-                </Label>
+                <Label>Experience (in years)</Label>
                 <Input
                   type="text"
                   id="experience"
@@ -307,9 +320,7 @@ export default function CreateAdminPage() {
               </div>
               {/* <!-- Doctor's Type --> */}
               <div>
-                <Label>
-                  Doctor's Type
-                </Label>
+                <Label>Doctor's Type</Label>
                 <Input
                   type="text"
                   id="doctorType"
@@ -335,7 +346,7 @@ export default function CreateAdminPage() {
                   />
                   <span
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
+                    className="absolute top-1/2 right-4 z-30 -translate-y-1/2 cursor-pointer"
                   >
                     {showPassword ? (
                       <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
@@ -364,7 +375,7 @@ export default function CreateAdminPage() {
                 <div className="flex items-center justify-end">
                   <button
                     type="submit"
-                    className="flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2.5 font-medium text-white-default-500 transition-colors duration-300 hover:bg-blue-700"
+                    className="text-white-default-500 flex items-center justify-center rounded-lg bg-blue-600 px-6 py-2.5 font-medium transition-colors duration-300 hover:bg-blue-700"
                   >
                     Create Admin
                   </button>
@@ -372,7 +383,6 @@ export default function CreateAdminPage() {
               </div>
             </div>
           </form>
-                        
         </div>
       </div>
     </div>

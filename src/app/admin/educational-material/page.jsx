@@ -32,13 +32,13 @@ export default function EducationalMaterialPage() {
             className="flex flex-col rounded-xl bg-white p-6 shadow-lg dark:bg-gray-900"
           >
             <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-blue-700 dark:text-blue-200">
+              <h2 className="text-xl font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
                 {mat.name}
               </h2>
               <a
                 href={mat.file}
                 download
-                className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white shadow transition hover:bg-blue-700"
+                className="rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white subpixel-antialiased shadow transition hover:bg-blue-700"
               >
                 Download
               </a>

@@ -17,7 +17,7 @@ export const EcommerceMetrics = () => {
             <span className="text-sm text-gray-500 dark:text-gray-400">
               Customers
             </span>
-            <h4 className="text-title-sm mt-2 font-semibold text-gray-800 dark:text-white/90">
+            <h4 className="text-title-sm mt-2 font-semibold text-gray-800 subpixel-antialiased dark:text-white/90">
               3,782
             </h4>
           </div>
@@ -39,7 +39,7 @@ export const EcommerceMetrics = () => {
             <span className="text-sm text-gray-500 dark:text-gray-400">
               Orders
             </span>
-            <h4 className="text-title-sm mt-2 font-semibold text-gray-800 dark:text-white/90">
+            <h4 className="text-title-sm mt-2 font-semibold text-gray-800 subpixel-antialiased dark:text-white/90">
               5,359
             </h4>
           </div>

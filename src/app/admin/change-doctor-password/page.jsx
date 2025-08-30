@@ -185,7 +185,7 @@ export default function ChangeDoctorPasswordPage() {
           </p>
           <button
             onClick={() => router.back()}
-            className="mt-6 transform rounded-lg bg-gradient-to-r from-red-500 to-orange-500 px-6 py-2 font-semibold text-white shadow-lg transition-all duration-150 ease-in-out hover:translate-y-px hover:from-red-600 hover:to-orange-600 focus:ring-4 focus:ring-red-300 focus:outline-none dark:focus:ring-red-800"
+            className="mt-6 transform rounded-lg bg-gradient-to-r from-red-500 to-orange-500 px-6 py-2 font-semibold text-white subpixel-antialiased shadow-lg transition-all duration-150 ease-in-out hover:translate-y-px hover:from-red-600 hover:to-orange-600 focus:ring-4 focus:ring-red-300 focus:outline-none dark:focus:ring-red-800"
           >
             Go Back
           </button>
@@ -215,37 +215,37 @@ export default function ChangeDoctorPasswordPage() {
                 <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
                   <TableCell
                     isHeader
-                    className="px-3 py-2 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-3 py-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     S.N.
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-3 py-2 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-3 py-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Name
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-3 py-2 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-3 py-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Email
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-3 py-2 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-3 py-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Password
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-3 py-2 font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-3 py-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Confirm Password
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-3 py-2 text-center font-semibold text-blue-700 dark:text-blue-200"
+                    className="px-3 py-2 text-center font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Action
                   </TableCell>
@@ -258,10 +258,10 @@ export default function ChangeDoctorPasswordPage() {
                     className={`group transition-all duration-300 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? "bg-blue-50/50 dark:bg-gray-900/30" : "bg-white/70 dark:bg-gray-900/50"} animate-fadeInUp`}
                     style={{ animationDelay: `${idx * 30}ms` }}
                   >
-                    <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 dark:text-gray-300">
+                    <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
                       {idx + 1}
                     </TableCell>
-                    <TableCell className="px-2 py-1 font-semibold text-blue-600 dark:text-blue-300">
+                    <TableCell className="px-2 py-1 font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
                       {admin.name}
                     </TableCell>
                     <TableCell className="px-2 py-1 font-medium">
@@ -387,37 +387,37 @@ export default function ChangeDoctorPasswordPage() {
             <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
               <TableCell
                 isHeader
-                className="px-3 py-2 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-3 py-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 S.N.
               </TableCell>
               <TableCell
                 isHeader
-                className="px-3 py-2 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-3 py-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Name
               </TableCell>
               <TableCell
                 isHeader
-                className="px-3 py-2 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-3 py-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Email
               </TableCell>
               <TableCell
                 isHeader
-                className="px-3 py-2 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-3 py-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Password
               </TableCell>
               <TableCell
                 isHeader
-                className="px-3 py-2 font-semibold text-blue-700 dark:text-blue-200"
+                className="px-3 py-2 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Confirm Password
               </TableCell>
               <TableCell
                 isHeader
-                className="px-3 py-2 text-center font-semibold text-blue-700 dark:text-blue-200"
+                className="px-3 py-2 text-center font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
                 Action
               </TableCell>
@@ -430,10 +430,10 @@ export default function ChangeDoctorPasswordPage() {
                 className={`group transition-all duration-300 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? "bg-blue-50/50 dark:bg-gray-900/30" : "bg-white/70 dark:bg-gray-900/50"} animate-fadeInUp`}
                 style={{ animationDelay: `${idx * 30}ms` }}
               >
-                <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 dark:text-gray-300">
+                <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
                   {idx + 1}
                 </TableCell>
-                <TableCell className="px-2 py-1 font-semibold text-blue-600 dark:text-blue-300">
+                <TableCell className="px-2 py-1 font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
                   {doctor.name}
                 </TableCell>
                 <TableCell className="px-2 py-1 font-medium">

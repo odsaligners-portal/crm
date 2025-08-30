@@ -20,7 +20,7 @@ const DoctorQuickLinks = () => {
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
-      <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
+      <h3 className="mb-4 text-xl font-semibold text-gray-800 subpixel-antialiased dark:text-white">
         Quick Links
       </h3>
       <div className="grid grid-cols-2 gap-4">
@@ -31,7 +31,7 @@ const DoctorQuickLinks = () => {
             className={`flex transform flex-col items-center justify-center rounded-lg p-6 text-white transition-transform hover:scale-105 ${link.color}`}
           >
             {link.icon}
-            <span className="mt-2 text-center text-sm font-semibold">
+            <span className="mt-2 text-center text-sm font-semibold subpixel-antialiased">
               {link.label}
             </span>
           </Link>

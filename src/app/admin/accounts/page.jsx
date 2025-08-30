@@ -143,7 +143,7 @@ export default function SalesPersonsPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="rounded-xl bg-white p-8 text-center shadow-xl dark:bg-gray-900">
-          <h2 className="mb-2 text-2xl font-semibold text-red-600">
+          <h2 className="mb-2 text-2xl font-semibold text-red-600 subpixel-antialiased">
             Access Denied
           </h2>
           <p className="text-gray-700 dark:text-gray-300">
@@ -225,10 +225,10 @@ export default function SalesPersonsPage() {
                         className={`group transition-all duration-300 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? "bg-blue-50/50 dark:bg-gray-900/30" : "bg-white/70 dark:bg-gray-900/50"} animate-fadeInUp`}
                         style={{ animationDelay: `${idx * 30}ms` }}
                       >
-                        <TableCell className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300">
+                        <TableCell className="px-3 py-2 text-center font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
                           {idx + 1}
                         </TableCell>
-                        <TableCell className="px-3 py-2 text-center font-semibold text-gray-700 dark:text-gray-300">
+                        <TableCell className="px-3 py-2 text-center font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
                           {a.name}
                         </TableCell>
                         <TableCell className="px-3 py-2 text-center font-medium">

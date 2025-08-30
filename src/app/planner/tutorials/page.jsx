@@ -26,14 +26,14 @@ export default function TutorialsPage() {
             className="flex flex-col rounded-xl bg-white p-6 shadow-lg dark:bg-gray-900"
           >
             <div className="mb-4 flex items-center justify-between">
-              <span className="text-xs font-semibold text-blue-400 dark:text-blue-200">
+              <span className="text-xs font-semibold text-blue-400 subpixel-antialiased dark:text-blue-200">
                 {vid.name}
               </span>
               {/* <a
                 href={vid.watch}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition font-semibold"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 transition font-semibold subpixel-antialiased"
               >
                 Watch on YouTube
               </a> */}

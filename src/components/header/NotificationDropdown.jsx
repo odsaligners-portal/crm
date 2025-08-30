@@ -69,7 +69,7 @@ export default function NotificationDropdown() {
         className="shadow-theme-lg dark:bg-gray-dark fixed inset-x-0 mt-[17px] flex max-h-[480px] w-screen flex-col rounded-2xl border border-gray-200 bg-white p-3 sm:absolute sm:inset-x-auto sm:right-0 sm:left-auto sm:mx-0 sm:w-[400px] sm:border-2 sm:border-blue-500 md:w-[450px] lg:w-[500px] dark:border-gray-800 dark:sm:border-blue-400"
       >
         <div className="mb-3 flex items-center justify-between border-b border-gray-100 pb-3 dark:border-gray-700">
-          <h5 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+          <h5 className="text-lg font-semibold text-gray-800 subpixel-antialiased dark:text-gray-200">
             Notification
           </h5>
           <button
@@ -123,7 +123,7 @@ export default function NotificationDropdown() {
                       </span>
                     </span>
                     <button
-                      className={`mt-2 rounded px-2 py-1 text-[11px] font-semibold shadow transition-all duration-200 md:text-xs ${
+                      className={`mt-2 rounded px-2 py-1 text-[11px] font-semibold subpixel-antialiased shadow transition-all duration-200 md:text-xs ${
                         isRead
                           ? "bg-gray-200/80 text-gray-500 hover:bg-gray-300/90 hover:text-gray-700"
                           : "bg-gradient-to-r from-blue-600 to-purple-500 text-white shadow-lg hover:from-blue-700 hover:to-purple-600 hover:shadow-xl"

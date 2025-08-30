@@ -101,7 +101,7 @@ const TeethSelector = ({ onTeethSelect, selectedTeeth = [] }) => {
             <span
               className={`text-xs font-medium transition-colors duration-300 group-hover:text-white ${
                 selectedTeeth.includes(toothNumber)
-                  ? "font-semibold text-white"
+                  ? "font-semibold text-white subpixel-antialiased"
                   : "text-gray-600"
               } `}
             >
@@ -146,7 +146,7 @@ const TeethSelector = ({ onTeethSelect, selectedTeeth = [] }) => {
 
       {/* Selected teeth display */}
       <div className="mt-5 min-w-80 rounded-lg border border-gray-300 bg-white p-4 text-center">
-        <h3 className="m-0 mb-3 text-lg font-semibold text-blue-500">
+        <h3 className="m-0 mb-3 text-lg font-semibold text-blue-500 subpixel-antialiased">
           Selected Teeth: {selectedTeeth.length}
         </h3>
         <p className="m-0 font-mono text-sm text-gray-600">
@@ -167,7 +167,7 @@ const TeethSelector = ({ onTeethSelect, selectedTeeth = [] }) => {
           }}
         >
           <div className="mb-2 text-center">
-            <span className="text-sm font-semibold text-gray-700">
+            <span className="text-sm font-semibold text-gray-700 subpixel-antialiased">
               Tooth {hoveredTooth}
             </span>
           </div>

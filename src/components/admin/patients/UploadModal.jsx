@@ -140,7 +140,7 @@ const UploadModal = ({ isOpen, onClose, patient, isModification = false }) => {
             </h2>
             <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
               For patient:{" "}
-              <span className="font-semibold text-purple-600 dark:text-purple-400">
+              <span className="font-semibold text-purple-600 subpixel-antialiased dark:text-purple-400">
                 {patient?.patientName}
               </span>
             </p>
@@ -149,7 +149,7 @@ const UploadModal = ({ isOpen, onClose, patient, isModification = false }) => {
           {patient && (
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="relative">
-                <label className="mb-2 block font-semibold text-gray-700 dark:text-gray-300">
+                <label className="mb-2 block font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
                   Patient Name
                 </label>
                 <div className="relative">
@@ -164,7 +164,7 @@ const UploadModal = ({ isOpen, onClose, patient, isModification = false }) => {
               </div>
 
               <div className="relative">
-                <label className="mb-2 block font-semibold text-gray-700 dark:text-gray-300">
+                <label className="mb-2 block font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
                   Description
                 </label>
                 <div className="relative">
@@ -230,7 +230,7 @@ const UploadModal = ({ isOpen, onClose, patient, isModification = false }) => {
                 <Button
                   type="submit"
                   disabled={formLoading}
-                  className="flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 font-semibold text-white subpixel-antialiased shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {formLoading ? (
                     <>

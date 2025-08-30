@@ -128,7 +128,7 @@ export default function Step3Page() {
         </div>
         <div className="mb-8">
           <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-semibold text-blue-600">
+            <span className="text-xs font-semibold text-blue-600 subpixel-antialiased">
               Step 3 of 4
             </span>
             <span className="text-xs text-gray-400">
@@ -143,7 +143,7 @@ export default function Step3Page() {
           </div>
         </div>
         {/* Heading & Description */}
-        <h1 className="mb-1 text-3xl font-semibold tracking-tight text-blue-700 dark:text-white">
+        <h1 className="mb-1 text-3xl font-semibold tracking-tight text-blue-700 subpixel-antialiased dark:text-white">
           Step 3: Midline & Arch Expansion
         </h1>
         <p className="mb-8 text-sm text-gray-500 dark:text-gray-300">
@@ -154,7 +154,7 @@ export default function Step3Page() {
         <form className="space-y-8" onSubmit={nextStep}>
           <div className="space-y-6">
             <div className="rounded-lg border border-blue-100 bg-blue-50/50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
-              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+              <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold subpixel-antialiased">
                 <ArrowsRightLeftIcon className="h-5 w-5 text-blue-400" />
                 Midline & Arch Expansion
               </h3>
@@ -235,7 +235,7 @@ export default function Step3Page() {
             <Button
               type="button"
               onClick={prevStep}
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-400 to-blue-500 px-8 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-500 hover:to-blue-600"
+              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-400 to-blue-500 px-8 py-3 text-base font-semibold text-white subpixel-antialiased shadow-lg transition-all duration-200 hover:from-blue-500 hover:to-blue-600"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -255,7 +255,7 @@ export default function Step3Page() {
             </Button>
             <Button
               type="submit"
-              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-8 py-3 text-base font-semibold text-white shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700"
+              className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-8 py-3 text-base font-semibold text-white subpixel-antialiased shadow-lg transition-all duration-200 hover:from-blue-600 hover:to-blue-700"
             >
               Submit
             </Button>

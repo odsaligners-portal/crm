@@ -167,7 +167,7 @@ export default function SpecialCommentModal({
       <div className="relative max-h-[90vh] overflow-auto p-6">
         {/* Header */}
         <div className="border-stroke dark:border-strokedark mb-6 flex items-center justify-between border-b pb-4">
-          <h3 className="text-xl font-semibold text-black dark:text-white">
+          <h3 className="text-xl font-semibold text-black subpixel-antialiased dark:text-white">
             {modalTitle}
           </h3>
           <button
