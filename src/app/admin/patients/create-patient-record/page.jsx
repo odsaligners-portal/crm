@@ -1681,7 +1681,7 @@ const DentalExaminationForm = () => {
                 >
                   <span className="block text-sm font-semibold text-gray-800 group-hover/upload:text-gray-900">
                     Drop file or{" "}
-                    <span className="font-bold text-blue-600 underline group-hover/upload:text-blue-700">
+                    <span className="font-semibold text-blue-600 underline group-hover/upload:text-blue-700">
                       browse
                     </span>
                   </span>
@@ -1801,7 +1801,7 @@ const DentalExaminationForm = () => {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <span className="font-bold tracking-wide">
+                <span className="font-semibold tracking-wide">
                   Case ID: {caseId}
                 </span>
               </div>
@@ -1845,7 +1845,7 @@ const DentalExaminationForm = () => {
           <div className="flex flex-wrap justify-center gap-3 rounded-3xl border border-white/20 bg-white/90 p-3 shadow-2xl backdrop-blur-xl">
             <button
               onClick={() => setActiveTab("general")}
-              className={`group flex items-center gap-3 rounded-2xl px-8 py-4 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-3 rounded-2xl px-8 py-4 font-semibold transition-all duration-500 ${
                 activeTab === "general"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -1877,7 +1877,7 @@ const DentalExaminationForm = () => {
 
             <button
               onClick={() => setActiveTab("clinical")}
-              className={`group flex items-center gap-3 rounded-2xl px-8 py-4 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-3 rounded-2xl px-8 py-4 font-semibold transition-all duration-500 ${
                 activeTab === "clinical"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -1915,7 +1915,7 @@ const DentalExaminationForm = () => {
 
             <button
               onClick={() => setActiveTab("files")}
-              className={`group flex items-center gap-3 rounded-2xl px-8 py-4 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-3 rounded-2xl px-8 py-4 font-semibold transition-all duration-500 ${
                 activeTab === "files"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -1967,7 +1967,7 @@ const DentalExaminationForm = () => {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-blue-800 to-indigo-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-blue-800 to-indigo-800 bg-clip-text text-4xl font-semibold text-transparent">
                   General Information
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -1993,7 +1993,7 @@ const DentalExaminationForm = () => {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Patient Information
                     </h2>
                   </div>
@@ -2217,7 +2217,7 @@ const DentalExaminationForm = () => {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Location Information
                     </h2>
                   </div>
@@ -2312,7 +2312,7 @@ const DentalExaminationForm = () => {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Address Information
                     </h2>
                   </div>
@@ -2895,7 +2895,7 @@ const DentalExaminationForm = () => {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Case Information
                     </h2>
                   </div>
@@ -3090,7 +3090,7 @@ const DentalExaminationForm = () => {
                           Character limit: 1500
                         </span>
                         <span
-                          className={`font-bold ${
+                          className={`font-semibold ${
                             formData.caseCategoryDetails &&
                             formData.caseCategoryDetails.length > 1500
                               ? "text-red-600"
@@ -3137,7 +3137,7 @@ const DentalExaminationForm = () => {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-green-800 to-emerald-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-green-800 to-emerald-800 bg-clip-text text-4xl font-semibold text-transparent">
                   Clinical Information
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -5442,7 +5442,7 @@ const DentalExaminationForm = () => {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent">
                   Files Upload
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -5475,7 +5475,7 @@ const DentalExaminationForm = () => {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-blue-800">
+                      <h2 className="text-2xl font-semibold text-blue-800">
                         📸 Intraoral Photo
                       </h2>
                       <p className="text-blue-600">
@@ -5509,7 +5509,7 @@ const DentalExaminationForm = () => {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-green-800">
+                      <h2 className="text-2xl font-semibold text-green-800">
                         👤 Facial
                       </h2>
                       <p className="text-green-600">
@@ -5544,7 +5544,7 @@ const DentalExaminationForm = () => {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-purple-800">
+                      <h2 className="text-2xl font-semibold text-purple-800">
                         🔬 X-ray
                       </h2>
                       <p className="text-purple-600">
@@ -5578,7 +5578,7 @@ const DentalExaminationForm = () => {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-orange-800">
+                      <h2 className="text-2xl font-semibold text-orange-800">
                         🎯 3D Models (PLY/STL)
                       </h2>
                       <p className="text-orange-600">
@@ -5607,7 +5607,7 @@ const DentalExaminationForm = () => {
                     // Save data to DB and move to next tab
                     handleSaveAndNext("clinical");
                   }}
-                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-10 py-4 font-bold text-white shadow-xl shadow-blue-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/40"
+                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-10 py-4 font-semibold text-white shadow-xl shadow-blue-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/40"
                 >
                   <span>Next</span>
                   <svg
@@ -5635,7 +5635,7 @@ const DentalExaminationForm = () => {
                     // Save data to DB and move to previous tab
                     handleSaveAndNext("general");
                   }}
-                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-gray-600 to-gray-700 px-8 py-4 font-bold text-white shadow-xl shadow-gray-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-gray-500/40"
+                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-gray-600 to-gray-700 px-8 py-4 font-semibold text-white shadow-xl shadow-gray-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-gray-500/40"
                 >
                   <svg
                     className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1"
@@ -5658,7 +5658,7 @@ const DentalExaminationForm = () => {
                     // Save data to DB and move to next tab
                     handleSaveAndNext("files");
                   }}
-                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-10 py-4 font-bold text-white shadow-xl shadow-blue-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/40"
+                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-10 py-4 font-semibold text-white shadow-xl shadow-blue-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/40"
                 >
                   <span>Next</span>
                   <svg
@@ -5686,7 +5686,7 @@ const DentalExaminationForm = () => {
                     // Save data to DB and move to previous tab
                     handleSaveAndNext("clinical");
                   }}
-                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-gray-600 to-gray-700 px-8 py-4 font-bold text-white shadow-xl shadow-gray-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-gray-500/40"
+                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-gray-600 to-gray-700 px-8 py-4 font-semibold text-white shadow-xl shadow-gray-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-gray-500/40"
                 >
                   <svg
                     className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1"
@@ -5709,7 +5709,7 @@ const DentalExaminationForm = () => {
                     // Submit the complete form
                     handleSubmit(new Event("submit"));
                   }}
-                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-10 py-4 font-bold text-white shadow-xl shadow-green-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/40"
+                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-10 py-4 font-semibold text-white shadow-xl shadow-green-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/40"
                 >
                   <svg
                     className="h-5 w-5"

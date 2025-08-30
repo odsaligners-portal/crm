@@ -142,7 +142,7 @@ export default function AssignDistributer() {
   if (hasDistributerAccess === false) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <span className="text-lg font-bold text-red-600 dark:text-red-400">
+        <span className="text-lg font-semibold text-red-600 dark:text-red-400">
           Access Denied
         </span>
         <span className="mt-2 text-gray-600 dark:text-gray-300">
@@ -202,37 +202,37 @@ export default function AssignDistributer() {
             <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
               <TableCell
                 isHeader
-                className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
               >
                 S.N.
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
               >
                 Name
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
               >
                 Email
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
               >
                 Mobile
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
               >
                 Distributer
               </TableCell>
               <TableCell
                 isHeader
-                className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
               >
                 Access
               </TableCell>

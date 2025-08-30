@@ -87,7 +87,7 @@ const baseNavItems = [
   },
   {
     icon: <MdDescription />,
-    name: "Special Comments",
+    name: "Production Comments",
     path: "/admin/special-comments",
   },
   // {
@@ -364,7 +364,7 @@ const AppSidebar = () => {
                 >
                   {nav.icon}
                   {nav.name === "Notifications" && unreadCount > 0 && (
-                    <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white">
+                    <span className="absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}

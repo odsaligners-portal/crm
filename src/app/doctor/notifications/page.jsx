@@ -79,7 +79,7 @@ export default function NotificationsPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-6 text-3xl font-bold">Notifications</h1>
+      <h1 className="mb-6 text-3xl font-semibold">Notifications</h1>
       {notifications.length === 0 ? (
         <div>No notifications found.</div>
       ) : (
@@ -118,7 +118,7 @@ export default function NotificationsPage() {
                       className={`text-sm md:text-base ${
                         isRead
                           ? "font-medium text-gray-700"
-                          : "font-bold text-blue-900"
+                          : "font-semibold text-blue-900"
                       }`}
                     >
                       {n.title}
@@ -145,7 +145,7 @@ export default function NotificationsPage() {
                 </div>
                 <div className="flex min-w-[40px] flex-col items-end">
                   <span
-                    className={`text-[11px] font-bold tracking-wide ${
+                    className={`text-[11px] font-semibold tracking-wide ${
                       isRead
                         ? "font-medium text-gray-400"
                         : "animate-pulse text-blue-600"

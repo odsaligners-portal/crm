@@ -254,19 +254,21 @@ const CaseCategoriesPage = () => {
                           <TagIcon className="h-6 w-6 text-blue-600 dark:text-blue-300" />
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h2 className="truncate text-2xl font-bold text-gray-800 dark:text-white/90">
+                          <h2 className="truncate text-2xl font-semibold text-gray-800 dark:text-white/90">
                             {category.category}
                           </h2>
                           <div className="mt-1 flex items-center gap-2">
-                            {category.categoryType === "default" && <span
-                              className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                                category.categoryType === "default"
-                                  ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
-                                  : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300"
-                              }`}
-                            >
-                              🌍 Default
-                            </span>}
+                            {category.categoryType === "default" && (
+                              <span
+                                className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                                  category.categoryType === "default"
+                                    ? "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300"
+                                    : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300"
+                                }`}
+                              >
+                                🌍 Default
+                              </span>
+                            )}
                             {category.categoryType === "country-specific" &&
                               category.country && (
                                 <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">

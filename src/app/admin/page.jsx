@@ -130,7 +130,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div>
-                <h1 className="bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-4xl font-bold text-transparent dark:from-white dark:via-blue-200 dark:to-purple-200">
+                <h1 className="bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-4xl font-semibold text-transparent dark:from-white dark:via-blue-200 dark:to-purple-200">
                   Admin Dashboard
                 </h1>
                 <p className="mt-1 text-lg text-gray-600 dark:text-gray-400">

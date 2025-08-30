@@ -257,7 +257,7 @@ export default function Step2Page() {
           </div>
         </div>
         {/* Heading & Description */}
-        <h1 className="mb-1 text-3xl font-bold tracking-tight text-blue-700 dark:text-white">
+        <h1 className="mb-1 text-3xl font-semibold tracking-tight text-blue-700 dark:text-white">
           Step 2: Chief Complaint & Case
         </h1>
         <p className="mb-8 text-sm text-gray-500 dark:text-gray-300">

@@ -143,7 +143,7 @@ export default function SalesPersonsPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="rounded-xl bg-white p-8 text-center shadow-xl dark:bg-gray-900">
-          <h2 className="mb-2 text-2xl font-bold text-red-600">
+          <h2 className="mb-2 text-2xl font-semibold text-red-600">
             Access Denied
           </h2>
           <p className="text-gray-700 dark:text-gray-300">

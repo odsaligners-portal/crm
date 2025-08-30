@@ -189,6 +189,7 @@ export default function ViewPatientDetails() {
   const { token } = useSelector((state) => state.auth);
   const [comments, setComments] = useState([]);
   const [patientFiles, setPatientFiles] = useState([]);
+  const [specialComments, setSpecialComments] = useState([]);
 
   // Clinic Images Modal States
   const [isClinicImagesModalOpen, setIsClinicImagesModalOpen] = useState(false);
@@ -234,6 +235,7 @@ export default function ViewPatientDetails() {
   useEffect(() => {
     if (patientData?.caseId && activeTab === "comments") {
       fetchComments();
+      fetchSpecialComments();
     }
   }, [patientData?.caseId, activeTab]);
 
@@ -243,6 +245,18 @@ export default function ViewPatientDetails() {
       fetchPatientFiles();
     }
   }, [patientData?.caseId, activeTab]);
+
+  // Mark Production Comments as read when section is expanded
+  useEffect(() => {
+    if (expandedSection === "specialComments" && specialComments.length > 0) {
+      // Mark unread comments as read
+      specialComments.forEach((comment) => {
+        if (!comment.isRead) {
+          markSpecialCommentAsRead(comment._id);
+        }
+      });
+    }
+  }, [expandedSection, specialComments]);
 
   // Helper function to extract error messages from API responses
   const extractErrorMessage = (errorData) => {
@@ -315,6 +329,55 @@ export default function ViewPatientDetails() {
       const errorMsg = e.message || "Error fetching comments";
       toast.error(errorMsg);
       setComments([]);
+    }
+  };
+
+  const fetchSpecialComments = async () => {
+    try {
+      const patientId = searchParams.get("id");
+      const result = await fetchWithError(
+        `/api/admin/special-comments/patient?patientId=${patientId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (result.success) {
+        setSpecialComments(result.specialComments || []);
+      } else {
+        const errorMsg =
+          result.message || "Failed to fetch Production Comments";
+        toast.error(errorMsg);
+        setSpecialComments([]);
+      }
+    } catch (e) {
+      const errorMsg = e.message || "Error fetching Production Comments";
+      toast.error(errorMsg);
+      setSpecialComments([]);
+    }
+  };
+
+  const markSpecialCommentAsRead = async (commentId) => {
+    try {
+      await fetchWithError("/api/admin/special-comments", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ commentId }),
+      });
+
+      // Update local state to mark comment as read
+      setSpecialComments((prev) =>
+        prev.map((comment) =>
+          comment._id === commentId ? { ...comment, isRead: true } : comment,
+        ),
+      );
+    } catch (error) {
+      // Error handling is done by fetchWithError
     }
   };
 
@@ -400,7 +463,7 @@ export default function ViewPatientDetails() {
         <div className="sticky top-20 z-10 border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-md">
           <div className="mx-auto max-w-7xl px-6 py-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-800">
+              <h1 className="text-2xl font-semibold text-gray-800">
                 {patientData.patientName}
               </h1>
               <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 px-6 py-3 text-white shadow-lg">
@@ -417,7 +480,7 @@ export default function ViewPatientDetails() {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <span className="font-bold tracking-wide">
+                <span className="font-semibold tracking-wide">
                   Case ID: {patientData.caseId}
                 </span>
               </div>
@@ -435,7 +498,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("general");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
                 activeTab === "general"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -458,7 +521,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("clinical");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
                 activeTab === "clinical"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -499,7 +562,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("files");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
                 activeTab === "files"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -522,7 +585,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("scanFiles");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
                 activeTab === "scanFiles"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -545,7 +608,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("comments");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
                 activeTab === "comments"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -588,7 +651,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-blue-800 to-indigo-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-blue-800 to-indigo-800 bg-clip-text text-4xl font-semibold text-transparent">
                   General Information
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -615,7 +678,7 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Patient Information
                     </h2>
                   </div>
@@ -665,7 +728,7 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Assigned Personnel
                     </h2>
                   </div>
@@ -862,7 +925,7 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Location Information
                     </h2>
                   </div>
@@ -912,7 +975,7 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Address Information
                     </h2>
                   </div>
@@ -1085,7 +1148,7 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Case Information
                     </h2>
                   </div>
@@ -1177,7 +1240,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-green-800 to-emerald-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-green-800 to-emerald-800 bg-clip-text text-4xl font-semibold text-transparent">
                   Clinical Information
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -2376,7 +2439,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent">
                   Files Upload
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -2408,7 +2471,7 @@ export default function ViewPatientDetails() {
                           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                         />
                       </svg>
-                      Update Middle Clinic Images
+                      Update Mid Treatment Records
                     </button>
                   ) : (
                     <button
@@ -2428,7 +2491,7 @@ export default function ViewPatientDetails() {
                           d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                         />
                       </svg>
-                      Add Middle Clinic Images
+                      Add Mid Treatment Records
                     </button>
                   )}
                 </div>
@@ -2454,7 +2517,7 @@ export default function ViewPatientDetails() {
                           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                         />
                       </svg>
-                      Update Post Clinic Images
+                      Update Post Treatment Records
                     </button>
                   ) : (
                     <button
@@ -2474,7 +2537,7 @@ export default function ViewPatientDetails() {
                           d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                         />
                       </svg>
-                      Add Post Clinic Images
+                      Add Post Treatment Records
                     </button>
                   )}
                 </div>
@@ -2506,7 +2569,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-blue-800">
+                      <h2 className="text-2xl font-semibold text-blue-800">
                         📸 Intraoral Photo
                       </h2>
                       <p className="text-blue-600">
@@ -2544,7 +2607,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-green-800">
+                      <h2 className="text-2xl font-semibold text-green-800">
                         👤 Facial
                       </h2>
                       <p className="text-green-600">
@@ -2583,7 +2646,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-purple-800">
+                      <h2 className="text-2xl font-semibold text-purple-800">
                         🔬 X-ray
                       </h2>
                       <p className="text-purple-600">
@@ -2621,7 +2684,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-orange-800">
+                      <h2 className="text-2xl font-semibold text-orange-800">
                         🎯 3D Models (PLY/STL)
                       </h2>
                       <p className="text-orange-600">
@@ -2644,7 +2707,7 @@ export default function ViewPatientDetails() {
                 <div className="mb-8">
                   <ClinicImagesDisplay
                     images={patientData.middleClinicImages}
-                    title="🔄 Middle Clinic Images"
+                    title="🔄 Mid Treatment Records"
                     description="Images taken during the treatment process"
                     colorScheme={{
                       border: "border-amber-200",
@@ -2664,7 +2727,7 @@ export default function ViewPatientDetails() {
                 <div className="mb-8">
                   <ClinicImagesDisplay
                     images={patientData.postClinicImages}
-                    title="✅ Post Clinic Images"
+                    title="✅ Post Treatment Records"
                     description="Images taken after treatment completion"
                     colorScheme={{
                       border: "border-green-200",
@@ -2701,7 +2764,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent">
                   Comments
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -2709,134 +2772,460 @@ export default function ViewPatientDetails() {
                 </p>
               </div>
 
-              {comments.length === 0 ? (
-                <div className="py-12 text-center">
-                  <svg
-                    className="mx-auto mb-4 h-16 w-16 text-gray-400"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                    />
-                  </svg>
-                  <h3 className="mb-2 text-lg font-medium text-gray-500">
-                    No Comments Yet
-                  </h3>
-                  <p className="text-gray-400">
-                    This patient doesn't have any comments yet.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {comments.map((comment, index) => (
-                    <div
-                      key={comment._id || index}
-                      className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg transition-shadow hover:shadow-xl"
-                    >
-                      <div className="mb-4 flex items-start justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
-                            <span className="text-sm font-semibold text-blue-600">
-                              {comment.commentedBy?.name
-                                ?.charAt(0)
-                                ?.toUpperCase() || "U"}
-                            </span>
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">
-                              {comment.commentedBy?.name || "Unknown User"}
-                            </h4>
-                            <p className="text-sm text-gray-500">
-                              {comment.commentedBy?.userType || "User"}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-xs text-gray-400">
-                            {comment.datetime
-                              ? new Date(comment.datetime).toLocaleDateString()
-                              : "Unknown Date"}
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            {comment.datetime
-                              ? new Date(comment.datetime).toLocaleTimeString()
-                              : ""}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="rounded-xl bg-gray-50 p-4">
-                        <div
-                          className="prose prose-sm max-w-none leading-relaxed text-gray-700"
-                          dangerouslySetInnerHTML={{
-                            __html: (comment.comment || "").replace(
-                              /<a /g,
-                              '<a target="_blank" rel="noopener noreferrer" ',
-                            ),
-                          }}
+              {/* Production Comments Section */}
+              <div className="mb-8 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-amber-100 p-6 shadow-lg">
+                <button
+                  onClick={() =>
+                    setExpandedSection(
+                      expandedSection === "specialComments"
+                        ? null
+                        : "specialComments",
+                    )
+                  }
+                  className="flex w-full items-center justify-between rounded-xl bg-white/60 p-4 backdrop-blur-sm transition-all hover:bg-white/80"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-amber-200 p-2">
+                      <svg
+                        className="h-6 w-6 text-amber-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"
                         />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-xl font-semibold text-amber-800">
+                        ⭐ Production Comments
+                        {specialComments.filter((c) => !c.isRead).length >
+                          0 && (
+                          <span className="ml-2 inline-flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-xs font-semibold text-white">
+                            {specialComments.filter((c) => !c.isRead).length}
+                          </span>
+                        )}
+                      </h3>
+                      <p className="text-sm text-amber-600">
+                        Important notes and special instructions for this
+                        patient
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-amber-700">
+                      {expandedSection === "specialComments"
+                        ? "Collapse"
+                        : "Expand"}
+                    </span>
+                    <svg
+                      className={`h-5 w-5 transform text-amber-600 transition-transform duration-200 ${
+                        expandedSection === "specialComments"
+                          ? "rotate-180"
+                          : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </button>
+
+                {expandedSection === "specialComments" && (
+                  <div className="mt-4 space-y-4">
+                    {specialComments.length === 0 ? (
+                      <div className="rounded-xl bg-white/80 p-6 backdrop-blur-sm">
+                        <div className="text-center">
+                          <svg
+                            className="mx-auto mb-4 h-16 w-16 text-amber-400"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                            />
+                          </svg>
+                          <h4 className="mb-2 text-lg font-semibold text-amber-800">
+                            No Production Comments Yet
+                          </h4>
+                          <p className="text-amber-600">
+                            This patient doesn't have any Production Comments
+                            yet.
+                          </p>
+                          <p className="mt-2 text-sm text-amber-500">
+                            Production Comments can include treatment
+                            priorities, allergies, special instructions, or any
+                            other critical information.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {specialComments.map((specialComment, index) => (
+                          <div
+                            key={specialComment._id || index}
+                            className="rounded-xl border border-amber-200 bg-white/90 p-6 shadow-lg backdrop-blur-sm"
+                          >
+                            <div className="mb-4 flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100">
+                                  <span className="text-sm font-semibold text-amber-600">
+                                    {specialComment.createdByName
+                                      ?.charAt(0)
+                                      ?.toUpperCase() || "A"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-gray-900">
+                                    {specialComment.title ||
+                                      "Production Comment"}
+                                  </h4>
+                                  <p className="text-sm text-gray-500">
+                                    Created by:{" "}
+                                    {specialComment.createdByName || "Admin"}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-xs text-gray-400">
+                                  {specialComment.createdAt
+                                    ? new Date(
+                                        specialComment.createdAt,
+                                      ).toLocaleDateString()
+                                    : "Unknown Date"}
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  {specialComment.createdAt
+                                    ? new Date(
+                                        specialComment.createdAt,
+                                      ).toLocaleTimeString()
+                                    : ""}
+                                </div>
+                                <div className="mt-1 flex items-center gap-1">
+                                  <div
+                                    className={`h-2 w-2 rounded-full ${
+                                      specialComment.isRead
+                                        ? "bg-green-500"
+                                        : "bg-amber-500"
+                                    }`}
+                                    title={
+                                      specialComment.isRead ? "Read" : "Unread"
+                                    }
+                                  ></div>
+                                  <span className="text-xs text-gray-500">
+                                    {specialComment.isRead ? "Read" : "Unread"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="rounded-xl bg-amber-50/50 p-4">
+                              <div
+                                className="prose prose-sm max-w-none leading-relaxed text-gray-700"
+                                dangerouslySetInnerHTML={{
+                                  __html: (
+                                    specialComment.comment || ""
+                                  ).replace(
+                                    /<a /g,
+                                    '<a target="_blank" rel="noopener noreferrer" ',
+                                  ),
+                                }}
+                              />
+                            </div>
+                            {specialComment.doctorName && (
+                              <div className="mt-3 rounded-lg bg-blue-50 p-3">
+                                <div className="text-xs font-medium text-blue-700">
+                                  Related Doctor
+                                </div>
+                                <div className="text-sm font-semibold text-blue-800">
+                                  {specialComment.doctorName}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+
+                        {/* Production Comments Summary */}
+                        <div className="mt-6 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-amber-100 p-6 shadow-lg">
+                          <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold text-amber-800">
+                            <svg
+                              className="h-5 w-5"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                              />
+                            </svg>
+                            Production Comments Summary
+                          </h4>
+                          <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
+                            <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
+                              <div className="mb-1 text-2xl font-semibold text-amber-600">
+                                {specialComments.length}
+                              </div>
+                              <div className="font-medium text-amber-700">
+                                Total Production Comments
+                              </div>
+                            </div>
+                            <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
+                              <div className="mb-1 text-2xl font-semibold text-green-600">
+                                {specialComments.filter((c) => c.isRead).length}
+                              </div>
+                              <div className="font-medium text-green-700">
+                                Read
+                              </div>
+                            </div>
+                            <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
+                              <div className="mb-1 text-2xl font-semibold text-amber-600">
+                                {
+                                  specialComments.filter((c) => !c.isRead)
+                                    .length
+                                }
+                              </div>
+                              <div className="font-medium text-amber-700">
+                                Unread
+                              </div>
+                            </div>
+                            <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
+                              <div className="mb-1 text-2xl font-semibold text-blue-600">
+                                {
+                                  specialComments.filter((c) => c.doctorName)
+                                    .length
+                                }
+                              </div>
+                              <div className="font-medium text-blue-700">
+                                With Doctor Info
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Regular Comments Section */}
+              <div className="mb-8 rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 to-blue-100 p-6 shadow-lg">
+                <button
+                  onClick={() =>
+                    setExpandedSection(
+                      expandedSection === "regularComments"
+                        ? null
+                        : "regularComments",
+                    )
+                  }
+                  className="flex w-full items-center justify-between rounded-xl bg-white/60 p-4 backdrop-blur-sm transition-all hover:bg-white/80"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-blue-200 p-2">
+                      <svg
+                        className="h-6 w-6 text-blue-700"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="text-left">
+                      <h3 className="text-xl font-semibold text-blue-800">
+                        💬 Comments
+                      </h3>
+                      <p className="text-sm text-blue-600">
+                        General comments and notes from doctors and distributers
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-blue-700">
+                      {expandedSection === "regularComments"
+                        ? "Collapse"
+                        : "Expand"}
+                    </span>
+                    <svg
+                      className={`h-5 w-5 transform text-blue-600 transition-transform duration-200 ${
+                        expandedSection === "regularComments"
+                          ? "rotate-180"
+                          : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M19 9l-7 7-7-7"
+                      />
+                    </svg>
+                  </div>
+                </button>
+
+                {expandedSection === "regularComments" && (
+                  <div className="mt-4 space-y-4">
+                    {comments.length === 0 ? (
+                      <div className="py-12 text-center">
+                        <svg
+                          className="mx-auto mb-4 h-16 w-16 text-gray-400"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
+                        </svg>
+                        <h3 className="mb-2 text-lg font-medium text-gray-500">
+                          No Comments Yet
+                        </h3>
+                        <p className="text-gray-400">
+                          This patient doesn't have any comments yet.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {comments.map((comment, index) => (
+                          <div
+                            key={comment._id || index}
+                            className="rounded-2xl border border-gray-100 bg-white p-6 shadow-lg transition-shadow hover:shadow-xl"
+                          >
+                            <div className="mb-4 flex items-start justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                                  <span className="text-sm font-semibold text-blue-600">
+                                    {comment.commentedBy?.name
+                                      ?.charAt(0)
+                                      ?.toUpperCase() || "U"}
+                                  </span>
+                                </div>
+                                <div>
+                                  <h4 className="font-semibold text-gray-900">
+                                    {comment.commentedBy?.name ||
+                                      "Unknown User"}
+                                  </h4>
+                                  <p className="text-sm text-gray-500">
+                                    {comment.commentedBy?.userType || "User"}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-xs text-gray-400">
+                                  {comment.datetime
+                                    ? new Date(
+                                        comment.datetime,
+                                      ).toLocaleDateString()
+                                    : "Unknown Date"}
+                                </div>
+                                <div className="text-xs text-gray-400">
+                                  {comment.datetime
+                                    ? new Date(
+                                        comment.datetime,
+                                      ).toLocaleTimeString()
+                                    : ""}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="rounded-xl bg-gray-50 p-4">
+                              <div
+                                className="prose prose-sm max-w-none leading-relaxed text-gray-700"
+                                dangerouslySetInnerHTML={{
+                                  __html: (comment.comment || "").replace(
+                                    /<a /g,
+                                    '<a target="_blank" rel="noopener noreferrer" ',
+                                  ),
+                                }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Comment Summary */}
+                    <div className="mt-8 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-rose-50 p-6 shadow-lg">
+                      <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold text-pink-800">
+                        <svg
+                          className="h-5 w-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          />
+                        </svg>
+                        Comment Summary
+                      </h4>
+                      <div className="grid grid-cols-2 gap-6 text-sm md:grid-cols-3">
+                        <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
+                          <div className="mb-1 text-3xl font-semibold text-blue-600">
+                            {comments.length}
+                          </div>
+                          <div className="font-medium text-blue-700">
+                            Total Comments
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
+                          <div className="mb-1 text-3xl font-semibold text-green-600">
+                            {
+                              comments.filter(
+                                (c) => c.commentedBy?.userType === "User",
+                              ).length
+                            }
+                          </div>
+                          <div className="font-medium text-green-700">
+                            From Doctors
+                          </div>
+                        </div>
+                        <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
+                          <div className="mb-1 text-3xl font-semibold text-purple-600">
+                            {
+                              comments.filter(
+                                (c) =>
+                                  c.commentedBy?.userType === "Distributer",
+                              ).length
+                            }
+                          </div>
+                          <div className="font-medium text-purple-700">
+                            From Distributers
+                          </div>
+                        </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Comment Summary */}
-              <div className="mt-8 rounded-2xl border border-pink-200 bg-gradient-to-br from-pink-50 to-rose-50 p-6 shadow-lg">
-                <h4 className="mb-4 flex items-center gap-2 text-lg font-semibold text-pink-800">
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-                    />
-                  </svg>
-                  Comment Summary
-                </h4>
-                <div className="grid grid-cols-2 gap-6 text-sm md:grid-cols-3">
-                  <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-                    <div className="mb-1 text-3xl font-bold text-blue-600">
-                      {comments.length}
-                    </div>
-                    <div className="font-medium text-blue-700">
-                      Total Comments
-                    </div>
                   </div>
-                  <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-                    <div className="mb-1 text-3xl font-bold text-green-600">
-                      {
-                        comments.filter(
-                          (c) => c.commentedBy?.userType === "User",
-                        ).length
-                      }
-                    </div>
-                    <div className="font-medium text-green-700">
-                      From Doctors
-                    </div>
-                  </div>
-                  <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-                    <div className="mb-1 text-3xl font-bold text-purple-600">
-                      {
-                        comments.filter(
-                          (c) => c.commentedBy?.userType === "Distributer",
-                        ).length
-                      }
-                    </div>
-                    <div className="font-medium text-purple-700">
-                      From Distributers
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}
@@ -2859,7 +3248,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent">
                   Scan Files
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -3072,13 +3461,13 @@ export default function ViewPatientDetails() {
                 </h4>
                 <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-semibold text-blue-600">
                       {patientFiles.length}
                     </div>
                     <div className="text-blue-700">Total Files</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-2xl font-semibold text-green-600">
                       {
                         patientFiles.filter((f) => f.fileType === "image")
                           .length
@@ -3087,7 +3476,7 @@ export default function ViewPatientDetails() {
                     <div className="text-green-700">Images</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">
+                    <div className="text-2xl font-semibold text-purple-600">
                       {
                         patientFiles.filter((f) => f.fileType === "video")
                           .length
@@ -3096,7 +3485,7 @@ export default function ViewPatientDetails() {
                     <div className="text-purple-600">Videos</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">
+                    <div className="text-2xl font-semibold text-orange-600">
                       {patientFiles.filter((f) => f.fileType === "pdf").length}
                     </div>
                     <div className="text-orange-700">PDFs</div>

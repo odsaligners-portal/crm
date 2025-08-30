@@ -551,7 +551,7 @@ export default function ViewPatientRecords() {
           />
           <circle cx="60" cy="54" r="10" fill="#6366f1" />
         </svg>
-        <div className="mb-2 text-2xl font-bold text-blue-700 dark:text-blue-200">
+        <div className="mb-2 text-2xl font-semibold text-blue-700 dark:text-blue-200">
           No patients found
         </div>
         <div className="mb-6 text-gray-500">
@@ -791,55 +791,55 @@ export default function ViewPatientRecords() {
                 <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     S.N.
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Case ID
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Patient Name
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Doctor Name
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Case Date
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Location
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Comments
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Files
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Actions
                   </TableCell>

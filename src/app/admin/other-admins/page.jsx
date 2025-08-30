@@ -132,7 +132,7 @@ export default function OtherAdminsPage() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="rounded-xl bg-white p-8 text-center shadow-xl dark:bg-gray-900">
-          <h2 className="mb-2 text-2xl font-bold text-red-600">
+          <h2 className="mb-2 text-2xl font-semibold text-red-600">
             Access Denied
           </h2>
           <p className="text-gray-700 dark:text-gray-300">
@@ -173,85 +173,85 @@ export default function OtherAdminsPage() {
                 <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     S.N.
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Name
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Email
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Patient Delete Access
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Event Update Access
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Comment Update Access
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Case Category Update Access
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Change Doctor Password Access
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Price Update Access
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     A/C Team Access
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Distributer Access
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Planner Access
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
-                    Special Comment Access
+                    Production Comment Access
                   </TableCell>
                   <TableCell
                     isHeader
-                    className="px-2 py-1 font-bold text-blue-700 dark:text-blue-200"
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
                   >
                     Actions
                   </TableCell>
@@ -449,7 +449,7 @@ export default function OtherAdminsPage() {
                     <TableCell className="border p-2 text-center">
                       {isSuperAdmin && (
                         <button
-                          className="text-xs font-bold text-red-500 hover:text-red-700"
+                          className="text-xs font-semibold text-red-500 hover:text-red-700"
                           title="Delete Admin"
                           onClick={() => {
                             setAdminToDelete(admin);
@@ -491,7 +491,7 @@ export default function OtherAdminsPage() {
               />
               <circle cx="60" cy="54" r="10" fill="#6366f1" />
             </svg>
-            <div className="mb-2 text-2xl font-bold text-blue-700 dark:text-blue-200">
+            <div className="mb-2 text-2xl font-semibold text-blue-700 dark:text-blue-200">
               No admins found
             </div>
             <div className="mb-6 text-gray-500">

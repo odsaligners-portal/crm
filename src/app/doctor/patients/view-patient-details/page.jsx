@@ -399,7 +399,7 @@ export default function ViewPatientDetails() {
         <div className="sticky top-20 z-10 border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-md">
           <div className="mx-auto max-w-7xl px-6 py-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-800">
+              <h1 className="text-2xl font-semibold text-gray-800">
                 {patientData.patientName}
               </h1>
               <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 px-6 py-3 text-white shadow-lg">
@@ -416,7 +416,7 @@ export default function ViewPatientDetails() {
                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                   />
                 </svg>
-                <span className="font-bold tracking-wide">
+                <span className="font-semibold tracking-wide">
                   Case ID: {patientData.caseId}
                 </span>
               </div>
@@ -434,7 +434,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("general");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
                 activeTab === "general"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -457,7 +457,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("clinical");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
                 activeTab === "clinical"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -498,7 +498,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("files");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
                 activeTab === "files"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -521,7 +521,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("scanFiles");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
                 activeTab === "scanFiles"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -544,7 +544,7 @@ export default function ViewPatientDetails() {
                 setActiveTab("comments");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-bold transition-all duration-500 ${
+              className={`group flex items-center gap-2 rounded-2xl px-6 py-3 font-semibold transition-all duration-500 ${
                 activeTab === "comments"
                   ? "scale-105 bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xl shadow-blue-500/30"
                   : "text-gray-600 hover:scale-105 hover:bg-blue-50 hover:text-blue-600"
@@ -587,7 +587,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-blue-800 to-indigo-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-blue-800 to-indigo-800 bg-clip-text text-4xl font-semibold text-transparent">
                   General Information
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -614,7 +614,7 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Patient Information
                     </h2>
                   </div>
@@ -670,7 +670,7 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Location Information
                     </h2>
                   </div>
@@ -720,7 +720,7 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Address Information
                     </h2>
                   </div>
@@ -893,7 +893,7 @@ export default function ViewPatientDetails() {
                         />
                       </svg>
                     </div>
-                    <h2 className="text-2xl font-bold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-gray-800">
                       Case Information
                     </h2>
                   </div>
@@ -985,7 +985,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-green-800 to-emerald-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-green-800 to-emerald-800 bg-clip-text text-4xl font-semibold text-transparent">
                   Clinical Information
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -2186,7 +2186,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent">
                   Files Upload
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -2218,7 +2218,7 @@ export default function ViewPatientDetails() {
                           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                         />
                       </svg>
-                      Update Middle Clinic Images
+                      Update Mid Treatment Records
                     </button>
                   ) : (
                     <button
@@ -2238,7 +2238,7 @@ export default function ViewPatientDetails() {
                           d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                         />
                       </svg>
-                      Add Middle Clinic Images
+                      Add Mid Treatment Records
                     </button>
                   )}
                 </div>
@@ -2264,7 +2264,7 @@ export default function ViewPatientDetails() {
                           d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                         />
                       </svg>
-                      Update Post Clinic Images
+                      Update Post Treatment Records
                     </button>
                   ) : (
                     <button
@@ -2284,7 +2284,7 @@ export default function ViewPatientDetails() {
                           d="M12 6v6m0 0v6m0-6h6m-6 0H6"
                         />
                       </svg>
-                      Add Post Clinic Images
+                      Add Post Treatment Records
                     </button>
                   )}
                 </div>
@@ -2316,7 +2316,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-blue-800">
+                      <h2 className="text-2xl font-semibold text-blue-800">
                         📸 Intraoral Photo
                       </h2>
                       <p className="text-blue-600">
@@ -2354,7 +2354,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-green-800">
+                      <h2 className="text-2xl font-semibold text-green-800">
                         👤 Facial
                       </h2>
                       <p className="text-green-600">
@@ -2393,7 +2393,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-purple-800">
+                      <h2 className="text-2xl font-semibold text-purple-800">
                         🔬 X-ray
                       </h2>
                       <p className="text-purple-600">
@@ -2431,7 +2431,7 @@ export default function ViewPatientDetails() {
                       </svg>
                     </div>
                     <div>
-                      <h2 className="text-2xl font-bold text-orange-800">
+                      <h2 className="text-2xl font-semibold text-orange-800">
                         🎯 3D Models (PLY/STL)
                       </h2>
                       <p className="text-orange-600">
@@ -2454,7 +2454,7 @@ export default function ViewPatientDetails() {
                 <div className="mb-8">
                   <ClinicImagesDisplay
                     images={patientData.middleClinicImages}
-                    title="🔄 Middle Clinic Images"
+                    title="🔄 Mid Treatment Records"
                     description="Images taken during the treatment process"
                     colorScheme={{
                       border: "border-amber-200",
@@ -2474,7 +2474,7 @@ export default function ViewPatientDetails() {
                 <div className="mb-8">
                   <ClinicImagesDisplay
                     images={patientData.postClinicImages}
-                    title="✅ Post Clinic Images"
+                    title="✅ Post Treatment Records"
                     description="Images taken after treatment completion"
                     colorScheme={{
                       border: "border-green-200",
@@ -2511,7 +2511,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent">
                   Comments
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -2615,7 +2615,7 @@ export default function ViewPatientDetails() {
                 </h4>
                 <div className="grid grid-cols-2 gap-6 text-sm md:grid-cols-3">
                   <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-                    <div className="mb-1 text-3xl font-bold text-blue-600">
+                    <div className="mb-1 text-3xl font-semibold text-blue-600">
                       {comments.length}
                     </div>
                     <div className="font-medium text-blue-700">
@@ -2623,7 +2623,7 @@ export default function ViewPatientDetails() {
                     </div>
                   </div>
                   <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-                    <div className="mb-1 text-3xl font-bold text-green-600">
+                    <div className="mb-1 text-3xl font-semibold text-green-600">
                       {
                         comments.filter(
                           (c) => c.commentedBy?.userType === "User",
@@ -2635,7 +2635,7 @@ export default function ViewPatientDetails() {
                     </div>
                   </div>
                   <div className="rounded-xl bg-white/60 p-4 text-center backdrop-blur-sm">
-                    <div className="mb-1 text-3xl font-bold text-purple-600">
+                    <div className="mb-1 text-3xl font-semibold text-purple-600">
                       {
                         comments.filter(
                           (c) => c.commentedBy?.userType === "Distributer",
@@ -2669,7 +2669,7 @@ export default function ViewPatientDetails() {
                     />
                   </svg>
                 </div>
-                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-bold text-transparent">
+                <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent">
                   Scan Files
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
@@ -2882,13 +2882,13 @@ export default function ViewPatientDetails() {
                 </h4>
                 <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-600">
+                    <div className="text-2xl font-semibold text-blue-600">
                       {patientFiles.length}
                     </div>
                     <div className="text-blue-700">Total Files</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-green-600">
+                    <div className="text-2xl font-semibold text-green-600">
                       {
                         patientFiles.filter((f) => f.fileType === "image")
                           .length
@@ -2897,7 +2897,7 @@ export default function ViewPatientDetails() {
                     <div className="text-green-700">Images</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-purple-600">
+                    <div className="text-2xl font-semibold text-purple-600">
                       {
                         patientFiles.filter((f) => f.fileType === "video")
                           .length
@@ -2906,7 +2906,7 @@ export default function ViewPatientDetails() {
                     <div className="text-purple-600">Videos</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-orange-600">
+                    <div className="text-2xl font-semibold text-orange-600">
                       {patientFiles.filter((f) => f.fileType === "pdf").length}
                     </div>
                     <div className="text-orange-700">PDFs</div>

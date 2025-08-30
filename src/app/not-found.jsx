@@ -22,15 +22,15 @@ export default function NotFound() {
           role === "doctor"
             ? "/doctor"
             : role === "admin"
-            ? "/admin"
-            : role === "super-admin"
-            ? "/admin"
-            : role === "planner"
-            ? "/planner"
-            : role === "distributer"
-            ? "/distributer"
-            : "/";
-        
+              ? "/admin"
+              : role === "super-admin"
+                ? "/admin"
+                : role === "planner"
+                  ? "/planner"
+                  : role === "distributer"
+                    ? "/distributer"
+                    : "/";
+
         toast.info("Page not found, redirecting to your dashboard.");
         router.push(redirectPath);
         // Loader will remain active until the new page loads
@@ -42,14 +42,13 @@ export default function NotFound() {
     }, 500); // 500ms delay
 
     return () => clearTimeout(timer);
-
   }, [token, role, router, dispatch]);
 
   return (
-    <div className="relative flex flex-col items-center justify-center min-h-screen p-6 overflow-hidden z-1">
+    <div className="relative z-1 flex min-h-screen flex-col items-center justify-center overflow-hidden p-6">
       <GridShape />
       <div className="mx-auto w-full max-w-[242px] text-center sm:max-w-[472px]">
-        <h1 className="mb-8 font-bold text-gray-800 text-title-md dark:text-white/90 xl:text-title-2xl">
+        <h1 className="text-title-md xl:text-title-2xl mb-8 font-semibold text-gray-800 dark:text-white/90">
           ERROR
         </h1>
 
@@ -68,12 +67,12 @@ export default function NotFound() {
           height={152}
         />
 
-        <p className="mt-10 mb-6 text-base text-gray-700 dark:text-gray-400 sm:text-lg">
+        <p className="mt-10 mb-6 text-base text-gray-700 sm:text-lg dark:text-gray-400">
           We can't seem to find the page you are looking for!
         </p>
       </div>
       {/* <!-- Footer --> */}
-      <p className="absolute text-sm text-center text-gray-500 -translate-x-1/2 bottom-6 left-1/2 dark:text-gray-400">
+      <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-center text-sm text-gray-500 dark:text-gray-400">
         &copy; {new Date().getFullYear()} - ODS Aligners
       </p>
     </div>

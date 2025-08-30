@@ -1,11 +1,17 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import Input from "@/components/form/input/InputField";
 import Button from "@/components/ui/button/Button";
-import { setLoading } from '@/store/features/uiSlice';
-import { fetchWithError } from '@/utils/apiErrorHandler';
+import { setLoading } from "@/store/features/uiSlice";
+import { fetchWithError } from "@/utils/apiErrorHandler";
 
 export default function PaymentStatus() {
   const { token } = useSelector((state) => state.auth);
@@ -26,10 +32,10 @@ export default function PaymentStatus() {
       let params;
       if (pendingOnly) {
         params = new URLSearchParams({
-          page: '1',
-          limit: '10000', // fetch all for client-side filtering
-          sort: 'latest',
-          caseStatus: 'approved',
+          page: "1",
+          limit: "10000", // fetch all for client-side filtering
+          sort: "latest",
+          caseStatus: "approved",
           search: searchTerm,
         });
       } else {
@@ -47,7 +53,9 @@ export default function PaymentStatus() {
         },
       });
       if (pendingOnly) {
-        const filtered = data.patients.filter(p => (p.amount?.pending ?? 0) > 0);
+        const filtered = data.patients.filter(
+          (p) => (p.amount?.pending ?? 0) > 0,
+        );
         setFilteredPatients(filtered);
         setFilteredTotalPatients(filtered.length);
         setFilteredTotalPages(Math.ceil(filtered.length / 10) || 1);
@@ -73,13 +81,13 @@ export default function PaymentStatus() {
   }, [currentPage, searchTerm, pendingOnly]);
 
   return (
-    <div className="p-5 lg:p-10 min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 p-5 lg:p-10 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold text-blue-800 dark:text-white/90 tracking-tight drop-shadow-lg">
+          <h1 className="text-3xl font-extrabold tracking-tight text-blue-800 drop-shadow-lg dark:text-white/90">
             Payment Status
           </h1>
-          <p className="mt-2 text-base text-gray-500 dark:text-gray-400 font-medium">
+          <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
             View payment status for all patients
           </p>
         </div>
@@ -88,12 +96,12 @@ export default function PaymentStatus() {
             type="text"
             placeholder="Search by name, city, or case ID..."
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full min-w-[300px] max-w-xs shadow-sm rounded-lg border border-blue-100 focus:ring-2 focus:ring-blue-300"
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full max-w-xs min-w-[300px] rounded-lg border border-blue-100 shadow-sm focus:ring-2 focus:ring-blue-300"
           />
           <Button
             type="button"
-            className="h-10 px-4 shadow-md bg-gradient-to-r from-blue-400 to-blue-600 text-white font-semibold rounded-lg hover:scale-105 transition-transform"
+            className="h-10 rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 font-semibold text-white shadow-md transition-transform hover:scale-105"
             onClick={() => fetchPatients()}
           >
             Search
@@ -101,53 +109,90 @@ export default function PaymentStatus() {
         </div>
       </div>
       <div className="mb-4 flex items-center gap-4">
-        <label className="flex items-center gap-2 text-blue-700 dark:text-blue-200 font-semibold">
+        <label className="flex items-center gap-2 font-semibold text-blue-700 dark:text-blue-200">
           <input
             type="checkbox"
             checked={pendingOnly}
-            onChange={e => setPendingOnly(e.target.checked)}
-            className="accent-blue-600 h-4 w-4"
+            onChange={(e) => setPendingOnly(e.target.checked)}
+            className="h-4 w-4 accent-blue-600"
           />
           Show only pending payments
         </label>
       </div>
-      <div className="relative rounded-xl border border-transparent bg-white/90 dark:bg-gray-900/80 shadow-xl mx-auto max-w-6xl w-full backdrop-blur-md overflow-x-auto sm:overflow-x-visible before:absolute before:inset-0 before:rounded-xl before:border-2 before:border-gradient-to-r before:from-blue-200 before:via-purple-100 before:to-blue-100 before:animate-border-glow before:pointer-events-none">
-        <Table className="min-w-full text-[10px] font-sans mx-auto relative z-10">
+      <div className="before:border-gradient-to-r before:animate-border-glow relative mx-auto w-full max-w-6xl overflow-x-auto rounded-xl border border-transparent bg-white/90 shadow-xl backdrop-blur-md before:pointer-events-none before:absolute before:inset-0 before:rounded-xl before:border-2 before:from-blue-200 before:via-purple-100 before:to-blue-100 sm:overflow-x-visible dark:bg-gray-900/80">
+        <Table className="relative z-10 mx-auto min-w-full font-sans text-[10px]">
           {(pendingOnly ? filteredPatients.length : patients.length) > 0 && (
             <>
               <TableHeader>
-                <TableRow className="sticky top-0 z-20 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90 shadow-lg rounded-t-xl border-b-2 border-blue-200 dark:border-blue-900 backdrop-blur-sm">
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Case ID</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Patient Name</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Location</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Total Payment</TableCell>
-                  <TableCell isHeader className="font-bold text-blue-700 dark:text-blue-200 py-1 px-2">Remaining Payment</TableCell>
+                <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                  >
+                    Case ID
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                  >
+                    Patient Name
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                  >
+                    Location
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                  >
+                    Total Payment
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 dark:text-blue-200"
+                  >
+                    Remaining Payment
+                  </TableCell>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {(pendingOnly
-                  ? filteredPatients.slice((currentPage - 1) * 10, currentPage * 10)
+                  ? filteredPatients.slice(
+                      (currentPage - 1) * 10,
+                      currentPage * 10,
+                    )
                   : patients
                 ).map((patient, idx) => (
                   <TableRow
                     key={patient._id}
-                    className={`transition-all duration-300 group hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? 'bg-blue-50/50 dark:bg-gray-900/30' : 'bg-white/70 dark:bg-gray-900/50'} animate-fadeInUp h-10 items-center`}
-                    style={{ fontFamily: 'Inter, sans-serif', animationDelay: `${idx * 30}ms` }}
+                    className={`group transition-all duration-300 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? "bg-blue-50/50 dark:bg-gray-900/30" : "bg-white/70 dark:bg-gray-900/50"} animate-fadeInUp h-10 items-center`}
+                    style={{
+                      fontFamily: "Inter, sans-serif",
+                      animationDelay: `${idx * 30}ms`,
+                    }}
                   >
-                    <TableCell className="font-semibold text-blue-600 dark:text-blue-300 text-center py-1 px-2">{patient.caseId}</TableCell>
-                    <TableCell className="h-10 flex justify-center items-center gap-2 font-medium text-center py-1 px-2">
-                      <span className="flex items-center">{patient.patientName}</span>
+                    <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 dark:text-blue-300">
+                      {patient.caseId}
                     </TableCell>
-                    <TableCell className="text-center py-1 px-2">
+                    <TableCell className="flex h-10 items-center justify-center gap-2 px-2 py-1 text-center font-medium">
+                      <span className="flex items-center">
+                        {patient.patientName}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-2 py-1 text-center">
                       <div className="text-[10px] leading-tight">
                         <div>{patient.city}</div>
-                        <div className="text-gray-500 text-[9px]">{patient.country}</div>
+                        <div className="text-[9px] text-gray-500">
+                          {patient.country}
+                        </div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-center py-1 px-2 font-bold text-green-700 dark:text-green-300">
+                    <TableCell className="px-2 py-1 text-center font-semibold text-green-700 dark:text-green-300">
                       ₹{patient.amount?.total ?? 0}
                     </TableCell>
-                    <TableCell className="text-center py-1 px-2 font-bold text-red-700 dark:text-red-300">
+                    <TableCell className="px-2 py-1 text-center font-semibold text-red-700 dark:text-red-300">
                       ₹{patient.amount?.pending ?? 0}
                     </TableCell>
                   </TableRow>
@@ -161,12 +206,16 @@ export default function PaymentStatus() {
       {(pendingOnly ? filteredTotalPages : totalPages) > 1 && (
         <div className="mt-6 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Showing {((currentPage - 1) * 10) + 1} to{" "}
-            {Math.min(currentPage * 10, pendingOnly ? filteredTotalPatients : totalPatients)} of {pendingOnly ? filteredTotalPatients : totalPatients} patients
+            Showing {(currentPage - 1) * 10 + 1} to{" "}
+            {Math.min(
+              currentPage * 10,
+              pendingOnly ? filteredTotalPatients : totalPatients,
+            )}{" "}
+            of {pendingOnly ? filteredTotalPatients : totalPatients} patients
           </div>
           <div className="flex gap-2">
             <Button
-              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
               disabled={currentPage === 1}
               variant="outline"
               size="sm"
@@ -174,11 +223,21 @@ export default function PaymentStatus() {
               Previous
             </Button>
             <span className="flex items-center px-3 text-sm">
-              Page {currentPage} of {pendingOnly ? filteredTotalPages : totalPages}
+              Page {currentPage} of{" "}
+              {pendingOnly ? filteredTotalPages : totalPages}
             </span>
             <Button
-              onClick={() => setCurrentPage(prev => Math.min(prev + 1, pendingOnly ? filteredTotalPages : totalPages))}
-              disabled={currentPage === (pendingOnly ? filteredTotalPages : totalPages)}
+              onClick={() =>
+                setCurrentPage((prev) =>
+                  Math.min(
+                    prev + 1,
+                    pendingOnly ? filteredTotalPages : totalPages,
+                  ),
+                )
+              }
+              disabled={
+                currentPage === (pendingOnly ? filteredTotalPages : totalPages)
+              }
               variant="outline"
               size="sm"
             >
@@ -187,13 +246,39 @@ export default function PaymentStatus() {
           </div>
         </div>
       )}
-      {((pendingOnly ? filteredPatients.length : patients.length) === 0) && (
+      {(pendingOnly ? filteredPatients.length : patients.length) === 0 && (
         <div className="flex flex-col items-center justify-center py-16">
-          <svg width="120" height="120" fill="none" className="mb-6 opacity-60" viewBox="0 0 120 120"><circle cx="60" cy="60" r="56" stroke="#3b82f6" strokeWidth="4" fill="#e0e7ff" /><path d="M40 80c0-11 9-20 20-20s20 9 20 20" stroke="#6366f1" strokeWidth="4" strokeLinecap="round" /><circle cx="60" cy="54" r="10" fill="#6366f1" /></svg>
-          <div className="text-2xl font-bold text-blue-700 dark:text-blue-200 mb-2">No patients found</div>
-          <div className="text-gray-500 mb-6">Try adjusting your filters or add a new patient record.</div>
+          <svg
+            width="120"
+            height="120"
+            fill="none"
+            className="mb-6 opacity-60"
+            viewBox="0 0 120 120"
+          >
+            <circle
+              cx="60"
+              cy="60"
+              r="56"
+              stroke="#3b82f6"
+              strokeWidth="4"
+              fill="#e0e7ff"
+            />
+            <path
+              d="M40 80c0-11 9-20 20-20s20 9 20 20"
+              stroke="#6366f1"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            <circle cx="60" cy="54" r="10" fill="#6366f1" />
+          </svg>
+          <div className="mb-2 text-2xl font-semibold text-blue-700 dark:text-blue-200">
+            No patients found
+          </div>
+          <div className="mb-6 text-gray-500">
+            Try adjusting your filters or add a new patient record.
+          </div>
         </div>
       )}
     </div>
   );
-} 
+}

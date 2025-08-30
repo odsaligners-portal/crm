@@ -158,8 +158,8 @@ export default function SpecialCommentModal({
 
   const isEditMode = mode === "edit";
   const modalTitle = isEditMode
-    ? "Edit Special Comment"
-    : "Create Special Comment";
+    ? "Edit Production Comment"
+    : "Create Production Comment";
   const submitButtonText = isEditMode ? "Update Comment" : "Create Comment";
 
   return (

@@ -115,7 +115,7 @@ const renderMenuItems = (
                   {nav.icon}
                   {/* Unread notification badge for Notifications */}
                   {nav.name === "Notifications" && unreadCount > 0 && (
-                    <span className="absolute -top-2 -right-2 z-10 min-w-[20px] animate-bounce rounded-full border-2 border-white bg-blue-600 px-1.5 py-0.5 text-center text-xs font-bold text-white shadow-lg">
+                    <span className="absolute -top-2 -right-2 z-10 min-w-[20px] animate-bounce rounded-full border-2 border-white bg-blue-600 px-1.5 py-0.5 text-center text-xs font-semibold text-white shadow-lg">
                       {unreadCount > 99 ? "99+" : unreadCount}
                     </span>
                   )}

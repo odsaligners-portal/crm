@@ -3,10 +3,15 @@ import Button from "@/components/ui/button/Button";
 import { Modal } from "@/components/ui/modal";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { UserIcon, PencilSquareIcon, PaperAirplaneIcon, XMarkIcon } from "@heroicons/react/24/solid";
-import { Editor } from '@tinymce/tinymce-react';
+import {
+  UserIcon,
+  PencilSquareIcon,
+  PaperAirplaneIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/solid";
+import { Editor } from "@tinymce/tinymce-react";
 import { useSelector, useDispatch } from "react-redux";
-import { setLoading } from '@/store/features/uiSlice';
+import { setLoading } from "@/store/features/uiSlice";
 
 const UploadModal = ({ isOpen, onClose, patient, isModification = false }) => {
   const [description, setDescription] = useState("");
@@ -16,11 +21,10 @@ const UploadModal = ({ isOpen, onClose, patient, isModification = false }) => {
   const [commentSubmitted, setCommentSubmitted] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
 
-
   useEffect(() => {
     if (isOpen) {
       setDescription("");
-      setEditorKey(prevKey => prevKey + 1); // Change key to re-mount the editor
+      setEditorKey((prevKey) => prevKey + 1); // Change key to re-mount the editor
       setCommentSubmitted(false);
     }
   }, [isOpen, patient]);
@@ -61,34 +65,39 @@ const UploadModal = ({ isOpen, onClose, patient, isModification = false }) => {
           },
         );
         if (response.ok) {
-          toast.success('Modification comment submitted!');
+          toast.success("Modification comment submitted!");
           setCommentSubmitted(true);
           onClose();
         } else {
           const errorData = await response.json();
-          toast.error(errorData.message || 'Failed to submit modification comment.');
+          toast.error(
+            errorData.message || "Failed to submit modification comment.",
+          );
         }
       } else {
         // Normal comment
-        const response = await fetch(`/api/patients/comments?patientId=${patient._id}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+        const response = await fetch(
+          `/api/patients/comments?patientId=${patient._id}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ comment: description }),
           },
-          body: JSON.stringify({ comment: description }),
-        });
+        );
         if (response.ok) {
-          toast.success('Comment added successfully!');
+          toast.success("Comment added successfully!");
           onClose();
         } else {
           const errorData = await response.json();
-          toast.error(errorData.message || 'Failed to add comment.');
+          toast.error(errorData.message || "Failed to add comment.");
         }
       }
     } catch (error) {
-      console.error('Error submitting comment:', error);
-      toast.error('An error occurred while submitting the comment.');
+      console.error("Error submitting comment:", error);
+      toast.error("An error occurred while submitting the comment.");
     } finally {
       dispatch(setLoading(false));
       setFormLoading(false);
@@ -131,7 +140,7 @@ const UploadModal = ({ isOpen, onClose, patient, isModification = false }) => {
             </h2>
             <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
               For patient:{" "}
-              <span className="font-bold text-purple-600 dark:text-purple-400">
+              <span className="font-semibold text-purple-600 dark:text-purple-400">
                 {patient?.patientName}
               </span>
             </p>
@@ -191,8 +200,7 @@ const UploadModal = ({ isOpen, onClose, patient, isModification = false }) => {
                         "bold italic forecolor | alignleft aligncenter " +
                         "alignright alignjustify | bullist numlist outdent indent | " +
                         "removeformat | help",
-                      content_style:
-                        "body {font-size:14px }",
+                      content_style: "body {font-size:14px }",
                       skin: document.documentElement.classList.contains("dark")
                         ? "oxide-dark"
                         : "oxide",
@@ -222,7 +230,7 @@ const UploadModal = ({ isOpen, onClose, patient, isModification = false }) => {
                 <Button
                   type="submit"
                   disabled={formLoading}
-                  className="flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {formLoading ? (
                     <>

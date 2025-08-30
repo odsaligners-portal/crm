@@ -101,7 +101,7 @@ const TeethSelector = ({ onTeethSelect, selectedTeeth = [] }) => {
             <span
               className={`text-xs font-medium transition-colors duration-300 group-hover:text-white ${
                 selectedTeeth.includes(toothNumber)
-                  ? "font-bold text-white"
+                  ? "font-semibold text-white"
                   : "text-gray-600"
               } `}
             >

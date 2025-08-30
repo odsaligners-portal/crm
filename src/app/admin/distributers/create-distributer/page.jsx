@@ -24,23 +24,23 @@ export default function CreateDistributer() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-      const fetchAccess = async () => {
-        if (!token) {
-          setHasDistributerAccess(false);
-          return;
-        }
-        try {
-          const data = await fetchWithError("/api/user/profile", {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-  
-          setHasDistributerAccess(data.user?.distributerAccess);
-        } catch (err) {
-          setHasDistributerAccess(false);
-        }
-      };
-      fetchAccess();
-    }, [token]);
+    const fetchAccess = async () => {
+      if (!token) {
+        setHasDistributerAccess(false);
+        return;
+      }
+      try {
+        const data = await fetchWithError("/api/user/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        setHasDistributerAccess(data.user?.distributerAccess);
+      } catch (err) {
+        setHasDistributerAccess(false);
+      }
+    };
+    fetchAccess();
+  }, [token]);
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -84,7 +84,7 @@ export default function CreateDistributer() {
   if (hasDistributerAccess === false) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <span className="text-lg font-bold text-red-600 dark:text-red-400">
+        <span className="text-lg font-semibold text-red-600 dark:text-red-400">
           Access Denied
         </span>
         <span className="mt-2 text-gray-600 dark:text-gray-300">
@@ -99,7 +99,7 @@ export default function CreateDistributer() {
 
   return (
     <div className="mx-auto mt-8 max-w-[75%] rounded-xl bg-white p-8 shadow-lg dark:bg-gray-900">
-      <h2 className="mb-6 text-2xl font-bold text-blue-800 dark:text-white">
+      <h2 className="mb-6 text-2xl font-semibold text-blue-800 dark:text-white">
         Create a New Distributer
       </h2>
       <form onSubmit={handleSubmit} className="space-y-6">

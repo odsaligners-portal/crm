@@ -336,7 +336,7 @@ export default function Step4Page() {
             Case Id: {formData?.caseId || patientId}
           </div>
         </div>
-        <h1 className="mb-2 text-3xl font-bold text-gray-800">
+        <h1 className="mb-2 text-3xl font-semibold text-gray-800">
           Step 4: File Upload
         </h1>
         <p className="mb-8 text-gray-500">

@@ -5,12 +5,12 @@ import { toast } from "react-toastify";
 import { XMarkIcon, ChatBubbleLeftRightIcon } from "@heroicons/react/24/solid";
 import Button from "@/components/ui/button/Button";
 import { useSelector, useDispatch } from "react-redux";
-import { setLoading } from '@/store/features/uiSlice';
+import { setLoading } from "@/store/features/uiSlice";
 
 const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
   const [comments, setComments] = useState([]);
   const { token } = useSelector((state) => state.auth);
-  const [caseId, setCaseId] = useState('');
+  const [caseId, setCaseId] = useState("");
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -18,16 +18,19 @@ const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
       const fetchComments = async () => {
         dispatch(setLoading(true));
         try {
-          const response = await fetch(`/api/patients/comments?patientId=${patient._id}`, {
-            headers: {
-              'Authorization': `Bearer ${token}`
-            }
-          });
+          const response = await fetch(
+            `/api/patients/comments?patientId=${patient._id}`,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            },
+          );
 
           if (response.ok) {
             const { comments, caseId } = await response.json();
             setComments(comments);
-            setCaseId(caseId)
+            setCaseId(caseId);
           } else {
             const errorData = await response.json();
             toast.error(errorData.message || "Failed to fetch comments.");
@@ -47,81 +50,116 @@ const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      className="max-w-2xl w-full"
+      className="w-full max-w-2xl"
       showCloseButton={false}
       alignTop={true}
     >
-      <div className="relative rounded-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/50 shadow-2xl backdrop-blur-lg border border-white/20 flex flex-col max-h-[75vh]">
+      <div className="relative flex max-h-[75vh] flex-col rounded-2xl border border-white/20 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-2xl backdrop-blur-lg dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/50">
         {/* Header */}
-        <div className="p-6 text-center border-b border-gray-200 dark:border-gray-700/50 shrink-0">
-          <h2 className="text-2xl font-extrabold text-blue-800 dark:text-white/90 tracking-tight flex items-center justify-center gap-3">
+        <div className="shrink-0 border-b border-gray-200 p-6 text-center dark:border-gray-700/50">
+          <h2 className="flex items-center justify-center gap-3 text-2xl font-extrabold tracking-tight text-blue-800 dark:text-white/90">
             <ChatBubbleLeftRightIcon className="h-7 w-7" />
             Comments
           </h2>
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
-            For patient: <span className="font-bold text-purple-600 dark:text-purple-400">{patient?.patientName}</span>
+          <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+            For patient:{" "}
+            <span className="font-semibold text-purple-600 dark:text-purple-400">
+              {patient?.patientName}
+            </span>
           </p>
-          {
-            caseId ? <>
-              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 font-medium">
-                Case ID: <span className="font-bold text-purple-600 dark:text-purple-400">{caseId}</span>
+          {caseId ? (
+            <>
+              <p className="mt-2 text-sm font-medium text-gray-500 dark:text-gray-400">
+                Case ID:{" "}
+                <span className="font-semibold text-purple-600 dark:text-purple-400">
+                  {caseId}
+                </span>
               </p>
-            </> : <></>
-          }
-          
+            </>
+          ) : (
+            <></>
+          )}
         </div>
-        
+
         {/* Content Body */}
-        <div className="p-6 overflow-y-auto flex-grow">
+        <div className="flex-grow overflow-y-auto p-6">
           {(() => {
             if (!comments?.length) {
-              return <div className="text-center p-8 text-gray-500">No comments found for this patient.</div>;
+              return (
+                <div className="p-8 text-center text-gray-500">
+                  No comments found for this patient.
+                </div>
+              );
             }
             let modComment = null;
             let otherComments = comments;
-            if (patient.modification && patient.modification.commentSubmitted && comments.length > 0) {
+            if (
+              patient.modification &&
+              patient.modification.commentSubmitted &&
+              comments.length > 0
+            ) {
               modComment = comments[comments.length - 1];
               otherComments = comments.slice(0, -1);
             }
-            return <>
-              {modComment && (
-                <div key={modComment._id} className="p-4 mb-4 rounded-lg border border-green-300 bg-green-50 dark:bg-green-900/30 dark:border-green-700 shadow-sm">
-                  <div className="flex justify-between items-baseline mb-2">
-                    <p className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                      Commented By: {modComment.commentedBy.name}
-                      <span className="ml-2 px-2 py-0.5 rounded bg-green-200 text-green-800 text-xs font-semibold">Modification</span>
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {new Date(modComment.datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
-                    </p>
+            return (
+              <>
+                {modComment && (
+                  <div
+                    key={modComment._id}
+                    className="mb-4 rounded-lg border border-green-300 bg-green-50 p-4 shadow-sm dark:border-green-700 dark:bg-green-900/30"
+                  >
+                    <div className="mb-2 flex items-baseline justify-between">
+                      <p className="flex items-center gap-2 font-semibold text-gray-800 dark:text-white">
+                        Commented By: {modComment.commentedBy.name}
+                        <span className="ml-2 rounded bg-green-200 px-2 py-0.5 text-xs font-semibold text-green-800">
+                          Modification
+                        </span>
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(modComment.datetime).toLocaleString("en-IN", {
+                          timeZone: "Asia/Kolkata",
+                        })}
+                      </p>
+                    </div>
+                    <div
+                      className="prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: modComment.comment }}
+                    ></div>
                   </div>
-                  <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: modComment.comment }}></div>
-                </div>
-              )}
-              {otherComments.map((comment) => (
-                <div key={comment._id} className="p-4 mb-4 rounded-lg bg-white/50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 shadow-sm">
-                  <div className="flex justify-between items-baseline mb-2">
-                    <p className="font-bold text-gray-800 dark:text-white flex items-center gap-2">
-                      Commented By: {comment.commentedBy.name}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {new Date(comment.datetime).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}
-                    </p>
+                )}
+                {otherComments.map((comment) => (
+                  <div
+                    key={comment._id}
+                    className="mb-4 rounded-lg border border-gray-200 bg-white/50 p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800/50"
+                  >
+                    <div className="mb-2 flex items-baseline justify-between">
+                      <p className="flex items-center gap-2 font-semibold text-gray-800 dark:text-white">
+                        Commented By: {comment.commentedBy.name}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(comment.datetime).toLocaleString("en-IN", {
+                          timeZone: "Asia/Kolkata",
+                        })}
+                      </p>
+                    </div>
+                    <div
+                      className="prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: comment.comment }}
+                    ></div>
                   </div>
-                  <div className="prose prose-sm dark:prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: comment.comment }}></div>
-                </div>
-              ))}
-            </>;
+                ))}
+              </>
+            );
           })()}
         </div>
-        
+
         {/* Footer */}
-        <div className="p-6 flex justify-end border-t border-gray-200 dark:border-gray-700/50 shrink-0">
+        <div className="flex shrink-0 justify-end border-t border-gray-200 p-6 dark:border-gray-700/50">
           <Button
             type="button"
             onClick={onClose}
             variant="secondary"
-            className="flex items-center gap-2 px-6 py-2.5 rounded-lg shadow-md bg-gray-200 text-gray-800 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition-all duration-300 transform hover:scale-105"
+            className="flex transform items-center gap-2 rounded-lg bg-gray-200 px-6 py-2.5 text-gray-800 shadow-md transition-all duration-300 hover:scale-105 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
           >
             <XMarkIcon className="h-5 w-5" />
             Close

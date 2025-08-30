@@ -122,7 +122,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
             {patient && (
               <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
                 For patient:{" "}
-                <span className="font-bold text-purple-600 dark:text-purple-400">
+                <span className="font-semibold text-purple-600 dark:text-purple-400">
                   {patient.patientName}
                 </span>
               </p>
@@ -211,7 +211,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
               <Button
                 type="submit"
                 disabled={!fileName.trim() || !files.length || loading}
-                className={`flex transform items-center gap-2 rounded-lg bg-gradient-to-r ${loading ? "from-blue-300 to-purple-400" : "from-blue-500 to-purple-600"} px-6 py-3 font-bold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-50`}
+                className={`flex transform items-center gap-2 rounded-lg bg-gradient-to-r ${loading ? "from-blue-300 to-purple-400" : "from-blue-500 to-purple-600"} px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:scale-105 hover:from-blue-600 hover:to-purple-700 disabled:scale-100 disabled:cursor-not-allowed disabled:opacity-50`}
               >
                 {loading ? "Uploading..." : "Upload"}
               </Button>
@@ -271,11 +271,11 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
             {patient && (
               <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
                 For patient:{" "}
-                <span className="font-bold text-purple-600 dark:text-purple-400">
+                <span className="font-semibold text-purple-600 dark:text-purple-400">
                   {patient.patientName}
                 </span>{" "}
                 &nbsp;|&nbsp; Case ID:{" "}
-                <span className="font-bold text-blue-600 dark:text-blue-400">
+                <span className="font-semibold text-blue-600 dark:text-blue-400">
                   {patient.caseId}
                 </span>
               </p>

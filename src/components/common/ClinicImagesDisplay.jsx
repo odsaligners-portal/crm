@@ -27,7 +27,7 @@ const ClinicImagesDisplay = ({
     // link.click();
     // document.body.removeChild(link);
 
-    // URL.revokeObjectURL(blobUrl); 
+    // URL.revokeObjectURL(blobUrl);
     window.open(url, "_blank");
   };
 
@@ -58,7 +58,7 @@ const ClinicImagesDisplay = ({
         </div>
         <div>
           <h3
-            className={`text-xl font-bold ${colorScheme.titleColor} transition-all duration-300 ${isExpanded ? "text-2xl" : ""}`}
+            className={`text-xl font-semibold ${colorScheme.titleColor} transition-all duration-300 ${isExpanded ? "text-2xl" : ""}`}
           >
             {title}
           </h3>

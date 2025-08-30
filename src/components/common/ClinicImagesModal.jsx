@@ -332,7 +332,7 @@ const ClinicImagesModal = ({
                 <div className="mb-2 text-center">
                   <span className="block text-sm font-semibold text-gray-800 group-hover/upload:text-gray-900">
                     Drop file or{" "}
-                    <span className="font-bold text-blue-600 underline group-hover/upload:text-blue-700">
+                    <span className="font-semibold text-blue-600 underline group-hover/upload:text-blue-700">
                       browse
                     </span>
                   </span>
@@ -385,7 +385,7 @@ const ClinicImagesModal = ({
       <div className="max-h-[90vh] w-full max-w-7xl overflow-y-auto rounded-3xl border border-white/20 bg-white/95 p-8 shadow-2xl backdrop-blur-sm">
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">
+            <h2 className="text-3xl font-semibold text-gray-800">
               {imageType === "middle" ? "Middle" : "Post"} Clinic Images
             </h2>
             <p className="mt-2 text-gray-600">
@@ -439,7 +439,7 @@ const ClinicImagesModal = ({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-blue-800">
+                <h3 className="text-xl font-semibold text-blue-800">
                   📸 Intraoral Photo
                 </h3>
                 <p className="text-blue-600">
@@ -473,7 +473,9 @@ const ClinicImagesModal = ({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-green-800">👤 Facial</h3>
+                <h3 className="text-xl font-semibold text-green-800">
+                  👤 Facial
+                </h3>
                 <p className="text-green-600">
                   Upload photos showing the patient's facial features and
                   profile
@@ -506,7 +508,9 @@ const ClinicImagesModal = ({
                 </svg>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-purple-800">🔬 X-ray</h3>
+                <h3 className="text-xl font-semibold text-purple-800">
+                  🔬 X-ray
+                </h3>
                 <p className="text-purple-600">
                   Upload radiographic images for diagnostic purposes
                 </p>

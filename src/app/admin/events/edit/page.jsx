@@ -1,7 +1,13 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "firebase/storage";
+import {
+  getStorage,
+  ref,
+  uploadBytesResumable,
+  getDownloadURL,
+  deleteObject,
+} from "firebase/storage";
 import { app } from "@/utils/firebase";
 import { useDropzone } from "react-dropzone";
 import { useSelector, useDispatch } from "react-redux";
@@ -67,7 +73,7 @@ const EditPage = () => {
       }
       dispatch(setLoading(true));
       try {
-        const data = await fetchWithError('/api/user/profile', {
+        const data = await fetchWithError("/api/user/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
         setHasEventUpdateAccess(!!data.user?.eventUpdateAccess);
@@ -101,7 +107,8 @@ const EditPage = () => {
     dispatch(setLoading(true));
     uploadTask.on(
       "state_changed",
-      (snapshot) => setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
+      (snapshot) =>
+        setProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
       (error) => {
         toast.error(`Upload failed: ${error.message}`);
         setProgress(0);
@@ -116,7 +123,7 @@ const EditPage = () => {
           setProgress(100);
           dispatch(setLoading(false));
         });
-      }
+      },
     );
   };
 
@@ -186,41 +193,85 @@ const EditPage = () => {
   };
 
   const UploadComponent = () => {
-    const onDrop = (acceptedFiles) => acceptedFiles.length > 0 && handleFileUpload(acceptedFiles[0]);
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({ onDrop, multiple: false, accept: { "image/*": [".jpeg", ".jpg", ".png", ".gif"], "video/*": [".mp4", ".mov", ".avi", ".webm", ".mkv"] } });
+    const onDrop = (acceptedFiles) =>
+      acceptedFiles.length > 0 && handleFileUpload(acceptedFiles[0]);
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+      onDrop,
+      multiple: false,
+      accept: {
+        "image/*": [".jpeg", ".jpg", ".png", ".gif"],
+        "video/*": [".mp4", ".mov", ".avi", ".webm", ".mkv"],
+      },
+    });
     return (
       <div className="text-center">
         <Label>Event Image/Video</Label>
         {!imageUrl ? (
           progress > 0 && progress < 100 ? (
-            <div className="w-full mt-2">
-              <div className="flex justify-between mb-1">
-                <span className="text-sm font-medium text-blue-700">Uploading...</span>
-                <span className="text-sm font-medium text-blue-700">{Math.round(progress)}%</span>
+            <div className="mt-2 w-full">
+              <div className="mb-1 flex justify-between">
+                <span className="text-sm font-medium text-blue-700">
+                  Uploading...
+                </span>
+                <span className="text-sm font-medium text-blue-700">
+                  {Math.round(progress)}%
+                </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${progress}%` }}></div>
+              <div className="h-2.5 w-full rounded-full bg-gray-200">
+                <div
+                  className="h-2.5 rounded-full bg-blue-600"
+                  style={{ width: `${progress}%` }}
+                ></div>
               </div>
             </div>
           ) : (
-            <div {...getRootProps()} className={`mt-2 flex justify-center items-center w-full h-32 px-4 transition bg-white border-2 border-gray-300 border-dashed rounded-md appearance-none cursor-pointer hover:border-gray-400 focus:outline-none ${isDragActive ? "border-blue-500 bg-blue-50" : ""}`}>
+            <div
+              {...getRootProps()}
+              className={`mt-2 flex h-32 w-full cursor-pointer appearance-none items-center justify-center rounded-md border-2 border-dashed border-gray-300 bg-white px-4 transition hover:border-gray-400 focus:outline-none ${isDragActive ? "border-blue-500 bg-blue-50" : ""}`}
+            >
               <input {...getInputProps()} />
               <span className="flex items-center space-x-2">
-                <span className="font-medium text-gray-600">Drop image or video file or <span className="text-blue-600 underline">browse</span></span>
+                <span className="font-medium text-gray-600">
+                  Drop image or video file or{" "}
+                  <span className="text-blue-600 underline">browse</span>
+                </span>
               </span>
             </div>
           )
         ) : (
-          <div className="relative group max-w-xs mx-auto mt-2">
-            <div className="rounded-xl shadow-lg border flex flex-col items-center justify-center h-48">
-              {fileType === 'image' ? (
-                <img src={imageUrl} alt="Event" className="w-full h-full object-contain rounded-xl" />
-              ) : fileType === 'video' ? (
-                <video src={imageUrl} controls className="w-full h-full object-contain rounded-xl" />
+          <div className="group relative mx-auto mt-2 max-w-xs">
+            <div className="flex h-48 flex-col items-center justify-center rounded-xl border shadow-lg">
+              {fileType === "image" ? (
+                <img
+                  src={imageUrl}
+                  alt="Event"
+                  className="h-full w-full rounded-xl object-contain"
+                />
+              ) : fileType === "video" ? (
+                <video
+                  src={imageUrl}
+                  controls
+                  className="h-full w-full rounded-xl object-contain"
+                />
               ) : null}
-              <button type="button" onClick={handleDeleteFile} className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 shadow-lg opacity-80 hover:opacity-100 transition-opacity">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <button
+                type="button"
+                onClick={handleDeleteFile}
+                className="absolute top-1 right-1 rounded-full bg-red-500 p-1 text-white opacity-80 shadow-lg transition-opacity hover:opacity-100"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  strokeWidth={2}
+                  stroke="currentColor"
+                  className="h-4 w-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
@@ -232,20 +283,27 @@ const EditPage = () => {
 
   if (hasEventUpdateAccess === false) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gray-50 dark:bg-gray-900">
-        <span className="text-lg text-red-600 dark:text-red-400 font-bold">Access Denied</span>
-        <span className="text-gray-600 dark:text-gray-300 mt-2">You do not have permission to edit events.</span>
+      <div className="flex h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
+        <span className="text-lg font-semibold text-red-600 dark:text-red-400">
+          Access Denied
+        </span>
+        <span className="mt-2 text-gray-600 dark:text-gray-300">
+          You do not have permission to edit events.
+        </span>
       </div>
     );
   }
   if (hasEventUpdateAccess === null) {
-    return null; 
+    return null;
   }
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Edit Event</h1>
-      <form onSubmit={handleFinalSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-md">
+      <h1 className="mb-4 text-2xl font-semibold">Edit Event</h1>
+      <form
+        onSubmit={handleFinalSubmit}
+        className="space-y-6 rounded-lg bg-white p-6 shadow-md"
+      >
         <InputField
           label="Event Name"
           placeholder="Enter event name"
@@ -255,7 +313,7 @@ const EditPage = () => {
         <div>
           <Label>Event Description</Label>
           <textarea
-            className="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            className="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none sm:text-sm"
             rows="4"
             placeholder="Enter event description"
             value={description}
@@ -271,8 +329,8 @@ const EditPage = () => {
           />
         </div>
         <UploadComponent />
-        <div className="flex justify-end pt-4 border-t">
-          <Button type="submit" disabled={(progress > 0 && progress < 100)}>
+        <div className="flex justify-end border-t pt-4">
+          <Button type="submit" disabled={progress > 0 && progress < 100}>
             Save Changes
           </Button>
         </div>

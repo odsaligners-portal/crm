@@ -38,7 +38,7 @@ const QuickActions = () => {
 
   return (
     <div className="rounded-2xl bg-white p-6 shadow-lg dark:bg-gray-800">
-      <h3 className="mb-4 text-xl font-bold text-gray-800 dark:text-white">
+      <h3 className="mb-4 text-xl font-semibold text-gray-800 dark:text-white">
         Quick Actions
       </h3>
       <div className="grid grid-cols-2 gap-4">

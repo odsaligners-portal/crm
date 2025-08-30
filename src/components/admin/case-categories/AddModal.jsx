@@ -339,7 +339,7 @@ const AddCaseCategoryModal = ({ isOpen, onClose, onCategoryAdded }) => {
     >
       <div className="relative flex max-h-[90vh] flex-col rounded-2xl border border-white/20 bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-2xl backdrop-blur-lg dark:from-gray-900 dark:via-gray-900 dark:to-blue-900/50">
         <div className="shrink-0 border-b border-gray-200 p-6 text-center dark:border-gray-700/50">
-          <h2 className="text-2xl font-bold">Add New Case Category</h2>
+          <h2 className="text-2xl font-semibold">Add New Case Category</h2>
         </div>
 
         <form
