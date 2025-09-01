@@ -223,7 +223,7 @@ export default function SignUpForm({
   return (
     <div
       className="flex min-h-screen w-full items-center justify-center bg-cover bg-fixed bg-center"
-      style={{ backgroundImage: "url(/materials/bg-signin.jpg)" }}
+      // style={{ backgroundImage: "url(/materials/bg-signin.jpg)" }}
     >
       <div className="mx-auto max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white/60 p-4 px-8 shadow-2xl backdrop-blur-xs dark:bg-gray-900/60">
         <div className="mb-2">

@@ -114,7 +114,7 @@ export default function SignInForm() {
     <>
       <div
         className="flex min-h-screen w-full items-center justify-center bg-cover bg-center"
-        style={{ backgroundImage: "url(/materials/bg-signin.jpg)" }}
+        // style={{ backgroundImage: "url(/materials/bg-signin.jpg)" }}
       >
         <div className="mx-auto w-full max-w-md rounded-2xl bg-white/60 p-8 shadow-2xl backdrop-blur-xs dark:bg-gray-900/60">
           <div className="mb-5 sm:mb-8">
