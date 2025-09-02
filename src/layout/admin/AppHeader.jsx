@@ -19,8 +19,8 @@ const AppHeader = () => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleToggle = () => {
@@ -118,14 +118,14 @@ const AppHeader = () => {
                 width={154}
                 height={32}
                 className="relative z-10 transition-transform duration-300 group-hover:scale-105 dark:hidden"
-                src="/logo.png"
+                src="/logo.jpeg"
                 alt="Logo"
               />
               <Image
                 width={154}
                 height={32}
                 className="relative z-10 hidden transition-transform duration-300 group-hover:scale-105 dark:block"
-                src="/logo.png"
+                src="/logo.jpeg"
                 alt="Logo"
               />
             </div>

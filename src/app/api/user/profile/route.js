@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import { handleError, AppError } from '../../utils/errorHandler';
-import connectDB from '../../config/db';
-import User from '../../models/User';
-import jwt from 'jsonwebtoken';
-import { verifyAuth } from '../../middleware/authMiddleware';
+import { NextResponse } from "next/server";
+import { handleError, AppError } from "../../utils/errorHandler";
+import connectDB from "../../config/db";
+import User from "../../models/User";
+import jwt from "jsonwebtoken";
+import { verifyAuth } from "../../middleware/authMiddleware";
 
 export async function GET(req) {
   try {
@@ -11,53 +11,67 @@ export async function GET(req) {
 
     // If query param role=doctor, return all doctors
     const { searchParams } = new URL(req.url);
-    const role = searchParams.get('role');
-    const id = searchParams.get('id');
-    const otherAdmins = searchParams.get('otherAdmins');
-    if (role === 'doctor') {
-      const search = searchParams.get('search');
-      let query = { role: 'doctor' };
+    const role = searchParams.get("role");
+    const id = searchParams.get("id");
+    const otherAdmins = searchParams.get("otherAdmins");
+    if (role === "doctor" || role === "planner") {
+      const search = searchParams.get("search");
+      let query = { role: role };
       if (search) {
         query = {
           ...query,
           $or: [
-            { name: { $regex: search, $options: 'i' } },
-            { email: { $regex: search, $options: 'i' } },
+            { name: { $regex: search, $options: "i" } },
+            { email: { $regex: search, $options: "i" } },
           ],
         };
       }
-      const doctors = await User.find(query);
-      return NextResponse.json({ doctors });
+      const users = await User.find(query);
+
+      if (role === "doctor") {
+        return NextResponse.json({ doctors: users });
+      } else if (role === "planner") {
+        return NextResponse.json({ planners: users });
+      }
     }
-    if (otherAdmins === 'true') {
+    if (otherAdmins === "true") {
       const superAdminId = process.env.SUPER_ADMIN_ID;
-      const admins = await User.find({ role: 'admin', _id: { $ne: superAdminId } })
-        .select('id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess changeDoctorPasswordAccess');
+      const admins = await User.find({
+        role: "admin",
+        _id: { $ne: superAdminId },
+      }).select(
+        "id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess changeDoctorPasswordAccess",
+      );
       return NextResponse.json({ admins });
     }
     if (id) {
-      const user = await User.findById(id).select('name role');
+      const user = await User.findById(id).select("name role");
       if (!user) {
-        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+        return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
-      return NextResponse.json({ user: { id: user._id, name: user.name, role: user.role } });
+      return NextResponse.json({
+        user: { id: user._id, name: user.name, role: user.role },
+      });
     }
 
     // Get token from authorization header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AppError('Not authorized', 401);
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new AppError("Not authorized", 401);
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(" ")[1];
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "fallback_secret",
+    );
 
     // Get user data
-    const user = await User.findById(decoded.id).select('-password');
+    const user = await User.findById(decoded.id).select("-password");
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("User not found", 404);
     }
 
     return NextResponse.json({
@@ -84,10 +98,13 @@ export async function GET(req) {
         experience: user.experience,
         doctorType: user.doctorType,
         address: user.address,
-        profilePicture: user.profilePicture || { url: '', fileKey: '', uploadedAt: null },
-      }
+        profilePicture: user.profilePicture || {
+          url: "",
+          fileKey: "",
+          uploadedAt: null,
+        },
+      },
     });
-
   } catch (error) {
     return handleError(error);
   }
@@ -99,10 +116,10 @@ export async function PUT(req) {
 
     const authResult = await verifyAuth(req);
     if (!authResult.success) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
     const user = authResult.user;
-    
+
     // Get request body
     const body = await req.json();
 
@@ -112,11 +129,11 @@ export async function PUT(req) {
     const updatedUser = await User.findByIdAndUpdate(
       user.id,
       { $set: updateData },
-      { new: true, runValidators: true }
-    ).select('-password');
+      { new: true, runValidators: true },
+    ).select("-password");
 
     if (!updatedUser) {
-      throw new AppError('User not found', 404);
+      throw new AppError("User not found", 404);
     }
 
     return NextResponse.json({
@@ -133,12 +150,15 @@ export async function PUT(req) {
         experience: updatedUser.experience,
         doctorType: updatedUser.doctorType,
         address: updatedUser.address,
-        profilePicture: updatedUser.profilePicture || { url: '', fileKey: '', uploadedAt: null },
-      }
+        profilePicture: updatedUser.profilePicture || {
+          url: "",
+          fileKey: "",
+          uploadedAt: null,
+        },
+      },
     });
-
   } catch (error) {
-    console.error('Profile update error:', error);
+    console.error("Profile update error:", error);
     return handleError(error);
   }
-} 
+}

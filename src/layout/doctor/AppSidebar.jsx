@@ -159,21 +159,21 @@ const AppSidebar = () => {
             <>
               <Image
                 className="dark:hidden"
-                src="/logo.png"
+                src="/logo.jpeg"
                 alt="Logo"
                 width={150}
                 height={40}
               />
               <Image
                 className="hidden dark:block"
-                src="/logo.png"
+                src="/logo.jpeg"
                 alt="Logo"
                 width={150}
                 height={40}
               />
             </>
           ) : (
-            <Image src="/logo.png" alt="Logo" width={32} height={32} />
+            <Image src="/logo.jpeg" alt="Logo" width={32} height={32} />
           )}
         </Link>
       </div>

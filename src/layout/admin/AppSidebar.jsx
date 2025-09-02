@@ -145,8 +145,8 @@ const baseNavItems = [
   },
   {
     icon: <MdLockReset />,
-    name: "Change Doctor Password",
-    path: "/admin/change-doctor-password",
+    name: "Manage Passwords",
+    path: "/admin/manage-passwords",
   },
   {
     icon: <MdPerson />,
@@ -255,7 +255,7 @@ const AppSidebar = () => {
       ],
     });
     const doctorPwdIdx = tempNavItems.findIndex(
-      (item) => item.name === "Change Doctor Password",
+      (item) => item.name === "Manage Passwords",
     );
     if (doctorPwdIdx !== -1) {
       tempNavItems.splice(doctorPwdIdx + 1, 0, {
@@ -267,7 +267,7 @@ const AppSidebar = () => {
   }
 
   const dynamicNavItems = tempNavItems.filter((item) => {
-    if (item.name === "Change Doctor Password") return hasPasswordAccess;
+    if (item.name === "Manage Passwords") return hasPasswordAccess;
     if (item.name === "Change Super Admin Password") return isSuperAdmin;
     return true;
   });
@@ -443,11 +443,11 @@ const AppSidebar = () => {
         <Link href="/" className="transition-all duration-200 hover:opacity-80">
           {isExpanded || isHovered || isMobileOpen ? (
             <div className="flex items-center">
-              <Image src="/logo.png" alt="Logo" width={140} height={36} />
+              <Image src="/logo.jpeg" alt="Logo" width={140} height={36} />
             </div>
           ) : (
             <Image
-              src="/logo.png"
+              src="/logo.jpeg"
               alt="Logo"
               width={28}
               height={28}

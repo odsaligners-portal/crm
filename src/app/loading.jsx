@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import Image from "next/image";
 
 export default function Loading() {
   return (
@@ -7,11 +7,11 @@ export default function Loading() {
     //     {/* Pulsating background circles */}
     //     <span className="absolute w-32 h-32 rounded-full bg-brand-500/20 animate-ping"></span>
     //     <span className="absolute w-24 h-24 rounded-full bg-brand-500/30 animate-ping [animation-delay:0.2s]"></span>
-        
+
     //     {/* Logo */}
     //     <div className="z-10 p-4 bg-white rounded-full shadow-lg dark:bg-gray-800">
     //         <Image
-    //             src="/logo.png"
+    //             src="/logo.jpeg"
     //             alt="Loading..."
     //             width={64}
     //             height={64}
@@ -22,4 +22,4 @@ export default function Loading() {
     // </div>
     <></>
   );
-} 
+}

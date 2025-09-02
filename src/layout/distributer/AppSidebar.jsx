@@ -30,35 +30,35 @@ const navItems = [
     path: "/distributer/patients",
   },
   {
-      icon: <MdNotifications />,
-      name: "Notifications",
-      path: "/distributer/notifications",
-    },
-    {
-      icon: <MdEvent />,
-      name: "Events",
-      path: "/distributer/events",
-    },
-    {
-      icon: <MdMenuBook />,
-      name: "Educational Material",
-      path: "/distributer/educational-material",
-    },
-    {
-      icon: <MdVideoLibrary />,
-      name: "Tutorials",
-      path: "/distributer/tutorials",
-    },
-    // {
-    //   icon: <MdPerson />,
-    //   name: "User Profile",
-    //   path: "/distributer/profile",
-    // },
-    {
-      icon: <MdDescription />,
-      name: "Terms & Conditions",
-      path: "/distributer/terms-and-conditions",
-    },
+    icon: <MdNotifications />,
+    name: "Notifications",
+    path: "/distributer/notifications",
+  },
+  {
+    icon: <MdEvent />,
+    name: "Events",
+    path: "/distributer/events",
+  },
+  {
+    icon: <MdMenuBook />,
+    name: "Educational Material",
+    path: "/distributer/educational-material",
+  },
+  {
+    icon: <MdVideoLibrary />,
+    name: "Tutorials",
+    path: "/distributer/tutorials",
+  },
+  // {
+  //   icon: <MdPerson />,
+  //   name: "User Profile",
+  //   path: "/distributer/profile",
+  // },
+  {
+    icon: <MdDescription />,
+    name: "Terms & Conditions",
+    path: "/distributer/terms-and-conditions",
+  },
 ];
 
 const renderMenuItems = (
@@ -134,21 +134,21 @@ const AppSidebar = () => {
             <>
               <Image
                 className="dark:hidden"
-                src="/logo.png"
+                src="/logo.jpeg"
                 alt="Logo"
                 width={150}
                 height={40}
               />
               <Image
                 className="hidden dark:block"
-                src="/logo.png"
+                src="/logo.jpeg"
                 alt="Logo"
                 width={150}
                 height={40}
               />
             </>
           ) : (
-            <Image src="/logo.png" alt="Logo" width={32} height={32} />
+            <Image src="/logo.jpeg" alt="Logo" width={32} height={32} />
           )}
         </Link>
       </div>

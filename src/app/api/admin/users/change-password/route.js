@@ -1,7 +1,8 @@
-import { NextResponse } from 'next/server';
-import connectDB from '@/app/api/config/db';
-import User from '@/app/api/models/User';
-import { admin } from '@/app/api/middleware/authMiddleware';
+import { NextResponse } from "next/server";
+import connectDB from "@/app/api/config/db";
+import User from "@/app/api/models/User";
+import Distributer from "@/app/api/models/Distributer";
+import { admin } from "@/app/api/middleware/authMiddleware";
 
 export async function POST(req) {
   await connectDB();
@@ -11,33 +12,58 @@ export async function POST(req) {
     return NextResponse.json({ message: authResult.error }, { status: 401 });
   }
 
-  const { userId, password } = await req.json();
+  const { userId, password, userType } = await req.json();
+
+  console.log("Password change request:", {
+    userId,
+    userType,
+    passwordLength: password?.length,
+  });
 
   if (!userId || !password) {
-    return NextResponse.json({ message: 'User ID and password are required' }, { status: 400 });
-  }
-  
-  if (password.length < 8) {
-    return NextResponse.json({ message: 'Password must be at least 8 characters long' }, { status: 400 });
+    return NextResponse.json(
+      { message: "User ID and password are required" },
+      { status: 400 },
+    );
   }
 
-  const user = await User.findById(userId);
+  if (password.length < 8) {
+    return NextResponse.json(
+      { message: "Password must be at least 8 characters long" },
+      { status: 400 },
+    );
+  }
+
+  let user;
+
+  // Check if it's a distributer (separate model)
+  if (userType === "distributer") {
+    user = await Distributer.findById(userId).select("+password");
+  } else {
+    // Check User model for doctors, planners, and admins
+    user = await User.findById(userId).select("+password");
+  }
 
   if (!user) {
-    return NextResponse.json({ message: 'User not found' }, { status: 404 });
+    return NextResponse.json({ message: "User not found" }, { status: 404 });
   }
 
   // If the target user is an admin, only a super admin can change their password
-  if (user.role === 'admin') {
+  if (user.role === "admin") {
     const superAdminId = process.env.SUPER_ADMIN_ID;
     if (authResult.user.id !== superAdminId) {
-      return NextResponse.json({ message: 'You are not authorized to change another admin\'s password.' }, { status: 403 });
+      return NextResponse.json(
+        {
+          message: "You are not authorized to change another admin's password.",
+        },
+        { status: 403 },
+      );
     }
   }
 
-  // The pre-save hook in the User model will hash the password
+  // The pre-save hook in the respective model will hash the password
   user.password = password;
   await user.save();
 
-  return NextResponse.json({ message: 'Password updated successfully' });
-} 
+  return NextResponse.json({ message: "Password updated successfully" });
+}
