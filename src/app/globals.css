@@ -1,4 +1,4 @@
-@import 'tailwindcss';
+@import "tailwindcss";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -186,7 +186,7 @@
     cursor: pointer;
   }
   body {
-    @apply relative font-normal z-1 bg-gray-50;
+    @apply relative z-1 bg-gray-50 font-normal;
   }
 }
 
@@ -198,11 +198,11 @@
 } */
 
 body {
-  font-family: 'Righteous', sans-serif;
+  font-family: "Righteous", sans-serif;
 }
 
 @utility menu-item {
-  @apply relative flex items-center w-full gap-3 px-3 py-2 font-medium rounded-lg text-theme-sm;
+  @apply text-theme-sm relative flex w-full items-center gap-3 rounded-lg px-3 py-2 font-medium;
 }
 
 @utility menu-item-active {
@@ -210,7 +210,7 @@ body {
 }
 
 @utility menu-item-inactive {
-  @apply text-gray-700 hover:bg-gray-100 group-hover:text-gray-700 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
+  @apply text-gray-700 group-hover:text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/5 dark:hover:text-gray-300;
 }
 
 @utility menu-item-icon {
@@ -230,7 +230,7 @@ body {
 }
 
 @utility menu-item-arrow-active {
-  @apply rotate-180 text-brand-500 dark:text-brand-400;
+  @apply text-brand-500 dark:text-brand-400 rotate-180;
 }
 
 @utility menu-item-arrow-inactive {
@@ -238,7 +238,7 @@ body {
 }
 
 @utility menu-dropdown-item {
-  @apply relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-theme-sm font-medium;
+  @apply text-theme-sm relative flex items-center gap-3 rounded-lg px-3 py-2.5 font-medium;
 }
 
 @utility menu-dropdown-item-active {
@@ -250,7 +250,7 @@ body {
 }
 
 @utility menu-dropdown-badge {
-  @apply block rounded-full px-2.5 py-0.5 text-xs font-medium uppercase text-brand-500 dark:text-brand-400;
+  @apply text-brand-500 dark:text-brand-400 block rounded-full px-2.5 py-0.5 text-xs font-medium uppercase;
 }
 
 @utility menu-dropdown-badge-active {
@@ -280,7 +280,7 @@ body {
   }
 
   &::-webkit-scrollbar-thumb {
-    @apply bg-gray-200 rounded-full dark:bg-gray-700;
+    @apply rounded-full bg-gray-200 dark:bg-gray-700;
   }
 }
 
@@ -309,7 +309,7 @@ body {
 }
 
 .apexcharts-tooltip.apexcharts-theme-light {
-  @apply gap-1 rounded-lg! border-gray-200! p-3 shadow-theme-sm! dark:border-gray-800! dark:bg-gray-900!;
+  @apply shadow-theme-sm! gap-1 rounded-lg! border-gray-200! p-3 dark:border-gray-800! dark:bg-gray-900!;
 }
 
 .apexcharts-legend-text {
@@ -339,7 +339,7 @@ body {
   @apply w-full;
 }
 .flatpickr-calendar {
-  @apply mt-2 bg-white! rounded-xl! p-5! border! border-gray-200! text-gray-500! dark:bg-gray-dark! dark:text-gray-400! dark:shadow-theme-xl! 2xsm:w-auto!;
+  @apply dark:bg-gray-dark! dark:shadow-theme-xl! 2xsm:w-auto! mt-2 rounded-xl! border! border-gray-200! bg-white! p-5! text-gray-500! dark:text-gray-400!;
 }
 
 .flatpickr-months .flatpickr-prev-month:hover svg,
@@ -365,15 +365,15 @@ body {
 }
 
 .flatpickr-weekdays {
-  @apply h-auto mt-6 mb-4 bg-transparent!;
+  @apply mt-6 mb-4 h-auto bg-transparent!;
 }
 
 .flatpickr-weekday {
-  @apply text-theme-sm! font-medium! text-gray-500! dark:text-gray-400! bg-transparent!;
+  @apply text-theme-sm! bg-transparent! font-medium! text-gray-500! dark:text-gray-400!;
 }
 
 .flatpickr-day {
-  @apply flex! items-center! text-theme-sm! font-medium! text-gray-800! dark:text-white/90! dark:hover:border-gray-300! dark:hover:bg-gray-900!;
+  @apply text-theme-sm! flex! items-center! font-medium! text-gray-800! dark:text-white/90! dark:hover:border-gray-300! dark:hover:bg-gray-900!;
 }
 .flatpickr-day.nextMonthDay,
 .flatpickr-day.prevMonthDay {
@@ -390,14 +390,14 @@ body {
   font-weight: 500;
 }
 .flatpickr-month
-.flatpickr-current-month
-.flatpickr-monthDropdown-months:focus {
+  .flatpickr-current-month
+  .flatpickr-monthDropdown-months:focus {
   outline: none !important;
   border: 0 !important;
 }
 .flatpickr-months .flatpickr-prev-month,
 .flatpickr-months .flatpickr-next-month {
-  @apply top-7! dark:fill-white! dark:text-white! bg-transparent!;
+  @apply top-7! bg-transparent! dark:fill-white! dark:text-white!;
 }
 .flatpickr-months .flatpickr-prev-month.flatpickr-prev-month,
 .flatpickr-months .flatpickr-next-month.flatpickr-prev-month {
@@ -412,7 +412,7 @@ body {
 }
 span.flatpickr-weekday,
 .flatpickr-months .flatpickr-month {
-  @apply dark:fill-white! dark:text-white! bg-none!;
+  @apply bg-none! dark:fill-white! dark:text-white!;
 }
 .flatpickr-innerContainer {
   @apply border-b-0!;
@@ -421,7 +421,9 @@ span.flatpickr-weekday,
   @apply bg-none!;
 }
 .flatpickr-day.inRange {
-  box-shadow: -5px 0 0 #f9fafb, 5px 0 0 #f9fafb !important;
+  box-shadow:
+    -5px 0 0 #f9fafb,
+    5px 0 0 #f9fafb !important;
   @apply dark:shadow-datepicker!;
 }
 .flatpickr-day.inRange,
@@ -487,7 +489,7 @@ span.flatpickr-weekday,
 }
 
 .fc .fc-view-harness {
-  @apply max-w-full overflow-x-auto custom-scrollbar;
+  @apply custom-scrollbar max-w-full overflow-x-auto;
 }
 .fc-dayGridMonth-view.fc-view.fc-daygrid {
   @apply min-w-[718px];
@@ -510,11 +512,11 @@ span.flatpickr-weekday,
 }
 
 .fc-button-group .fc-button.fc-prev-button:before {
-  @apply inline-block mt-1;
+  @apply mt-1 inline-block;
   content: url("data:image/svg+xml,%3Csvg width='25' height='24' viewBox='0 0 25 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M16.0068 6L9.75684 12.25L16.0068 18.5' stroke='%23344054' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E%0A");
 }
 .fc-button-group .fc-button.fc-next-button:before {
-  @apply inline-block mt-1;
+  @apply mt-1 inline-block;
   content: url("data:image/svg+xml,%3Csvg width='25' height='24' viewBox='0 0 25 24' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M9.50684 19L15.7568 12.75L9.50684 6.5' stroke='%23344054' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E%0A");
 }
 .dark .fc-button-group .fc-button.fc-prev-button:before {
@@ -527,7 +529,7 @@ span.flatpickr-weekday,
   @apply hidden;
 }
 .fc-addEventButton-button {
-  @apply rounded-lg! border-0! bg-brand-500! px-4! py-2.5! text-sm! font-medium! hover:bg-brand-600! focus:shadow-none!;
+  @apply bg-brand-500! hover:bg-brand-600! rounded-lg! border-0! px-4! py-2.5! text-sm! font-medium! focus:shadow-none!;
 }
 .fc-toolbar-title {
   @apply text-lg! font-medium! text-gray-800 dark:text-white/90;
@@ -541,7 +543,7 @@ span.flatpickr-weekday,
 .fc-header-toolbar.fc-toolbar
   .fc-toolbar-chunk:last-child
   .fc-button.fc-button-active {
-  @apply text-gray-900 bg-white dark:bg-gray-800 dark:text-white;
+  @apply bg-white text-gray-900 dark:bg-gray-800 dark:text-white;
 }
 .fc-theme-standard th {
   @apply border-x-0! border-t border-gray-200! bg-gray-50 text-left! dark:border-gray-800! dark:bg-gray-900;
@@ -551,7 +553,7 @@ span.flatpickr-weekday,
   @apply border-gray-200! dark:border-gray-800!;
 }
 .fc .fc-col-header-cell-cushion {
-  @apply px-5! py-4! text-sm font-medium uppercase text-gray-400;
+  @apply px-5! py-4! text-sm font-medium text-gray-400 uppercase;
 }
 .fc .fc-daygrid-day.fc-day-today {
   @apply bg-transparent;
@@ -575,13 +577,13 @@ span.flatpickr-weekday,
   @apply text-gray-400 dark:text-white/30;
 }
 .event-fc-color {
-  @apply rounded-lg py-2.5 pl-4 pr-3;
+  @apply rounded-lg py-2.5 pr-3 pl-4;
 }
 .event-fc-color .fc-event-title {
   @apply p-0 text-sm font-normal text-gray-700;
 }
 .fc-daygrid-event-dot {
-  @apply w-1 h-5 ml-0 mr-3 border-none rounded-sm;
+  @apply mr-3 ml-0 h-5 w-1 rounded-sm border-none;
 }
 .fc-event {
   @apply focus:shadow-none;
@@ -641,7 +643,7 @@ span.flatpickr-weekday,
 
 .stocks-slider-outer .swiper-button-next,
 .stocks-slider-outer .swiper-button-prev {
-  @apply static! mt-0 h-8 w-9 rounded-full border dark:hover:bg-white/[0.05] border-gray-200 text-gray-700! transition hover:bg-gray-100 dark:border-white/[0.03] dark:bg-gray-800 dark:text-gray-400!  dark:hover:text-white/90!;
+  @apply static! mt-0 h-8 w-9 rounded-full border border-gray-200 text-gray-700! transition hover:bg-gray-100 dark:border-white/[0.03] dark:bg-gray-800 dark:text-gray-400! dark:hover:bg-white/[0.05] dark:hover:text-white/90!;
 }
 
 .stocks-slider-outer .swiper-button-next.swiper-button-disabled,
@@ -675,7 +677,7 @@ span.flatpickr-weekday,
 .carouselTwo .swiper-button-prev,
 .carouselFour .swiper-button-next,
 .carouselFour .swiper-button-prev {
-  @apply h-10 w-10 rounded-full border-[0.5px] border-white/10 bg-white/90 text-gray-700! shadow-slider-navigation backdrop-blur-[10px];
+  @apply shadow-slider-navigation h-10 w-10 rounded-full border-[0.5px] border-white/10 bg-white/90 text-gray-700! backdrop-blur-[10px];
 }
 
 .carouselTwo .swiper-button-prev,
@@ -690,12 +692,12 @@ span.flatpickr-weekday,
 
 .carouselThree .swiper-pagination,
 .carouselFour .swiper-pagination {
-  @apply bottom-3! left-1/2! inline-flex w-auto! -translate-x-1/2 items-center gap-1.5 rounded-[40px] border-[0.5px] border-white/10 bg-white/60 px-2 py-1.5 shadow-slider-navigation backdrop-blur-[10px] sm:bottom-5!;
+  @apply shadow-slider-navigation bottom-3! left-1/2! inline-flex w-auto! -translate-x-1/2 items-center gap-1.5 rounded-[40px] border-[0.5px] border-white/10 bg-white/60 px-2 py-1.5 backdrop-blur-[10px] sm:bottom-5!;
 }
 
 .carouselThree .swiper-pagination-bullet,
 .carouselFour .swiper-pagination-bullet {
-  @apply m-0! h-2.5 w-2.5 bg-white opacity-100 shadow-theme-xs duration-200 ease-in-out;
+  @apply shadow-theme-xs m-0! h-2.5 w-2.5 bg-white opacity-100 duration-200 ease-in-out;
 }
 
 .carouselThree .swiper-pagination-bullet-active,
@@ -707,7 +709,7 @@ span.flatpickr-weekday,
   @apply bg-gray-50! dark:bg-gray-900!;
 }
 .jvectormap-region.jvectormap-element {
-  @apply fill-gray-300! hover:fill-brand-500! dark:fill-gray-700! dark:hover:fill-brand-500!;
+  @apply hover:fill-brand-500! dark:hover:fill-brand-500! fill-gray-300! dark:fill-gray-700!;
 }
 .jvectormap-marker.jvectormap-element {
   @apply stroke-gray-200! dark:stroke-gray-800!;
@@ -721,11 +723,11 @@ span.flatpickr-weekday,
 }
 
 .form-check-input:checked ~ span {
-  @apply border-[6px] border-brand-500 bg-brand-500 dark:border-brand-500;
+  @apply border-brand-500 bg-brand-500 dark:border-brand-500 border-[6px];
 }
 
 .taskCheckbox:checked ~ .box span {
-  @apply opacity-100 bg-brand-500;
+  @apply bg-brand-500 opacity-100;
 }
 .taskCheckbox:checked ~ p {
   @apply text-gray-400 line-through;
@@ -740,7 +742,8 @@ span.flatpickr-weekday,
 
 .task {
   border-radius: 0.75rem;
-  box-shadow: 0 1px 3px 0 rgba(16, 24, 40, 0.1),
+  box-shadow:
+    0 1px 3px 0 rgba(16, 24, 40, 0.1),
     0 1px 2px 0 rgba(16, 24, 40, 0.06);
   opacity: 0.8;
   cursor: grabbing; /* Changes the cursor to indicate dragging */
@@ -774,7 +777,9 @@ span.flatpickr-weekday,
 
 .hover-lift:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  box-shadow:
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
 }
 
 /* Gradient text effect */
@@ -785,7 +790,7 @@ span.flatpickr-weekday,
   background-clip: text;
 }
 
-p>a{
+p > a {
   text-decoration: underline;
   color: #667eea !important;
   font-weight: 800;
@@ -805,7 +810,8 @@ p>a{
 
 /* Pulse animation for status indicators */
 @keyframes pulse-glow {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 1;
     transform: scale(1);
   }
@@ -819,6 +825,140 @@ p>a{
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
+/* Custom animation delays */
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
 
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
 
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
 
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #6b7280;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Custom focus styles */
+.focus-ring {
+  @apply focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:outline-none dark:focus:ring-offset-gray-900;
+}
+
+/* Glass morphism effect */
+.glass {
+  @apply border border-white/20 bg-white/80 backdrop-blur-xl dark:border-gray-700/30 dark:bg-gray-800/80;
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+}
+
+/* Smooth transitions */
+.smooth-transition {
+  @apply transition-all duration-300 ease-out;
+}
+
+/* Hover effects */
+.hover-lift {
+  @apply transition-all duration-300 hover:scale-105 hover:shadow-xl;
+}
+
+/* Custom button styles */
+.btn-primary {
+  @apply rounded-xl bg-gradient-to-r from-blue-500 to-purple-500 px-6 py-3 font-semibold text-white shadow-lg transition-all duration-300 hover:from-blue-600 hover:to-purple-600 hover:shadow-xl focus:ring-2 focus:ring-blue-500/50 focus:outline-none;
+}
+
+/* Input field enhancements */
+.input-enhanced {
+  @apply w-full rounded-xl border border-gray-300 px-4 py-3 transition-all duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:focus:border-blue-400;
+}
+
+/* Card enhancements */
+.card-enhanced {
+  @apply rounded-3xl border border-white/20 bg-white/90 shadow-2xl shadow-blue-500/10 backdrop-blur-xl dark:border-gray-700/30 dark:bg-gray-800/90;
+}
+
+/* Animation utilities */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
+}
+
+/* Loading states */
+.loading-skeleton {
+  @apply animate-pulse rounded bg-gray-200 dark:bg-gray-700;
+}
+
+/* Responsive text utilities */
+.text-responsive {
+  @apply text-sm sm:text-base md:text-lg;
+}
+
+/* Custom shadows */
+.shadow-soft {
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.shadow-medium {
+  box-shadow:
+    0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.shadow-strong {
+  box-shadow:
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
