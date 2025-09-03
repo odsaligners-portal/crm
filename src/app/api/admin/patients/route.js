@@ -1,45 +1,45 @@
-import dbConnect from '@/app/api/config/db';
+import dbConnect from "@/app/api/config/db";
 
-import { NextResponse } from 'next/server';
-import Patient from '@/app/api/models/Patient';
-import { admin } from '../../middleware/authMiddleware';
+import { NextResponse } from "next/server";
+import Patient from "@/app/api/models/Patient";
+import { admin } from "../../middleware/authMiddleware";
 
 export async function GET(req) {
   await dbConnect();
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = parseInt(searchParams.get('limit') || '25', 10);
-  const search = searchParams.get('search') || '';
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "25", 10);
+  const search = searchParams.get("search") || "";
 
   // Get filter parameters
-  const gender = searchParams.get('gender') || '';
-  const country = searchParams.get('country') || '';
-  const city = searchParams.get('city') || '';
-  const startDate = searchParams.get('startDate') || '';
-  const endDate = searchParams.get('endDate') || '';
-  const state = searchParams.get('state') || '';
-  const caseCategory = searchParams.get('caseCategory') || '';
-  const caseType = searchParams.get('caseType') || '';
-  const selectedPrice = searchParams.get('selectedPrice') || '';
-  const treatmentFor = searchParams.get('treatmentFor') || '';
-  const sort = searchParams.get('sort') || '';
+  const gender = searchParams.get("gender") || "";
+  const country = searchParams.get("country") || "";
+  const city = searchParams.get("city") || "";
+  const startDate = searchParams.get("startDate") || "";
+  const endDate = searchParams.get("endDate") || "";
+  const state = searchParams.get("state") || "";
+  const caseCategory = searchParams.get("caseCategory") || "";
+  const caseType = searchParams.get("caseType") || "";
+  const selectedPrice = searchParams.get("selectedPrice") || "";
+  const treatmentFor = searchParams.get("treatmentFor") || "";
+  const sort = searchParams.get("sort") || "";
   const caseStatus = searchParams.get("caseStatus") || "";
 
   // Get userId from token
   const authResult = await admin(req);
-  
+
   if (!authResult.success) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  
+
   const query = {};
 
   // Search functionality
   if (search) {
     query.$or = [
-      { patientName: { $regex: search, $options: 'i' } },
-      { city: { $regex: search, $options: 'i' } },
-      { caseId: { $regex: search, $options: 'i' } },
+      { patientName: { $regex: search, $options: "i" } },
+      { city: { $regex: search, $options: "i" } },
+      { caseId: { $regex: search, $options: "i" } },
     ];
   }
 
@@ -85,17 +85,18 @@ export async function GET(req) {
     };
   }
 
-  let sortOption = {};
+  // Default sort by createdAt in descending order (newest first)
+  let sortOption = { createdAt: -1 };
 
-  if (sort === 'latest') {
-    sortOption = { createdAt: -1 };
+  if (sort === "oldest") {
+    sortOption = { createdAt: 1 };
   }
 
   try {
     const skip = (page - 1) * limit;
     const patients = await Patient.find(query)
-      .populate('userId', 'name')
-      .populate('plannerId', 'name')
+      .populate("userId", "name")
+      .populate("plannerId", "name")
       .sort(sortOption)
       .skip(skip)
       .limit(limit);
@@ -114,10 +115,10 @@ export async function GET(req) {
       },
     });
   } catch (error) {
-    console.error('Error fetching patients:', error);
+    console.error("Error fetching patients:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch patients' },
-      { status: 500 }
+      { error: "Failed to fetch patients" },
+      { status: 500 },
     );
   }
 }
@@ -129,7 +130,7 @@ export async function POST(req) {
     // Only allow admin users
     const authResult = await admin(req);
     if (!authResult.success) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Optionally, you can get the admin userId if needed
@@ -137,19 +138,19 @@ export async function POST(req) {
     let patientData = {};
 
     // Check content type to determine how to parse the request
-    const contentType = req.headers.get('content-type') || '';
-    
-    if (contentType.includes('application/json')) {
+    const contentType = req.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
       // Handle JSON data
       const jsonData = await req.json();
       patientData = { ...patientData, ...jsonData };
-    } else if (contentType.includes('multipart/form-data')) {
+    } else if (contentType.includes("multipart/form-data")) {
       // Handle FormData
       const formData = await req.formData();
-      
+
       // Process form fields
       for (const [key, value] of formData.entries()) {
-        if (key !== 'scanFiles') {
+        if (key !== "scanFiles") {
           try {
             // Try to parse as JSON for nested objects
             patientData[key] = JSON.parse(value);
@@ -161,7 +162,7 @@ export async function POST(req) {
       }
 
       // Handle file uploads
-      const files = formData.getAll('scanFiles');
+      const files = formData.getAll("scanFiles");
       const scanFiles = files.map((file, index) => ({
         fileName: file.name,
         fileUrl: `/uploads/${Date.now()}-${index}-${file.name}`, // Placeholder URL
@@ -173,19 +174,19 @@ export async function POST(req) {
 
     // --- CASE ID GENERATION LOGIC ---
     function getStateAbbreviation(state) {
-      if (!state) return '';
-      const words = state.trim().split(' ');
+      if (!state) return "";
+      const words = state.trim().split(" ");
       if (words.length > 1) {
-        return words.map(w => w[0].toUpperCase()).join('');
+        return words.map((w) => w[0].toUpperCase()).join("");
       } else {
         return state.substring(0, 3).toUpperCase();
       }
     }
 
     async function generateUniqueCaseId(state) {
-      const prefix = '+91';
+      const prefix = "+91";
       const stateAbbr = getStateAbbreviation(state);
-      let caseId = '';
+      let caseId = "";
       let isUnique = false;
       let attempts = 0;
       const maxAttempts = 100; // Prevent infinite loops
@@ -199,7 +200,9 @@ export async function POST(req) {
       }
 
       if (!isUnique) {
-        throw new Error('Failed to generate unique case ID after multiple attempts');
+        throw new Error(
+          "Failed to generate unique case ID after multiple attempts",
+        );
       }
 
       return caseId;
@@ -215,27 +218,27 @@ export async function POST(req) {
     const patient = await Patient.create(patientData);
     return NextResponse.json(patient, { status: 201 });
   } catch (error) {
-    console.error('Error in POST:', error);
+    console.error("Error in POST:", error);
     // Handle duplicate key error
     if (error.code === 11000) {
       return NextResponse.json(
-        { error: 'A patient with this information already exists' },
-        { status: 400 }
+        { error: "A patient with this information already exists" },
+        { status: 400 },
       );
     }
     // Handle validation errors
-    if (error.name === 'ValidationError') {
+    if (error.name === "ValidationError") {
       const validationErrors = Object.values(error.errors).map(
-        (err) => err.message
+        (err) => err.message,
       );
       return NextResponse.json(
-        { error: validationErrors.join(', ') },
-        { status: 400 }
+        { error: validationErrors.join(", ") },
+        { status: 400 },
       );
     }
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
+      { error: error.message || "Internal server error" },
+      { status: 500 },
     );
   }
-} 
+}
