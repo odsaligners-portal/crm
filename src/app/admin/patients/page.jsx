@@ -50,6 +50,8 @@ export default function ViewPatientRecords() {
   const [showViewFilesModal, setShowViewFilesModal] = useState(false);
   const [viewFilesPatient, setViewFilesPatient] = useState(null);
   const [hasUserDeleteAccess, setHasUserDeleteAccess] = useState(false);
+  const [hasPlannerAccess, setHasPlannerAccess] = useState(false);
+  const [planners, setPlanners] = useState([]);
 
   const handleOpenUploadModal = (patient) => {
     setSelectedPatient(patient);
@@ -114,6 +116,25 @@ export default function ViewPatientRecords() {
   }, [currentPage, searchTerm, filters]);
 
   useEffect(() => {
+    const fetchPlanners = async () => {
+      if (!hasPlannerAccess || !token) return;
+      try {
+        const data = await fetchWithError(
+          "/api/admin/other-admins?role=planner",
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
+        setPlanners(data.admins || []);
+      } catch (err) {
+        // fetchWithError handles toast
+        setPlanners([]);
+      }
+    };
+    fetchPlanners();
+  }, [hasPlannerAccess, token]);
+
+  useEffect(() => {
     const fetchCaseCategories = async () => {
       dispatch(setLoading(true));
       try {
@@ -142,8 +163,10 @@ export default function ViewPatientRecords() {
           headers: { Authorization: `Bearer ${token}` },
         });
         setHasUserDeleteAccess(!!data.user?.userDeleteAccess);
+        setHasPlannerAccess(!!data.user?.plannerAccess);
       } catch (err) {
         setHasUserDeleteAccess(false);
+        setHasPlannerAccess(false);
       } finally {
         dispatch(setLoading(false));
       }
@@ -525,6 +548,29 @@ export default function ViewPatientRecords() {
     }
   };
 
+  const handleAssignPlanner = async (patientId, plannerId) => {
+    dispatch(setLoading(true));
+    try {
+      await fetchWithError(
+        `/api/admin/patients/update-details?id=${patientId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ plannerId }),
+        },
+      );
+      toast.success("Planner assigned successfully!");
+      fetchPatients();
+    } catch (error) {
+      // fetchWithError handles toast
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
   if (patients.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
@@ -837,6 +883,14 @@ export default function ViewPatientRecords() {
                   >
                     Files
                   </TableCell>
+                  {hasPlannerAccess && (
+                    <TableCell
+                      isHeader
+                      className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
+                    >
+                      Planner
+                    </TableCell>
+                  )}
                   <TableCell
                     isHeader
                     className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
@@ -913,6 +967,23 @@ export default function ViewPatientRecords() {
                         </Button>
                       </div>
                     </TableCell>
+                    {hasPlannerAccess && (
+                      <TableCell className="px-2 py-0 text-center">
+                        <Select
+                          value={patient.plannerId?._id || ""}
+                          onChange={(e) =>
+                            handleAssignPlanner(patient._id, e.target.value)
+                          }
+                          options={[
+                            ...planners.map((planner) => ({
+                              label: planner.name,
+                              value: planner._id,
+                            })),
+                          ]}
+                          className="h-5 !w-28 text-[9px] !px-0 !py-0"
+                        />
+                      </TableCell>
+                    )}
                     <TableCell className="px-2 py-1 text-center">
                       <div className="flex justify-center gap-1">
                         <Button

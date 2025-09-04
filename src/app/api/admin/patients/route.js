@@ -85,7 +85,6 @@ export async function GET(req) {
     };
   }
 
-  // Default sort by createdAt in descending order (newest first)
   let sortOption = { createdAt: -1 };
 
   if (sort === "oldest") {
@@ -189,10 +188,10 @@ export async function POST(req) {
       let caseId = "";
       let isUnique = false;
       let attempts = 0;
-      const maxAttempts = 100; // Prevent infinite loops
+      const maxAttempts = 100;
 
       while (!isUnique && attempts < maxAttempts) {
-        const randomNum = Math.floor(1000000 + Math.random() * 9000000); // 7-digit
+        const randomNum = Math.floor(1000000 + Math.random() * 900000000);
         caseId = `${prefix}${stateAbbr}${randomNum}`;
         const exists = await Patient.findOne({ caseId });
         if (!exists) isUnique = true;
@@ -208,25 +207,20 @@ export async function POST(req) {
       return caseId;
     }
 
-    // Only generate caseId if not already present (first creation)
     if (!patientData.caseId) {
       patientData.caseId = await generateUniqueCaseId(patientData.state);
     }
-    // --- END CASE ID GENERATION ---
 
-    // Create patient
     const patient = await Patient.create(patientData);
     return NextResponse.json(patient, { status: 201 });
   } catch (error) {
     console.error("Error in POST:", error);
-    // Handle duplicate key error
     if (error.code === 11000) {
       return NextResponse.json(
         { error: "A patient with this information already exists" },
         { status: 400 },
       );
     }
-    // Handle validation errors
     if (error.name === "ValidationError") {
       const validationErrors = Object.values(error.errors).map(
         (err) => err.message,

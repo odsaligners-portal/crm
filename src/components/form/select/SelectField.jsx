@@ -15,7 +15,7 @@ const SelectField = ({
         </label>
       )}
       <select
-        className={`w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-500 ${className}`}
+        className={`w-full rounded-lg border border-gray-300 cursor-pointer bg-white px-4 py-2.5 text-gray-900 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-white dark:focus:border-blue-500 ${className}`}
         {...props}
       >
         <option value="">Select an option</option>
