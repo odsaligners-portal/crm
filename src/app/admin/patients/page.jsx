@@ -405,6 +405,9 @@ export default function ViewPatientRecords() {
         (patient.dentalExaminationFiles?.model1?.length || 0) +
         (patient.dentalExaminationFiles?.model2?.length || 0),
 
+      // Modification Status
+      Modified: patient.modification?.commentSubmitted ? "Yes" : "No",
+
       // Timestamps
       "Created Date": new Date(patient.createdAt).toLocaleDateString(),
       "Last Updated": new Date(
@@ -503,6 +506,7 @@ export default function ViewPatientRecords() {
       { wch: 15 }, // X-ray Files
       { wch: 15 }, // 3D Models
       { wch: 15 }, // Total Files
+      { wch: 12 }, // Modified
       { wch: 15 }, // Created Date
       { wch: 15 }, // Last Updated
     ];
@@ -903,7 +907,13 @@ export default function ViewPatientRecords() {
                 {patients.map((patient, idx) => (
                   <TableRow
                     key={patient._id}
-                    className={`group transition-all duration-300 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${idx % 2 === 1 ? "bg-blue-50/50 dark:bg-gray-900/30" : "bg-white/70 dark:bg-gray-900/50"} animate-fadeInUp h-10 items-center`}
+                    className={`group transition-all duration-300 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${
+                      patient.modification?.commentSubmitted
+                        ? "border-l-4 border-yellow-400 bg-yellow-50/80 dark:border-yellow-500 dark:bg-yellow-900/20"
+                        : idx % 2 === 1
+                          ? "bg-blue-50/50 dark:bg-gray-900/30"
+                          : "bg-white/70 dark:bg-gray-900/50"
+                    } animate-fadeInUp h-10 items-center`}
                     style={{
                       fontFamily: "Inter, sans-serif",
                       animationDelay: `${idx * 30}ms`,
@@ -916,7 +926,14 @@ export default function ViewPatientRecords() {
                       {patient.caseId}
                     </TableCell>
                     <TableCell className="flex h-10 items-center justify-center gap-2 px-2 py-1 text-center font-medium">
-                      {patient.patientName}
+                      <span className="flex items-center gap-2">
+                        {patient.patientName}
+                        {patient.modification?.commentSubmitted && (
+                          <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">
+                            Modified
+                          </span>
+                        )}
+                      </span>
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center font-medium">
                       {patient.userId ? patient.userId.name : "N/A"}
@@ -980,7 +997,7 @@ export default function ViewPatientRecords() {
                               value: planner._id,
                             })),
                           ]}
-                          className="h-5 !w-28 text-[9px] !px-0 !py-0"
+                          className="h-5 !w-28 !px-0 !py-0 text-[9px]"
                         />
                       </TableCell>
                     )}
