@@ -80,6 +80,7 @@ export default function ViewPatientRecords() {
     state: "",
     startDate: "",
     endDate: "",
+    caseStatus: [],
   });
 
   const [caseCategories, setCaseCategories] = useState([]);
@@ -93,7 +94,16 @@ export default function ViewPatientRecords() {
         sort: "latest",
         search: searchTerm,
         ...filters,
+        // Handle caseStatus array for multi-select
+        ...(filters.caseStatus.length > 0 && {
+          caseStatus: filters.caseStatus.join(","),
+        }),
       });
+      // Remove caseStatus from filters to avoid duplicate
+      if (filters.caseStatus.length > 0) {
+        delete params.caseStatus;
+        params.append("caseStatus", filters.caseStatus.join(","));
+      }
 
       const data = await fetchWithError(`/api/admin/patients?${params}`, {
         headers: {
@@ -204,6 +214,7 @@ export default function ViewPatientRecords() {
       state: "",
       startDate: "",
       endDate: "",
+      caseStatus: [],
     });
     setCurrentPage(1);
   };
@@ -214,7 +225,17 @@ export default function ViewPatientRecords() {
     if (filters.country) count++;
     if (filters.state) count++;
     if (filters.startDate || filters.endDate) count++;
+    if (filters.caseStatus && filters.caseStatus.length > 0) count++;
     return count;
+  };
+
+  const getFilterCount = () => {
+    return Object.values(filters).filter((value) => {
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      return value !== "";
+    }).length;
   };
 
   const exportToExcel = () => {
@@ -526,6 +547,21 @@ export default function ViewPatientRecords() {
     state: "State",
     startDate: "Start Date",
     endDate: "End Date",
+    caseStatus: "Case Status",
+  };
+
+  // Case status options for multi-select
+  const caseStatusOptions = [
+    { label: "Setup Pending", value: "setup pending" },
+    { label: "Approval Pending", value: "approval pending" },
+    { label: "Approved", value: "approved" },
+    { label: "Rejected", value: "rejected" },
+  ];
+
+  // Handle multi-select changes
+  const handleMultiSelectChange = (key, newValues) => {
+    setFilters((prev) => ({ ...prev, [key]: newValues }));
+    setCurrentPage(1);
   };
 
   const handleDeletePatient = async () => {
@@ -754,6 +790,36 @@ export default function ViewPatientRecords() {
                 />
               </div>
             </div>
+
+            {/* Case Status Multi-Select Filter */}
+            <div className="col-span-full flex w-full flex-col gap-2">
+              <label className="text-xs font-medium text-gray-600">
+                Case Status
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {caseStatusOptions.map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.caseStatus.includes(option.value)}
+                      onChange={() => {
+                        const newValues = filters.caseStatus.includes(
+                          option.value,
+                        )
+                          ? filters.caseStatus.filter((v) => v !== option.value)
+                          : [...filters.caseStatus, option.value];
+                        handleMultiSelectChange("caseStatus", newValues);
+                      }}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-700">{option.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
             <div className="col-span-full mt-2 flex w-full justify-end gap-2">
               <Button
                 type="submit"
@@ -772,9 +838,9 @@ export default function ViewPatientRecords() {
               </Button>
             </div>
           </form>
-          {getActiveFiltersCount() > 0 && (
+          {getFilterCount() > 0 && (
             <Badge color="info" className="mt-2 text-xs">
-              {getActiveFiltersCount()} filters active
+              {getFilterCount()} filters active
             </Badge>
           )}
         </div>
@@ -783,30 +849,56 @@ export default function ViewPatientRecords() {
       {/* Active Filters */}
       {getActiveFiltersCount() > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
-          {Object.entries(filters).map(([key, value]) =>
-            value ? (
-              <Badge
-                key={key}
-                color="info"
-                className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
-              >
-                <span className="font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
-                  {filterLabels[key] || key}:
-                </span>
-                <span className="text-blue-900 dark:text-blue-100">
-                  {value}
-                </span>
-                <button
-                  type="button"
-                  className="ml-1 text-blue-400 hover:text-blue-700 focus:outline-none dark:hover:text-blue-200"
-                  onClick={() => handleFilterChange(key, "")}
-                  aria-label={`Clear ${filterLabels[key] || key} filter`}
+          {Object.entries(filters).map(([key, value]) => {
+            if (Array.isArray(value) && value.length > 0) {
+              return (
+                <Badge
+                  key={key}
+                  color="info"
+                  className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
                 >
-                  ×
-                </button>
-              </Badge>
-            ) : null,
-          )}
+                  <span className="font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
+                    {filterLabels[key] || key}:
+                  </span>
+                  <span className="text-blue-900 dark:text-blue-100">
+                    {value.join(", ")}
+                  </span>
+                  <button
+                    type="button"
+                    className="ml-1 text-blue-400 hover:text-blue-700 focus:outline-none dark:hover:text-blue-200"
+                    onClick={() => handleMultiSelectChange(key, [])}
+                    aria-label={`Clear ${filterLabels[key] || key} filter`}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              );
+            } else if (value) {
+              return (
+                <Badge
+                  key={key}
+                  color="info"
+                  className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
+                >
+                  <span className="font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
+                    {filterLabels[key] || key}:
+                  </span>
+                  <span className="text-blue-900 dark:text-blue-100">
+                    {value}
+                  </span>
+                  <button
+                    type="button"
+                    className="ml-1 text-blue-400 hover:text-blue-700 focus:outline-none dark:hover:text-blue-200"
+                    onClick={() => handleFilterChange(key, "")}
+                    aria-label={`Clear ${filterLabels[key] || key} filter`}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              );
+            }
+            return null;
+          })}
         </div>
       )}
 
@@ -834,7 +926,7 @@ export default function ViewPatientRecords() {
           </defs>
           <rect width="100%" height="100%" fill="url(#dots)" />
         </svg>
-        <Table className="relative z-10 mx-auto min-w-full font-sans text-[10px]">
+        <Table className="relative z-10 min-w-full font-sans text-[10px]">
           {patients.length > 0 && (
             <>
               <TableHeader>
@@ -869,11 +961,17 @@ export default function ViewPatientRecords() {
                   >
                     Case Date
                   </TableCell>
-                  <TableCell
+                  {/* <TableCell
                     isHeader
                     className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Location
+                  </TableCell> */}
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
+                  >
+                    Case Status
                   </TableCell>
                   <TableCell
                     isHeader
@@ -926,7 +1024,7 @@ export default function ViewPatientRecords() {
                       {patient.caseId}
                     </TableCell>
                     <TableCell className="flex h-10 items-center justify-center gap-2 px-2 py-1 text-center font-medium">
-                      <span className="flex items-center gap-2">
+                      <span className="flex items-center gap-2 whitespace-nowrap">
                         {patient.patientName}
                         {patient.modification?.commentSubmitted && (
                           <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">
@@ -935,19 +1033,36 @@ export default function ViewPatientRecords() {
                         )}
                       </span>
                     </TableCell>
-                    <TableCell className="px-2 py-1 text-center font-medium">
+                    <TableCell className="px-2 py-1 text-center font-medium whitespace-nowrap">
                       {patient.userId ? patient.userId.name : "N/A"}
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center font-medium">
                       {formatDateToIST(patient.createdAt)}
                     </TableCell>
-                    <TableCell className="px-2 py-1 text-center">
+                    {/* <TableCell className="px-2 py-1 text-center">
                       <div className="text-[10px] leading-tight">
                         <div>{patient.city}</div>
-                        <div className="text-[9px] text-gray-500">
+                        <div className="text-[9px] whitespace-nowrap text-gray-500">
                           {patient.country}
                         </div>
                       </div>
+                    </TableCell> */}
+                    <TableCell className="px-1 py-1 text-center">
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap ${
+                          patient.caseStatus === "approved"
+                            ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300"
+                            : patient.caseStatus === "rejected"
+                              ? "border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-300"
+                              : patient.caseStatus === "approval pending"
+                                ? "border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300"
+                                : patient.caseStatus === "setup pending"
+                                  ? "border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-900/20 dark:text-sky-300"
+                                  : "border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-900/20 dark:text-slate-400"
+                        }`}
+                      >
+                        {patient.caseStatus || "Not specified"}
+                      </span>
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center">
                       <div className="flex justify-center gap-1">
@@ -970,7 +1085,7 @@ export default function ViewPatientRecords() {
                       </div>
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center">
-                      <div className="flex justify-center gap-1">
+                      <div className="flex justify-center gap-1 whitespace-nowrap">
                         <Button
                           onClick={() => {
                             setViewFilesPatient(patient);

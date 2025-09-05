@@ -2,7 +2,9 @@ import dbConnect from "@/app/api/config/db";
 
 import { NextResponse } from "next/server";
 import Patient from "@/app/api/models/Patient";
+import User from "@/app/api/models/User";
 import { admin } from "../../middleware/authMiddleware";
+import { sendEmail } from "@/app/api/utils/mailer";
 
 export async function GET(req) {
   await dbConnect();
@@ -76,7 +78,13 @@ export async function GET(req) {
     query.treatmentFor = treatmentFor;
   }
   if (caseStatus) {
-    query.caseStatus = caseStatus;
+    // Handle comma-separated caseStatus values for multi-select
+    const caseStatusArray = caseStatus
+      .split(",")
+      .filter((status) => status.trim() !== "");
+    if (caseStatusArray.length > 0) {
+      query.caseStatus = { $in: caseStatusArray };
+    }
   }
   if (startDate && endDate) {
     query.createdAt = {
@@ -212,6 +220,199 @@ export async function POST(req) {
     }
 
     const patient = await Patient.create(patientData);
+
+    // Send email notifications for new patient creation by admin
+    try {
+      // Get the admin who created the patient
+      const adminUser = await User.findById(authResult.user.id)
+        .select("name email role")
+        .lean();
+
+      if (adminUser && adminUser.role === "admin") {
+        // Get the doctor assigned to this patient (if any)
+        const assignedDoctor = patient.userId
+          ? await User.findById(patient.userId).select("name email").lean()
+          : null;
+
+        // Send notification email to all other admins
+        const allAdmins = await User.find(
+          { role: "admin", _id: { $ne: authResult.user.id } },
+          "email name",
+        ).lean();
+        const adminEmails = allAdmins
+          .map((admin) => admin.email)
+          .filter(Boolean);
+
+        if (adminEmails.length > 0) {
+          const adminNotificationHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>New Patient Created by Admin</title>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
+                .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
+                .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+                .content { margin-bottom: 30px; }
+                .patient-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #6f42c1; }
+                .patient-info h3 { margin: 0 0 15px 0; color: #6f42c1; font-size: 18px; }
+                .patient-info p { margin: 5px 0; }
+                .admin-info { background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                .admin-info h3 { margin: 0 0 15px 0; color: #495057; font-size: 16px; }
+                .doctor-info { background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                .doctor-info h3 { margin: 0 0 15px 0; color: #495057; font-size: 16px; }
+                .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+                .cta-button { display: inline-block; background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+                .cta-button:hover { opacity: 0.9; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>👥 New Patient Created by Admin</h1>
+                </div>
+                
+                <div class="content">
+                  <p>Hello Admin,</p>
+                  
+                  <p>A new patient has been created by ${adminUser.name} and requires your attention.</p>
+                  
+                  <div class="patient-info">
+                    <h3>👤 Patient Information</h3>
+                    <p><strong>Patient Name:</strong> ${patient.patientName}</p>
+                    <p><strong>Case ID:</strong> ${patient.caseId}</p>
+                    <p><strong>Age:</strong> ${patient.age} years</p>
+                    <p><strong>Gender:</strong> ${patient.gender}</p>
+                    <p><strong>Location:</strong> ${patient.city}, ${patient.state}</p>
+                    <p><strong>Treatment For:</strong> ${patient.treatmentFor || "Not specified"}</p>
+                    <p><strong>Created Date:</strong> ${new Date().toLocaleDateString()}</p>
+                  </div>
+                  
+                  <div class="admin-info">
+                    <h3>👨‍💼 Created By</h3>
+                    <p><strong>Admin Name:</strong> ${adminUser.name}</p>
+                    <p><strong>Admin Email:</strong> ${adminUser.email}</p>
+                  </div>
+                  
+                  ${
+                    assignedDoctor
+                      ? `
+                  <div class="doctor-info">
+                    <h3>👨‍⚕️ Assigned Doctor</h3>
+                    <p><strong>Doctor Name:</strong> Dr. ${assignedDoctor.name}</p>
+                    <p><strong>Doctor Email:</strong> ${assignedDoctor.email}</p>
+                  </div>
+                  `
+                      : `
+                  <div class="doctor-info">
+                    <h3>👨‍⚕️ Assigned Doctor</h3>
+                    <p><strong>Status:</strong> No doctor assigned yet</p>
+                  </div>
+                  `
+                  }
+                  
+                  <p>Please review the patient's information and take any necessary administrative actions.</p>
+                  
+                  
+                </div>
+                
+                <div class="footer">
+                  <p>This is an automated notification from the Patient Management System.</p>
+                  <p>Please do not reply to this email.</p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `;
+
+          await sendEmail({
+            to: adminEmails,
+            subject: `New Patient Created by Admin: ${patient.patientName}`,
+            html: adminNotificationHtml,
+          });
+        }
+
+        // Send notification email to assigned doctor (if any)
+        if (assignedDoctor) {
+          const doctorNotificationHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>New Patient Assigned to You</title>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
+                .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
+                .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+                .content { margin-bottom: 30px; }
+                .patient-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #17a2b8; }
+                .patient-info h3 { margin: 0 0 15px 0; color: #17a2b8; font-size: 18px; }
+                .patient-info p { margin: 5px 0; }
+                .admin-info { background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                .admin-info h3 { margin: 0 0 15px 0; color: #495057; font-size: 16px; }
+                .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+                .cta-button { display: inline-block; background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+                .cta-button:hover { opacity: 0.9; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>👤 New Patient Assigned to You</h1>
+                </div>
+                
+                <div class="content">
+                  <p>Dear Dr. ${assignedDoctor.name},</p>
+                  
+                  <p>A new patient has been assigned to you by an admin and requires your attention.</p>
+                  
+                  <div class="patient-info">
+                    <h3>📋 Patient Details</h3>
+                    <p><strong>Patient Name:</strong> ${patient.patientName}</p>
+                    <p><strong>Case ID:</strong> ${patient.caseId}</p>
+                    <p><strong>Age:</strong> ${patient.age} years</p>
+                    <p><strong>Gender:</strong> ${patient.gender}</p>
+                    <p><strong>Location:</strong> ${patient.city}, ${patient.state}</p>
+                    <p><strong>Treatment For:</strong> ${patient.treatmentFor || "Not specified"}</p>
+                    <p><strong>Assigned Date:</strong> ${new Date().toLocaleDateString()}</p>
+                  </div>
+                  
+                  <div class="admin-info">
+                    <h3>👨‍💼 Assigned By</h3>
+                    <p><strong>Admin Name:</strong> ${adminUser.name}</p>
+                    <p><strong>Admin Email:</strong> ${adminUser.email}</p>
+                  </div>
+                  
+                  <p>Please review the patient's information and start managing their treatment.</p>
+                  
+                </div>
+                
+                <div class="footer">
+                  <p>This is an automated notification from the Patient Management System.</p>
+                  <p>Please do not reply to this email.</p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `;
+
+          await sendEmail({
+            to: assignedDoctor.email,
+            subject: `New Patient Assigned to You: ${patient.patientName}`,
+            html: doctorNotificationHtml,
+          });
+        }
+      }
+    } catch (emailError) {
+      console.error("Error sending admin patient creation emails:", emailError);
+      // Don't fail the patient creation if email fails
+    }
+
     return NextResponse.json(patient, { status: 201 });
   } catch (error) {
     console.error("Error in POST:", error);

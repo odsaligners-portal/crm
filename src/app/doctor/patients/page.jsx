@@ -56,9 +56,18 @@ export default function ViewPatientRecords() {
     state: "",
     startDate: "",
     endDate: "",
+    caseStatus: [],
   });
 
   const [caseCategories, setCaseCategories] = useState([]);
+
+  // Filter options
+  const caseStatusOptions = [
+    { label: "Setup Pending", value: "setup pending" },
+    { label: "Approval Pending", value: "approval pending" },
+    { label: "Approved", value: "approved" },
+    { label: "Rejected", value: "rejected" },
+  ];
 
   const fetchPatients = async () => {
     dispatch(setLoading(true));
@@ -69,6 +78,8 @@ export default function ViewPatientRecords() {
         sort: "latest",
         search: searchTerm,
         ...filters,
+        // Handle multi-select filters
+        caseStatus: filters.caseStatus.join(","),
       });
       const data = await fetchWithError(`/api/patients?${params}`, {
         headers: {
@@ -127,6 +138,11 @@ export default function ViewPatientRecords() {
     setCurrentPage(1);
   };
 
+  const handleMultiSelectChange = (key, value) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+    setCurrentPage(1);
+  };
+
   const clearFilters = () => {
     setFilters({
       gender: "",
@@ -134,6 +150,7 @@ export default function ViewPatientRecords() {
       state: "",
       startDate: "",
       endDate: "",
+      caseStatus: [],
     });
     setCurrentPage(1);
   };
@@ -144,6 +161,7 @@ export default function ViewPatientRecords() {
     if (filters.country) count++;
     if (filters.state) count++;
     if (filters.startDate || filters.endDate) count++;
+    if (filters.caseStatus && filters.caseStatus.length > 0) count++;
     return count;
   };
 
@@ -154,7 +172,6 @@ export default function ViewPatientRecords() {
       "Patient Name": patient.patientName,
       Age: patient.age,
       Gender: patient.gender,
-      "Treatment For": patient.treatmentFor,
 
       // Location Information
       Country: patient.country,
@@ -450,7 +467,12 @@ export default function ViewPatientRecords() {
   };
 
   const getFilterCount = () => {
-    return Object.values(filters).filter((value) => value !== "").length;
+    return Object.values(filters).filter((value) => {
+      if (Array.isArray(value)) {
+        return value.length > 0;
+      }
+      return value !== "";
+    }).length;
   };
 
   // Helper to get filter label
@@ -460,6 +482,7 @@ export default function ViewPatientRecords() {
     state: "State",
     startDate: "Start Date",
     endDate: "End Date",
+    caseStatus: "Case Status",
   };
 
   const handleOpenUploadModal = (patient) => {
@@ -668,6 +691,36 @@ export default function ViewPatientRecords() {
               </div>
             </div>
 
+            {/* Multi-Select Filters */}
+            <div className="col-span-2 flex w-full flex-col gap-1">
+              <label className="text-xs font-medium text-gray-600">
+                Case Status
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {caseStatusOptions.map((option) => (
+                  <label
+                    key={option.value}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg border border-gray-300 px-3 py-2 text-sm hover:bg-gray-50"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.caseStatus.includes(option.value)}
+                      onChange={() => {
+                        const newValues = filters.caseStatus.includes(
+                          option.value,
+                        )
+                          ? filters.caseStatus.filter((v) => v !== option.value)
+                          : [...filters.caseStatus, option.value];
+                        handleMultiSelectChange("caseStatus", newValues);
+                      }}
+                      className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-700">{option.label}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
             {/* Filter Actions */}
             <div className="col-span-full mt-2 flex w-full justify-end gap-2">
               <Button
@@ -698,30 +751,56 @@ export default function ViewPatientRecords() {
       {/* Active Filters */}
       {getFilterCount() > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
-          {Object.entries(filters).map(([key, value]) =>
-            value ? (
-              <Badge
-                key={key}
-                color="info"
-                className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
-              >
-                <span className="font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
-                  {filterLabels[key] || key}:
-                </span>
-                <span className="text-blue-900 dark:text-blue-100">
-                  {value}
-                </span>
-                <button
-                  type="button"
-                  className="ml-1 text-blue-400 hover:text-blue-700 focus:outline-none dark:hover:text-blue-200"
-                  onClick={() => handleFilterChange(key, "")}
-                  aria-label={`Clear ${filterLabels[key] || key} filter`}
+          {Object.entries(filters).map(([key, value]) => {
+            if (Array.isArray(value) && value.length > 0) {
+              return (
+                <Badge
+                  key={key}
+                  color="info"
+                  className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
                 >
-                  ×
-                </button>
-              </Badge>
-            ) : null,
-          )}
+                  <span className="font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
+                    {filterLabels[key] || key}:
+                  </span>
+                  <span className="text-blue-900 dark:text-blue-100">
+                    {value.join(", ")}
+                  </span>
+                  <button
+                    type="button"
+                    className="ml-1 text-blue-400 hover:text-blue-700 focus:outline-none dark:hover:text-blue-200"
+                    onClick={() => handleMultiSelectChange(key, [])}
+                    aria-label={`Clear ${filterLabels[key] || key} filter`}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              );
+            } else if (value && !Array.isArray(value)) {
+              return (
+                <Badge
+                  key={key}
+                  color="info"
+                  className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
+                >
+                  <span className="font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
+                    {filterLabels[key] || key}:
+                  </span>
+                  <span className="text-blue-900 dark:text-blue-100">
+                    {value}
+                  </span>
+                  <button
+                    type="button"
+                    className="ml-1 text-blue-400 hover:text-blue-700 focus:outline-none dark:hover:text-blue-200"
+                    onClick={() => handleFilterChange(key, "")}
+                    aria-label={`Clear ${filterLabels[key] || key} filter`}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              );
+            }
+            return null;
+          })}
         </div>
       )}
 
