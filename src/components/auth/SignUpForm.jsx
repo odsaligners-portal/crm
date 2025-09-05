@@ -32,6 +32,7 @@ import {
   MdVisibility,
   MdVisibilityOff,
 } from "react-icons/md";
+import OTPVerificationModal from "./OTPVerificationModal";
 
 export default function SignUpForm({
   heading = "Registration",
@@ -60,6 +61,9 @@ export default function SignUpForm({
   const [photoUrl, setPhotoUrl] = useState("");
   const [photoFileKey, setPhotoFileKey] = useState("");
   const [photoUploadedAt, setPhotoUploadedAt] = useState(null);
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState("");
+  const [isVerifying, setIsVerifying] = useState(false);
 
   useEffect(() => {
     // Trigger entrance animation
@@ -176,7 +180,6 @@ export default function SignUpForm({
         setPhotoFileKey("");
         setPhotoUploadedAt(null);
       } catch (err) {
-        console.error("Error deleting image from Firebase: ", err);
         toast.error("Failed to delete image from storage.");
       } finally {
         dispatch(setLoading(false));
@@ -220,6 +223,45 @@ export default function SignUpForm({
         body: JSON.stringify(payload),
       });
 
+      // Check if OTP verification is required
+      if (data.requiresVerification) {
+        setPendingEmail(data.email);
+        setShowOTPModal(true);
+        toast.success(
+          "OTP sent to your email. Please verify to complete registration.",
+        );
+      } else {
+        // Update Redux store with user data
+        dispatch(
+          setCredentials({
+            user: data.user,
+            token: data.token,
+            role: data.user.role,
+          }),
+        );
+
+        toast.success("Successfully registered!");
+        router.push("/");
+      }
+    } catch (error) {
+      // Error is already handled by fetchWithError
+    }
+  };
+
+  const handleOTPVerify = async (otp) => {
+    setIsVerifying(true);
+    try {
+      const data = await fetchWithError("/api/auth/verify-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: pendingEmail,
+          otp: otp,
+        }),
+      });
+
       // Update Redux store with user data
       dispatch(
         setCredentials({
@@ -229,12 +271,38 @@ export default function SignUpForm({
         }),
       );
 
-      toast.success("Successfully registered!");
-      router.push("/"); // Redirect to dashboard after successful registration
+      setShowOTPModal(false);
+      toast.success("Email verified successfully! Welcome to our platform.");
+
+      // Redirect to doctor dashboard (registration is for doctors only)
+      router.push("/doctor");
     } catch (error) {
       // Error is already handled by fetchWithError
-      console.error("Registration error:", error);
+    } finally {
+      setIsVerifying(false);
     }
+  };
+
+  const handleResendOTP = async () => {
+    try {
+      await fetchWithError("/api/auth/verify-otp", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: pendingEmail,
+        }),
+      });
+    } catch (error) {
+      // Error is already handled by fetchWithError
+      throw error; // Re-throw to let the modal handle it
+    }
+  };
+
+  const handleCloseOTPModal = () => {
+    setShowOTPModal(false);
+    setPendingEmail("");
   };
 
   return (
@@ -765,6 +833,16 @@ export default function SignUpForm({
           </div>
         </div>
       </div>
+
+      {/* OTP Verification Modal */}
+      <OTPVerificationModal
+        isOpen={showOTPModal}
+        onClose={handleCloseOTPModal}
+        onVerify={handleOTPVerify}
+        onResend={handleResendOTP}
+        email={pendingEmail}
+        isLoading={isVerifying}
+      />
     </div>
   );
 }
