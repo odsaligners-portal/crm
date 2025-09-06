@@ -41,8 +41,10 @@ export async function PUT(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const distributer = await Distributer.findById(patient.userId.distributerId);
-   
+    const distributer = await Distributer.findById(
+      patient.userId.distributerId,
+    );
+
     if (
       role === "distributor" &&
       distributer._id.toString() !== authResult.user.id
@@ -61,9 +63,17 @@ export async function PUT(req) {
     const body = await req.json();
     const { caseStatus } = body;
 
+    // Prepare update object
+    const updateData = { caseStatus };
+
+    // If case is being approved, set canUpload to true for STL file
+    if (caseStatus === "approved") {
+      updateData["stlFile.canUpload"] = true;
+    }
+
     const updatedPatient = await Patient.findByIdAndUpdate(
       id,
-      { $set: { caseStatus } },
+      { $set: updateData },
       { new: true, runValidators: true },
     );
 
@@ -74,14 +84,13 @@ export async function PUT(req) {
     const doctorEmail = patient?.userId?.email;
     const distributerEmail = distributer?.email;
 
-
     // ---------------- Email Notification Logic ----------------
 
     let recipients = [];
     if (patient?.palnnerId?.email) {
       recipients.push(patient?.palnnerId?.email);
     }
-  
+
     if (role === "admin") {
       // Notify doctor and distributor
       if (doctorEmail) recipients.push(doctorEmail);
@@ -108,7 +117,7 @@ export async function PUT(req) {
 
     // Send Email (deduplicate and only if valid emails exist)
     const uniqueRecipients = [...new Set(recipients.filter(Boolean))];
-  
+
     if (uniqueRecipients.length > 0) {
       await sendEmail({
         to: uniqueRecipients,

@@ -94,8 +94,8 @@ const ViewCommentsModal = ({ isOpen, onClose, patient }) => {
             let modComment = null;
             let otherComments = comments;
             if (
-              patient.modification &&
-              patient.modification.commentSubmitted &&
+              patient?.modification &&
+              patient?.modification?.commentSubmitted &&
               comments.length > 0
             ) {
               modComment = comments[comments.length - 1];

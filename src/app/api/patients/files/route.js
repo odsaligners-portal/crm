@@ -45,7 +45,6 @@ export async function POST(req) {
       );
     }
 
-
     if (!patientId || !Array.isArray(files) || files.length === 0) {
       return NextResponse.json(
         { success: false, message: "Missing patient ID or files" },
@@ -213,8 +212,8 @@ export async function POST(req) {
                     <h3>📋 Uploaded Files</h3>
                     ${files
                       .map(
-                        (file, index) => `
-                        <div class="file-name" style="margin-bottom: 10px;">${index === 0 && file.fileName}</div>
+                        (file) => `
+                        
                           <div class="file-item">
                         <a href="${file.fileUrl}" class="file-url" target="_blank">View File</a>
                       </div>
@@ -225,11 +224,7 @@ export async function POST(req) {
                 
                 <p>Please review these files and take appropriate action as required.</p>
                 
-                <div style="text-align: center;">
-                  <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}" class="cta-button">
-                    🔗 Access Patient Portal
-                  </a>
-                </div>
+               
               </div>
               
               <div class="footer">

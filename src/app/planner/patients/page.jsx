@@ -4,6 +4,7 @@ import FileUploadModal, {
 } from "@/components/admin/patients/FileUploadModal";
 import UploadModal from "@/components/admin/patients/UploadModal";
 import ViewCommentsModal from "@/components/admin/patients/ViewCommentsModal";
+import STLUploadModal from "@/components/planner/STLUploadModal";
 import Input from "@/components/form/input/InputField";
 import Select from "@/components/form/select/SelectField";
 import Badge from "@/components/ui/badge/Badge";
@@ -47,16 +48,18 @@ export default function PlannerPatientRecords() {
   const [viewFilesPatient, setViewFilesPatient] = useState(null);
   const [modificationModalPatient, setModificationModalPatient] =
     useState(null);
+  const [showSTLUploadModal, setShowSTLUploadModal] = useState(false);
+  const [stlUploadPatient, setStlUploadPatient] = useState(null);
   const dispatch = useDispatch();
 
-  // Filter state - Planner only sees Setup Pending cases
+  // Filter state - Planner sees Setup Pending and Approved cases (STL not uploaded)
   const [filters, setFilters] = useState({
     gender: "",
     country: "",
     state: "",
     startDate: "",
     endDate: "",
-    caseStatus: "Setup Pending", // Always filter for Setup Pending
+    caseStatus: "", // No default filter - shows both setup pending and approved cases
   });
 
   const [caseCategories, setCaseCategories] = useState([]);
@@ -130,10 +133,6 @@ export default function PlannerPatientRecords() {
   };
 
   const handleFilterChange = (key, value) => {
-    // Prevent changing caseStatus filter - planner only sees Setup Pending
-    if (key === "caseStatus") {
-      return;
-    }
     setFilters((prev) => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
@@ -145,7 +144,7 @@ export default function PlannerPatientRecords() {
       state: "",
       startDate: "",
       endDate: "",
-      caseStatus: "Setup Pending", // Always maintain Setup Pending filter
+      caseStatus: "", // No default filter
     });
     setCurrentPage(1);
   };
@@ -453,10 +452,8 @@ export default function PlannerPatientRecords() {
   };
 
   const getFilterCount = () => {
-    // Exclude caseStatus from filter count since it's always set to "Setup Pending"
-    return Object.entries(filters).filter(
-      ([key, value]) => key !== "caseStatus" && value !== "",
-    ).length;
+    return Object.entries(filters).filter(([key, value]) => value !== "")
+      .length;
   };
 
   // Helper to get filter label
@@ -466,6 +463,7 @@ export default function PlannerPatientRecords() {
     state: "State",
     startDate: "Start Date",
     endDate: "End Date",
+    caseStatus: "Case Status",
   };
 
   const handleOpenUploadModal = (patient) => {
@@ -493,10 +491,10 @@ export default function PlannerPatientRecords() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-blue-800 drop-shadow-lg dark:text-white/90">
-            Setup Pending Cases
+            Patient Cases
           </h1>
           <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
-            Manage and process patient cases pending setup
+            Manage setup pending cases and upload STL files for approved cases
           </p>
         </div>
         <div className="flex gap-3">
@@ -593,6 +591,17 @@ export default function PlannerPatientRecords() {
               className="w-full"
               disabled={!filters.country}
             />
+            <Select
+              value={filters.caseStatus}
+              onChange={(e) => handleFilterChange("caseStatus", e.target.value)}
+              options={[
+                { label: "All Cases", value: "" },
+                { label: "Setup Pending", value: "setup pending" },
+                { label: "Approved (STL Not Uploaded)", value: "approved" },
+              ]}
+              label="Case Status"
+              className="w-full"
+            />
 
             <div className="col-span-2 flex w-full flex-col gap-1">
               <label className="text-xs font-medium text-gray-600">
@@ -647,32 +656,30 @@ export default function PlannerPatientRecords() {
       {/* Active Filters */}
       {getFilterCount() > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
-          {Object.entries(filters)
-            .filter(([key]) => key !== "caseStatus") // Exclude caseStatus from display
-            .map(([key, value]) =>
-              value ? (
-                <Badge
-                  key={key}
-                  color="info"
-                  className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
+          {Object.entries(filters).map(([key, value]) =>
+            value ? (
+              <Badge
+                key={key}
+                color="info"
+                className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
+              >
+                <span className="font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
+                  {filterLabels[key] || key}:
+                </span>
+                <span className="text-blue-900 dark:text-blue-100">
+                  {value}
+                </span>
+                <button
+                  type="button"
+                  className="ml-1 text-blue-400 hover:text-blue-700 focus:outline-none dark:hover:text-blue-200"
+                  onClick={() => handleFilterChange(key, "")}
+                  aria-label={`Clear ${filterLabels[key] || key} filter`}
                 >
-                  <span className="font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
-                    {filterLabels[key] || key}:
-                  </span>
-                  <span className="text-blue-900 dark:text-blue-100">
-                    {value}
-                  </span>
-                  <button
-                    type="button"
-                    className="ml-1 text-blue-400 hover:text-blue-700 focus:outline-none dark:hover:text-blue-200"
-                    onClick={() => handleFilterChange(key, "")}
-                    aria-label={`Clear ${filterLabels[key] || key} filter`}
-                  >
-                    ×
-                  </button>
-                </Badge>
-              ) : null,
-            )}
+                  ×
+                </button>
+              </Badge>
+            ) : null,
+          )}
         </div>
       )}
 
@@ -740,6 +747,12 @@ export default function PlannerPatientRecords() {
                     className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Files
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
+                  >
+                    STL Upload
                   </TableCell>
                   <TableCell
                     isHeader
@@ -848,6 +861,32 @@ export default function PlannerPatientRecords() {
                         >
                           See Files
                         </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-2 py-1 text-center">
+                      <div className="flex justify-center gap-1">
+                        {patient.stlFile?.canUpload &&
+                        !patient.stlFile?.uploaded ? (
+                          <Button
+                            onClick={() => {
+                              setStlUploadPatient(patient);
+                              setShowSTLUploadModal(true);
+                            }}
+                            size="xs"
+                            variant="outline"
+                            className="flex items-center gap-1 border-green-400 p-1 text-green-600 shadow-sm transition-transform hover:scale-105 hover:bg-green-100/60 dark:hover:bg-green-900/40"
+                          >
+                            Upload STL
+                          </Button>
+                        ) : patient.stlFile?.uploaded ? (
+                          <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-200">
+                            STL Uploaded
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
+                            Not Available
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center">
@@ -992,6 +1031,18 @@ export default function PlannerPatientRecords() {
         }}
         patient={viewFilesPatient}
         token={token}
+      />
+      <STLUploadModal
+        isOpen={showSTLUploadModal}
+        onClose={() => {
+          setShowSTLUploadModal(false);
+          setStlUploadPatient(null);
+        }}
+        patient={stlUploadPatient}
+        token={token}
+        onSuccess={() => {
+          fetchPatients(); // Re-fetch patients after successful STL upload
+        }}
       />
     </div>
   );

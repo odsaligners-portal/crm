@@ -21,7 +21,7 @@ export async function GET(req) {
   const caseType = searchParams.get("caseType") || "";
   const selectedPrice = searchParams.get("selectedPrice") || "";
   const treatmentFor = searchParams.get("treatmentFor") || "";
-  // caseStatus is always "Setup Pending" for planners
+  const caseStatus = searchParams.get("caseStatus") || "";
   const sort = searchParams.get("sort") || "";
 
   // Get userId from token
@@ -31,17 +31,39 @@ export async function GET(req) {
   }
   const userId = authResult.user.id;
 
+  // Base query conditions
+  const baseConditions = [
+    { caseStatus: "setup pending" }, // Setup pending cases
+    {
+      caseStatus: "approved",
+      "stlFile.uploaded": { $ne: true }, // Approved cases where STL is not uploaded
+    },
+  ];
+
+  // If caseStatus filter is specified, override the base conditions
+  if (caseStatus) {
+    if (caseStatus === "setup pending") {
+      baseConditions.splice(1, 1); // Remove approved condition
+    } else if (caseStatus === "approved") {
+      baseConditions.splice(0, 1); // Remove setup pending condition
+    }
+  }
+
   const query = {
     plannerId: userId,
-    caseStatus: "setup pending", // Planners can only see Setup Pending cases
+    $or: baseConditions,
   };
 
   // Search functionality
   if (search) {
-    query.$or = [
-      { patientName: { $regex: search, $options: "i" } },
-      { city: { $regex: search, $options: "i" } },
-      { caseId: { $regex: search, $options: "i" } },
+    query.$and = [
+      {
+        $or: [
+          { patientName: { $regex: search, $options: "i" } },
+          { city: { $regex: search, $options: "i" } },
+          { caseId: { $regex: search, $options: "i" } },
+        ],
+      },
     ];
   }
 
@@ -77,8 +99,6 @@ export async function GET(req) {
   if (treatmentFor) {
     query.treatmentFor = treatmentFor;
   }
-
-  // caseStatus is always "Setup Pending" for planners - no need to filter
 
   if (startDate && endDate) {
     query.createdAt = {

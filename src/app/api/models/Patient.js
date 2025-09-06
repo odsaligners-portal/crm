@@ -291,6 +291,18 @@ const patientSchema = new mongoose.Schema(
       fileKey: { type: String, default: "" },
       uploadedAt: { type: Date, default: Date.now },
     },
+    stlFile: {
+      canUpload: { type: Boolean, default: false },
+      uploaded: { type: Boolean, default: false },
+      uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      uploadedAt: { type: Date, default: Date.now },
+      file: {
+        url: { type: String, default: "" },
+        fileKey: { type: String, default: "" },
+        uploadedAt: { type: Date, default: Date.now },
+      },
+      comment: { type: String, default: "" },
+    },
     progressStatus: {
       type: String,
       enum: ["in-progress", "midway", "completed"],

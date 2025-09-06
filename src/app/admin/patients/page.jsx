@@ -24,6 +24,7 @@ import FileUploadModal, {
   ViewFilesModal,
 } from "@/components/admin/patients/FileUploadModal";
 import ConfirmationModal from "@/components/common/ConfirmationModal";
+import STLFileDetailsModal from "@/components/admin/STLFileDetailsModal";
 import { setLoading } from "@/store/features/uiSlice";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 
@@ -49,6 +50,8 @@ export default function ViewPatientRecords() {
   const [fileUploadPatient, setFileUploadPatient] = useState(null);
   const [showViewFilesModal, setShowViewFilesModal] = useState(false);
   const [viewFilesPatient, setViewFilesPatient] = useState(null);
+  const [showSTLDetailsModal, setShowSTLDetailsModal] = useState(false);
+  const [stlDetailsPatient, setStlDetailsPatient] = useState(null);
   const [hasUserDeleteAccess, setHasUserDeleteAccess] = useState(false);
   const [hasPlannerAccess, setHasPlannerAccess] = useState(false);
   const [planners, setPlanners] = useState([]);
@@ -71,6 +74,11 @@ export default function ViewPatientRecords() {
   const handleCloseViewCommentsModal = () => {
     setPatientForComments(null);
     setIsViewCommentsModalOpen(false);
+  };
+
+  const handleOpenSTLDetailsModal = (patient) => {
+    setStlDetailsPatient(patient);
+    setShowSTLDetailsModal(true);
   };
 
   // Filter state
@@ -983,7 +991,7 @@ export default function ViewPatientRecords() {
                     isHeader
                     className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
-                    Files
+                    STL Upload
                   </TableCell>
                   {hasPlannerAccess && (
                     <TableCell
@@ -1085,18 +1093,21 @@ export default function ViewPatientRecords() {
                       </div>
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center">
-                      <div className="flex justify-center gap-1 whitespace-nowrap">
-                        <Button
-                          onClick={() => {
-                            setViewFilesPatient(patient);
-                            setShowViewFilesModal(true);
-                          }}
-                          size="xs"
-                          variant="outline"
-                          className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
-                        >
-                          See Files
-                        </Button>
+                      <div className="flex justify-center">
+                        {patient.stlFile?.uploaded ? (
+                          <Button
+                            onClick={() => handleOpenSTLDetailsModal(patient)}
+                            size="xs"
+                            variant="outline"
+                            className="flex items-center gap-1 border-green-400 p-1 whitespace-nowrap text-green-600 shadow-sm transition-transform hover:scale-105 hover:bg-green-100/60 dark:hover:bg-green-900/40"
+                          >
+                            ✓ View STL
+                          </Button>
+                        ) : (
+                          <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                            Pending
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     {hasPlannerAccess && (
@@ -1245,6 +1256,15 @@ export default function ViewPatientRecords() {
         }}
         patient={viewFilesPatient}
         token={token}
+      />
+      <STLFileDetailsModal
+        isOpen={showSTLDetailsModal}
+        onClose={() => {
+          setShowSTLDetailsModal(false);
+          setStlDetailsPatient(null);
+        }}
+        patient={stlDetailsPatient}
+        stlFile={stlDetailsPatient?.stlFile}
       />
     </div>
   );
