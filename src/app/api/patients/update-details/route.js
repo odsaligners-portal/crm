@@ -1,8 +1,10 @@
 import { verifyAuth } from "@/app/api/middleware/authMiddleware";
 import dbConnect from "@/app/api/config/db";
 import Patient from "@/app/api/models/Patient";
+import User from "@/app/api/models/User";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
+import { sendEmail } from "@/app/api/utils/mailer";
 
 export async function GET(req) {
   try {
@@ -51,7 +53,6 @@ export async function GET(req) {
 
     return NextResponse.json(patient);
   } catch (error) {
-    console.error("Error in GET patient:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },
       { status: 500 },
@@ -213,9 +214,108 @@ export async function PUT(req) {
       );
     }
 
+    // Send email notification to all admins when doctor updates patient
+    if (authResult.user.role === "doctor") {
+      try {
+        // Get the doctor who updated the patient
+        const doctor = await User.findById(authResult.user.id)
+          .select("name email role")
+          .lean();
+
+        if (doctor) {
+          // Send notification email to all admins
+          const admins = await User.find(
+            { role: "admin" },
+            "email name",
+          ).lean();
+          const adminEmails = admins
+            .map((admin) => admin.email)
+            .filter(Boolean);
+
+          if (adminEmails.length > 0) {
+            const adminNotificationHtml = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Patient Record Updated</title>
+                <style>
+                  body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
+                  .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  .header { background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
+                  .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+                  .content { margin-bottom: 30px; }
+                  .patient-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #ffc107; }
+                  .patient-info h3 { margin: 0 0 15px 0; color: #ffc107; font-size: 18px; }
+                  .patient-info p { margin: 5px 0; }
+                  .doctor-info { background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
+                  .doctor-info h3 { margin: 0 0 15px 0; color: #495057; font-size: 16px; }
+                  .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+                  .cta-button { display: inline-block; background: linear-gradient(135deg, #ffc107 0%, #ff8f00 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+                  .cta-button:hover { opacity: 0.9; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="header">
+                    <h1>📝 Patient Record Updated</h1>
+                  </div>
+                  
+                  <div class="content">
+                    <p>Dear Admin,</p>
+                    
+                    <p>A patient record has been updated by a doctor in the system.</p>
+                    
+                    <div class="patient-info">
+                      <h3>👤 Patient Details</h3>
+                      <p><strong>Patient Name:</strong> ${updatedPatient.patientName}</p>
+                      <p><strong>Case ID:</strong> ${updatedPatient.caseId}</p>
+                      <p><strong>Age:</strong> ${updatedPatient.age} years</p>
+                      <p><strong>Gender:</strong> ${updatedPatient.gender}</p>
+                      <p><strong>Location:</strong> ${updatedPatient.city}, ${updatedPatient.state}</p>
+                      <p><strong>Treatment For:</strong> ${updatedPatient.treatmentFor || "Not specified"}</p>
+                      <p><strong>Updated Date:</strong> ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    
+                    <div class="doctor-info">
+                      <h3>👨‍⚕️ Doctor Information</h3>
+                      <p><strong>Doctor Name:</strong> Dr. ${doctor.name}</p>
+                      <p><strong>Doctor Email:</strong> ${doctor.email}</p>
+                    </div>
+                    
+                    <p>Please review the updated patient record and take any necessary actions.</p>
+                    
+                    <div style="text-align: center;">
+                      <a href="${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/admin/patients" class="cta-button">
+                        View Patient Records
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <div class="footer">
+                    <p>This is an automated notification from the Patient Management System.</p>
+                    <p>Please do not reply to this email.</p>
+                  </div>
+                </div>
+              </body>
+              </html>
+            `;
+
+            await sendEmail({
+              to: adminEmails,
+              subject: `Patient Record Updated: ${updatedPatient.patientName} by Dr. ${doctor.name}`,
+              html: adminNotificationHtml,
+            });
+          }
+        }
+      } catch {
+        // Don't fail the update if email fails
+      }
+    }
+
     return NextResponse.json(updatedPatient);
   } catch (error) {
-    console.error("Error in PUT patient:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },
       { status: 500 },
@@ -259,7 +359,6 @@ export async function DELETE(req) {
 
     return NextResponse.json({ message: "Patient deleted successfully" });
   } catch (error) {
-    console.error("Error in DELETE patient:", error);
     return NextResponse.json(
       { error: error.message || "Internal server error" },
       { status: 500 },
