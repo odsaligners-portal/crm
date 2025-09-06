@@ -60,8 +60,8 @@ const FileDisplayComponent = ({ idx, patientData }) => {
           {idx < 11
             ? imageLabels[idx]
             : idx === 11
-              ? "Select PLY/STL File 1"
-              : "Select PLY/STL File 2"}
+              ? "Maxillary"
+              : "Mandibular"}
         </label>
         <div className="mt-2 flex h-36 w-full items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-gray-50">
           <div className="text-center">
@@ -88,11 +88,7 @@ const FileDisplayComponent = ({ idx, patientData }) => {
   return (
     <div className="group text-center">
       <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased">
-        {idx < 11
-          ? imageLabels[idx]
-          : idx === 11
-            ? "Select PLY/STL File 1"
-            : "Select PLY/STL File 2"}
+        {idx < 11 ? imageLabels[idx] : idx === 11 ? "Maxillary" : "Mandibular"}
       </label>
 
       <div className="group relative mx-auto mt-2 max-w-xs">

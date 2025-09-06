@@ -18,7 +18,7 @@ export const imageLabels = [
   "Panoramic Radiograph",
   "Lateral Radiograph",
 ];
-export const modelLabels = ["Select PLY/STL File 1", "Select PLY/STL File 2"];
+export const modelLabels = ["Maxillary", "Mandibular"];
 
 export const singleArchTypeOptions = [
   { label: "Single Upper Arch", value: "Single Upper Arch" },

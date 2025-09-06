@@ -1547,7 +1547,7 @@ export default function ViewPatientDetails() {
               if (!file)
                 return (
                   <div key={idx} className="text-center">
-                    <Label>{`Select PLY/STL File ${idx + 1}`}</Label>
+                    <Label>{`Maxillary ${idx + 1}`}</Label>
                     <div className="flex h-32 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 text-gray-400">
                       No file
                     </div>
@@ -1567,7 +1567,7 @@ export default function ViewPatientDetails() {
                       onChange={() => handleFileSelect(idx + 11)}
                       className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     />
-                    <Label className="px-2 text-xs leading-tight break-words">{`Select PLY/STL File ${idx + 1}`}</Label>
+                    <Label className="px-2 text-xs leading-tight break-words">{`Maxillary ${idx + 1}`}</Label>
                   </div>
                   <div className="flex h-32 w-full flex-col items-center justify-center rounded-xl border bg-white p-2 shadow">
                     <svg
