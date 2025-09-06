@@ -49,13 +49,14 @@ export default function PlannerPatientRecords() {
     useState(null);
   const dispatch = useDispatch();
 
-  // Filter state
+  // Filter state - Planner only sees Setup Pending cases
   const [filters, setFilters] = useState({
     gender: "",
     country: "",
     state: "",
     startDate: "",
     endDate: "",
+    caseStatus: "Setup Pending", // Always filter for Setup Pending
   });
 
   const [caseCategories, setCaseCategories] = useState([]);
@@ -129,6 +130,10 @@ export default function PlannerPatientRecords() {
   };
 
   const handleFilterChange = (key, value) => {
+    // Prevent changing caseStatus filter - planner only sees Setup Pending
+    if (key === "caseStatus") {
+      return;
+    }
     setFilters((prev) => ({ ...prev, [key]: value }));
     setCurrentPage(1);
   };
@@ -140,6 +145,7 @@ export default function PlannerPatientRecords() {
       state: "",
       startDate: "",
       endDate: "",
+      caseStatus: "Setup Pending", // Always maintain Setup Pending filter
     });
     setCurrentPage(1);
   };
@@ -447,7 +453,10 @@ export default function PlannerPatientRecords() {
   };
 
   const getFilterCount = () => {
-    return Object.values(filters).filter((value) => value !== "").length;
+    // Exclude caseStatus from filter count since it's always set to "Setup Pending"
+    return Object.entries(filters).filter(
+      ([key, value]) => key !== "caseStatus" && value !== "",
+    ).length;
   };
 
   // Helper to get filter label
@@ -484,10 +493,10 @@ export default function PlannerPatientRecords() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-blue-800 drop-shadow-lg dark:text-white/90">
-            Patient Records
+            Setup Pending Cases
           </h1>
           <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
-            Manage and view all patient records
+            Manage and process patient cases pending setup
           </p>
         </div>
         <div className="flex gap-3">
@@ -638,30 +647,32 @@ export default function PlannerPatientRecords() {
       {/* Active Filters */}
       {getFilterCount() > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
-          {Object.entries(filters).map(([key, value]) =>
-            value ? (
-              <Badge
-                key={key}
-                color="info"
-                className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
-              >
-                <span className="font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
-                  {filterLabels[key] || key}:
-                </span>
-                <span className="text-blue-900 dark:text-blue-100">
-                  {value}
-                </span>
-                <button
-                  type="button"
-                  className="ml-1 text-blue-400 hover:text-blue-700 focus:outline-none dark:hover:text-blue-200"
-                  onClick={() => handleFilterChange(key, "")}
-                  aria-label={`Clear ${filterLabels[key] || key} filter`}
+          {Object.entries(filters)
+            .filter(([key]) => key !== "caseStatus") // Exclude caseStatus from display
+            .map(([key, value]) =>
+              value ? (
+                <Badge
+                  key={key}
+                  color="info"
+                  className="flex items-center gap-1 rounded-full border border-blue-200 bg-blue-100 px-3 py-1 text-xs shadow-sm dark:border-blue-700 dark:bg-blue-900/40"
                 >
-                  ×
-                </button>
-              </Badge>
-            ) : null,
-          )}
+                  <span className="font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
+                    {filterLabels[key] || key}:
+                  </span>
+                  <span className="text-blue-900 dark:text-blue-100">
+                    {value}
+                  </span>
+                  <button
+                    type="button"
+                    className="ml-1 text-blue-400 hover:text-blue-700 focus:outline-none dark:hover:text-blue-200"
+                    onClick={() => handleFilterChange(key, "")}
+                    aria-label={`Clear ${filterLabels[key] || key} filter`}
+                  >
+                    ×
+                  </button>
+                </Badge>
+              ) : null,
+            )}
         </div>
       )}
 
@@ -711,6 +722,12 @@ export default function PlannerPatientRecords() {
                     className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
                     Location
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
+                  >
+                    Case Status
                   </TableCell>
                   <TableCell
                     isHeader
@@ -769,6 +786,23 @@ export default function PlannerPatientRecords() {
                       </div>
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center">
+                      <span
+                        className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                          patient.caseStatus === "setup pending"
+                            ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
+                            : patient.caseStatus === "approval pending"
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200"
+                              : patient.caseStatus === "approved"
+                                ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
+                                : patient.caseStatus === "rejected"
+                                  ? "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200"
+                                  : "bg-slate-100 text-slate-800 dark:bg-slate-900/40 dark:text-slate-200"
+                        }`}
+                      >
+                        {patient.caseStatus}
+                      </span>
+                    </TableCell>
+                    <TableCell className="px-2 py-1 text-center">
                       <div className="flex justify-center gap-1">
                         {/* <Button
                           onClick={() => handleOpenUploadModal(patient)}
@@ -790,41 +824,30 @@ export default function PlannerPatientRecords() {
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center">
                       <div className="flex justify-center gap-1">
-                        {patient.caseStatus !== "approved" &&
-                        patient.caseStatus !== "rejected" ? (
-                          <>
-                            {patient?.fileUploadCount?.remianing !== 0 && (
-                              <Button
-                                onClick={() => {
-                                  setFileUploadPatient(patient);
-                                  setShowFileUploadModal(true);
-                                }}
-                                size="xs"
-                                variant="outline"
-                                className="flex items-center gap-1 border-purple-400 p-1 text-purple-600 shadow-sm transition-transform hover:scale-105 hover:bg-purple-100/60 dark:hover:bg-purple-900/40"
-                              >
-                                upload
-                              </Button>
-                            )}
-                            <Button
-                              onClick={() => {
-                                setViewFilesPatient(patient);
-                                setShowViewFilesModal(true);
-                              }}
-                              size="xs"
-                              variant="outline"
-                              className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
-                            >
-                              See Files
-                            </Button>
-                          </>
-                        ) : (
-                          <span
-                            className={`${patient.caseStatus === "approved" ? "bg-green-400" : "bg-red-400"} items-center rounded-3xl px-2 py-1 text-xs font-semibold text-white capitalize subpixel-antialiased`}
+                        {patient?.fileUploadCount?.remianing !== 0 && (
+                          <Button
+                            onClick={() => {
+                              setFileUploadPatient(patient);
+                              setShowFileUploadModal(true);
+                            }}
+                            size="xs"
+                            variant="outline"
+                            className="flex items-center gap-1 border-purple-400 p-1 text-purple-600 shadow-sm transition-transform hover:scale-105 hover:bg-purple-100/60 dark:hover:bg-purple-900/40"
                           >
-                            {patient.caseStatus}
-                          </span>
+                            upload
+                          </Button>
                         )}
+                        <Button
+                          onClick={() => {
+                            setViewFilesPatient(patient);
+                            setShowViewFilesModal(true);
+                          }}
+                          size="xs"
+                          variant="outline"
+                          className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
+                        >
+                          See Files
+                        </Button>
                       </div>
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center">
@@ -957,6 +980,9 @@ export default function PlannerPatientRecords() {
         }}
         patient={fileUploadPatient}
         token={token}
+        onSuccess={() => {
+          fetchPatients(); // Re-fetch patients after successful file upload
+        }}
       />
       <ViewFilesModal
         isOpen={showViewFilesModal}

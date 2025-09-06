@@ -14,29 +14,29 @@ export async function GET(req) {
   const plannerId = authResult.user.id;
 
   try {
-    // Get total patients for this planner
-    const totalPatients = await Patient.countDocuments({ plannerId });
-
-    // Get patients with approved status
-    const approvedCases = await Patient.countDocuments({
+    // Planners only work with Setup Pending cases
+    const totalPatients = await Patient.countDocuments({
       plannerId,
-      caseStatus: "approved",
+      caseStatus: "Setup Pending",
     });
 
-    // Get patients with approval pending
-    const approvalPending = await Patient.countDocuments({
-      plannerId,
-      caseStatus: "approval pending",
-    });
-
-    // Get patients with setup pending
+    // Get patients with setup pending (this is what planners work on)
     const setupPending = await Patient.countDocuments({
       plannerId,
-      caseStatus: "setup pending",
+      caseStatus: "Setup Pending",
     });
 
-    // Get recent patients for activity overview
-    const recentPatients = await Patient.find({ plannerId })
+    // Get patients that were processed by this planner (moved from Setup Pending)
+    const processedCases = await Patient.countDocuments({
+      plannerId,
+      caseStatus: { $ne: "Setup Pending" },
+    });
+
+    // Get recent setup pending patients for activity overview
+    const recentPatients = await Patient.find({
+      plannerId,
+      caseStatus: "Setup Pending",
+    })
       .select("patientName caseStatus createdAt")
       .sort({ createdAt: -1 })
       .limit(5);
@@ -60,16 +60,14 @@ export async function GET(req) {
     return NextResponse.json({
       success: true,
       data: {
-        totalPatients,
-        approvedCases,
-        approvalPending,
-        setupPending,
+        totalPatients, // Setup Pending cases
+        setupPending, // Same as totalPatients for planners
+        processedCases, // Cases moved from Setup Pending
         recentPatients,
         recentActivity,
       },
     });
   } catch (error) {
-    console.error("Error fetching planner dashboard stats:", error);
     return NextResponse.json(
       { success: false, message: error.message || "Server Error" },
       { status: 500 },

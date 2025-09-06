@@ -1,44 +1,47 @@
-import dbConnect from '@/app/api/config/db';
-import { verifyAuth } from '@/app/api/middleware/authMiddleware';
-import { NextResponse } from 'next/server';
-import Patient from '../../models/Patient';
+import dbConnect from "@/app/api/config/db";
+import { verifyAuth } from "@/app/api/middleware/authMiddleware";
+import { NextResponse } from "next/server";
+import Patient from "../../models/Patient";
 
 export async function GET(req) {
-    await dbConnect();
+  await dbConnect();
   const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get('page') || '1', 10);
-  const limit = parseInt(searchParams.get('limit') || '25', 10);
-  const search = searchParams.get('search') || '';
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "25", 10);
+  const search = searchParams.get("search") || "";
 
   // Get filter parameters
-  const gender = searchParams.get('gender') || '';
-  const country = searchParams.get('country') || '';
-  const city = searchParams.get('city') || '';
-  const startDate = searchParams.get('startDate') || '';
-  const endDate = searchParams.get('endDate') || '';
-  const state = searchParams.get('state') || '';
-  const caseCategory = searchParams.get('caseCategory') || '';
-  const caseType = searchParams.get('caseType') || '';
-  const selectedPrice = searchParams.get('selectedPrice') || '';
-  const treatmentFor = searchParams.get('treatmentFor') || '';
-  const caseStatus = searchParams.get('caseStatus') || '';
-  const sort = searchParams.get('sort') || '';
+  const gender = searchParams.get("gender") || "";
+  const country = searchParams.get("country") || "";
+  const city = searchParams.get("city") || "";
+  const startDate = searchParams.get("startDate") || "";
+  const endDate = searchParams.get("endDate") || "";
+  const state = searchParams.get("state") || "";
+  const caseCategory = searchParams.get("caseCategory") || "";
+  const caseType = searchParams.get("caseType") || "";
+  const selectedPrice = searchParams.get("selectedPrice") || "";
+  const treatmentFor = searchParams.get("treatmentFor") || "";
+  // caseStatus is always "Setup Pending" for planners
+  const sort = searchParams.get("sort") || "";
 
   // Get userId from token
   const authResult = await verifyAuth(req);
   if (!authResult.success || !authResult.user || !authResult.user.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const userId = authResult.user.id;
 
-  const query = { plannerId: userId };
+  const query = {
+    plannerId: userId,
+    caseStatus: "setup pending", // Planners can only see Setup Pending cases
+  };
 
   // Search functionality
   if (search) {
     query.$or = [
-      { patientName: { $regex: search, $options: 'i' } },
-      { city: { $regex: search, $options: 'i' } },
-      { caseId: { $regex: search, $options: 'i' } },
+      { patientName: { $regex: search, $options: "i" } },
+      { city: { $regex: search, $options: "i" } },
+      { caseId: { $regex: search, $options: "i" } },
     ];
   }
 
@@ -75,9 +78,7 @@ export async function GET(req) {
     query.treatmentFor = treatmentFor;
   }
 
-  if (caseStatus) {
-    query.caseStatus = caseStatus;
-  }
+  // caseStatus is always "Setup Pending" for planners - no need to filter
 
   if (startDate && endDate) {
     query.createdAt = {
@@ -88,7 +89,7 @@ export async function GET(req) {
 
   let sortOption = {};
 
-  if (sort === 'latest') {
+  if (sort === "latest") {
     sortOption = { createdAt: -1 };
   }
 
@@ -112,11 +113,10 @@ export async function GET(req) {
         hasPrevPage: page > 1,
       },
     });
-  } catch (error) {
-    console.error('Error fetching patients:', error);
+  } catch {
     return NextResponse.json(
-      { error: 'Failed to fetch patients' },
-      { status: 500 }
+      { error: "Failed to fetch patients" },
+      { status: 500 },
     );
   }
 }

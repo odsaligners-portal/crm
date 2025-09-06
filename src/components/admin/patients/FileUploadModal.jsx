@@ -8,7 +8,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
 import { Editor } from "@tinymce/tinymce-react";
 
-const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
+const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
   const [fileName, setFileName] = useState("");
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -98,6 +98,9 @@ const FileUploadModal = ({ isOpen, onClose, patient, token }) => {
 
       toast.success("Files uploaded successfully!");
       onClose();
+      if (onSuccess) {
+        onSuccess();
+      }
     } catch (error) {
       toast.error("Upload failed");
       alert(error.message || "Upload failed");
