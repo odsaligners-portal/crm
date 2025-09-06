@@ -117,6 +117,7 @@ export async function PUT(req) {
               "modification.commentSubmitted":
                 body.modification.commentSubmitted,
               caseStatus: body.caseStatus || "setup pending",
+              "fileUploadCount.remianing": 1,
             },
           },
           { new: true, runValidators: true },

@@ -18,7 +18,7 @@ export const GET = async (req) => {
       return NextResponse.json({ message: authResult.error }, { status: 401 });
     }
     const { user } = authResult;
-
+    console.log(user);
     const commentId = req.nextUrl.searchParams.get("commentId");
     const patientCommentId = req.nextUrl.searchParams.get("patientCommentId");
 
