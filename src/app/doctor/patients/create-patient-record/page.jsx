@@ -21,11 +21,16 @@ import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchWithError } from "@/utils/apiErrorHandler";
+import { setLoading } from "@/store/features/uiSlice";
 
 const countries = Object.keys(countriesData);
 
 const DentalExaminationForm = () => {
   const router = useRouter();
+  const { token } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("general");
   const [patientId, setPatientId] = useState(null); // Add patient ID state
   const [caseId, setCaseId] = useState(null); // Add case ID state
@@ -160,6 +165,9 @@ const DentalExaminationForm = () => {
   const [fileKeys, setFileKeys] = useState(Array(13).fill(undefined));
   const [imageUrls, setImageUrls] = useState(Array(13).fill(undefined));
   const [progresses, setProgresses] = useState(Array(13).fill(0));
+
+  // Check if any file is currently being uploaded or selected for upload
+  const isAnyFileUploading = progresses.some((progress) => progress > 0);
 
   const searchParams = useSearchParams();
 
@@ -525,6 +533,34 @@ const DentalExaminationForm = () => {
   useEffect(() => {
     loadCaseCategories(formData.country);
   }, [formData.country]);
+
+  // Fetch doctor profile data and autofill primary address
+  useEffect(() => {
+    const fetchDoctorProfile = async () => {
+      if (!token) return;
+
+      try {
+        const response = await fetchWithError("/api/user/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.user && response.user.address) {
+          // Autofill primary address with doctor's address
+          setFormData((prevData) => ({
+            ...prevData,
+            primaryAddress: response.user.address,
+          }));
+        }
+      } catch (error) {
+        console.error("Failed to fetch doctor profile:", error);
+        // Don't show error toast as this is not critical for the form
+      }
+    };
+
+    fetchDoctorProfile();
+  }, [token]);
 
   // Load case categories function - moved outside useEffect for accessibility
   const loadCaseCategories = async (country = null) => {
@@ -1411,6 +1447,13 @@ const DentalExaminationForm = () => {
       return;
     }
 
+    // Immediately set progress to 1 to disable other upload areas
+    setProgresses((p) => {
+      const n = [...p];
+      n[idx] = 1;
+      return n;
+    });
+
     const uniqueFileName = `${uuidv4()}-${file.name}`;
     const storagePath = `dental-examination/${uniqueFileName}`;
     const storageRef = ref(storage, storagePath);
@@ -1444,6 +1487,11 @@ const DentalExaminationForm = () => {
           setFileKeys((p) => {
             const n = [...p];
             n[idx] = storagePath;
+            return n;
+          });
+          setProgresses((p) => {
+            const n = [...p];
+            n[idx] = 0;
             return n;
           });
           toast.success("✅ File uploaded successfully!");
@@ -1492,10 +1540,13 @@ const DentalExaminationForm = () => {
 
   const UploadComponent = ({ idx }) => {
     const onDrop = (acceptedFiles) =>
-      acceptedFiles.length > 0 && handleFileUpload(acceptedFiles[0], idx);
+      acceptedFiles.length > 0 &&
+      !isAnyFileUploading &&
+      handleFileUpload(acceptedFiles[0], idx);
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
       onDrop,
       multiple: false,
+      disabled: isAnyFileUploading,
       accept:
         idx < 11
           ? { "image/jpeg": [], "image/png": [] }
@@ -1554,10 +1605,12 @@ const DentalExaminationForm = () => {
           ) : (
             <div
               {...getRootProps()}
-              className={`group/upload relative mt-2 flex ${idx < 9 ? "h-72" : "h-36"} w-full cursor-pointer appearance-none items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300 hover:scale-105 focus:outline-none ${
-                isDragActive
-                  ? "scale-105 border-blue-500 bg-gradient-to-br from-blue-100 to-blue-200 shadow-xl ring-4 shadow-blue-500/30 ring-blue-500/20"
-                  : "border-gray-300 bg-white/80 backdrop-blur-sm hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-lg"
+              className={`group/upload relative mt-2 flex ${idx < 9 ? "h-72" : "h-36"} w-full appearance-none items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300 focus:outline-none ${
+                isAnyFileUploading
+                  ? "cursor-not-allowed border-gray-200 bg-gray-100 opacity-50"
+                  : isDragActive
+                    ? "scale-105 cursor-pointer border-blue-500 bg-gradient-to-br from-blue-100 to-blue-200 shadow-xl ring-4 shadow-blue-500/30 ring-blue-500/20"
+                    : "cursor-pointer border-gray-300 bg-white/80 backdrop-blur-sm hover:scale-105 hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-lg"
               }`}
             >
               <input {...getInputProps()} />
@@ -1665,8 +1718,13 @@ const DentalExaminationForm = () => {
               )}
               <button
                 type="button"
-                onClick={() => handleDeleteFile(idx)}
-                className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-red-600 text-white opacity-0 shadow-lg transition-all duration-300 group-hover:opacity-100 hover:scale-110 hover:shadow-xl"
+                onClick={() => !isAnyFileUploading && handleDeleteFile(idx)}
+                disabled={isAnyFileUploading}
+                className={`absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full text-white shadow-lg transition-all duration-300 group-hover:opacity-100 hover:scale-110 hover:shadow-xl ${
+                  isAnyFileUploading
+                    ? "cursor-not-allowed bg-gray-400 opacity-50"
+                    : "bg-gradient-to-r from-red-500 to-red-600 opacity-0"
+                }`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -2190,11 +2248,14 @@ const DentalExaminationForm = () => {
                             placeholder="Enter primary address"
                             rows="3"
                             maxLength={1500}
+                            disabled={!!formData.primaryAddress}
                             className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                               formData.primaryAddress &&
                               formData.primaryAddress.length > 1500
                                 ? "border-red-500"
-                                : "border-gray-300"
+                                : formData.primaryAddress
+                                  ? "cursor-not-allowed border-gray-300 bg-gray-50"
+                                  : "border-gray-300"
                             }`}
                           />
                           <div className="mt-2 flex justify-between text-sm">

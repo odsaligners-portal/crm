@@ -40,7 +40,7 @@ export async function GET(req) {
         role: "admin",
         _id: { $ne: superAdminId },
       }).select(
-        "id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess changeDoctorPasswordAccess",
+        "id name email userDeleteAccess eventUpdateAccess commentUpdateAccess caseCategoryUpdateAccess changeDoctorPasswordAccess priceUpdateAccess addSalesPersonAccess distributerAccess plannerAccess specialCommentAccess",
       );
       return NextResponse.json({ admins });
     }

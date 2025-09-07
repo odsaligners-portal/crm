@@ -89,9 +89,12 @@ export default function OtherAdminsPage() {
             : a,
         ),
       );
+
       toast.success(
         `${field.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase())} updated to ${value}`,
       );
+    } catch (error) {
+      toast.error("Failed to update access");
     } finally {
       dispatch(setLoading(false));
     }

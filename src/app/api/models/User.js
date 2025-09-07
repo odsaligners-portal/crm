@@ -19,7 +19,6 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: [true, "Please provide a password"],
-      minlength: [8, "Password must be at least 8 characters long"],
       select: false,
     },
     mobile: {
@@ -45,6 +44,10 @@ const userSchema = new mongoose.Schema(
     },
     address: {
       type: String,
+    },
+    alternateAddresses: {
+      type: [String],
+      default: [],
     },
     role: {
       type: String,

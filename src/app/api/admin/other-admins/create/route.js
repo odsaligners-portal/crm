@@ -8,20 +8,42 @@ export async function POST(req) {
   try {
     await connectDB();
 
-    // Authenticate and check super admin
+    // Authenticate user
     const authResult = await verifyAuth(req);
     if (!authResult.success || !authResult.user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
-    const superAdminId = process.env.SUPER_ADMIN_ID;
-    if (authResult.user.id !== superAdminId) {
-      return NextResponse.json(
-        { message: "Only super admin can create admins" },
-        { status: 403 },
-      );
-    }
 
     const body = await req.json();
+    const role = body.role;
+
+    // If role is planner, check if user has planner access
+    if (role === "planner") {
+      // Fetch user data to check permissions
+      const userData = await User.findById(authResult.user.id);
+      if (!userData) {
+        return NextResponse.json(
+          { message: "User not found" },
+          { status: 404 },
+        );
+      }
+
+      if (!userData.plannerAccess) {
+        return NextResponse.json(
+          { message: "You don't have permission to create planners" },
+          { status: 403 },
+        );
+      }
+    } else {
+      // For other roles (admin, distributer), check super admin access
+      const superAdminId = process.env.SUPER_ADMIN_ID;
+      if (authResult.user.id !== superAdminId) {
+        return NextResponse.json(
+          { message: "Only super admin can create admins" },
+          { status: 403 },
+        );
+      }
+    }
     const requiredFields = ["name", "email", "password"];
     for (const field of requiredFields) {
       if (!body[field]) {
@@ -37,10 +59,10 @@ export async function POST(req) {
 
     // Create new admin or planner user
     const allowedRoles = ["admin", "planner", "distributer"];
-    const role = allowedRoles.includes(body.role) ? body.role : "admin";
+    const userRole = allowedRoles.includes(body.role) ? body.role : "admin";
     const newUser = new User({
       ...body,
-      role,
+      role: userRole,
     });
     await newUser.save();
 
@@ -50,7 +72,7 @@ export async function POST(req) {
 
     return NextResponse.json(
       {
-        message: `${role.charAt(0).toUpperCase() + role.slice(1)} created successfully`,
+        message: `${userRole.charAt(0).toUpperCase() + userRole.slice(1)} created successfully`,
       },
       { status: 201 },
     );

@@ -21,6 +21,7 @@ export async function POST(req) {
       experience,
       doctorType,
       address,
+      alternateAddresses,
       profilePicture,
     } = await req.json();
 
@@ -54,6 +55,7 @@ export async function POST(req) {
       experience,
       doctorType,
       address,
+      alternateAddresses: alternateAddresses || [],
       ...(profilePicture ? { profilePicture } : {}),
     };
 

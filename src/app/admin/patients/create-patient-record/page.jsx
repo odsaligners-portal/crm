@@ -170,6 +170,9 @@ const DentalExaminationForm = () => {
   const [imageUrls, setImageUrls] = useState(Array(13).fill(undefined));
   const [progresses, setProgresses] = useState(Array(13).fill(0));
 
+  // Check if any file is currently being uploaded or selected for upload
+  const isAnyFileUploading = progresses.some((progress) => progress > 0);
+
   const searchParams = useSearchParams();
 
   // Load existing data when component mounts
@@ -1485,6 +1488,13 @@ const DentalExaminationForm = () => {
       return;
     }
 
+    // Immediately set progress to 1 to disable other upload areas
+    setProgresses((p) => {
+      const n = [...p];
+      n[idx] = 1;
+      return n;
+    });
+
     const uniqueFileName = `${uuidv4()}-${file.name}`;
     const storagePath = `dental-examination/${uniqueFileName}`;
     const storageRef = ref(storage, storagePath);
@@ -1518,6 +1528,11 @@ const DentalExaminationForm = () => {
           setFileKeys((p) => {
             const n = [...p];
             n[idx] = storagePath;
+            return n;
+          });
+          setProgresses((p) => {
+            const n = [...p];
+            n[idx] = 0;
             return n;
           });
           toast.success("✅ File uploaded successfully!");
@@ -1566,10 +1581,13 @@ const DentalExaminationForm = () => {
 
   const UploadComponent = ({ idx }) => {
     const onDrop = (acceptedFiles) =>
-      acceptedFiles.length > 0 && handleFileUpload(acceptedFiles[0], idx);
+      acceptedFiles.length > 0 &&
+      !isAnyFileUploading &&
+      handleFileUpload(acceptedFiles[0], idx);
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
       onDrop,
       multiple: false,
+      disabled: isAnyFileUploading,
       accept:
         idx < 11
           ? { "image/jpeg": [], "image/png": [] }
@@ -1628,10 +1646,12 @@ const DentalExaminationForm = () => {
           ) : (
             <div
               {...getRootProps()}
-              className={`group/upload relative mt-2 flex ${idx < 9 ? "h-72" : "h-36"} w-full cursor-pointer appearance-none items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300 hover:scale-105 focus:outline-none ${
-                isDragActive
-                  ? "scale-105 border-blue-500 bg-gradient-to-br from-blue-100 to-blue-200 shadow-xl ring-4 shadow-blue-500/30 ring-blue-500/20"
-                  : "border-gray-300 bg-white/80 backdrop-blur-sm hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-lg"
+              className={`group/upload relative mt-2 flex ${idx < 9 ? "h-72" : "h-36"} w-full appearance-none items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed transition-all duration-300 focus:outline-none ${
+                isAnyFileUploading
+                  ? "cursor-not-allowed border-gray-200 bg-gray-100 opacity-50"
+                  : isDragActive
+                    ? "scale-105 cursor-pointer border-blue-500 bg-gradient-to-br from-blue-100 to-blue-200 shadow-xl ring-4 shadow-blue-500/30 ring-blue-500/20"
+                    : "cursor-pointer border-gray-300 bg-white/80 backdrop-blur-sm hover:scale-105 hover:border-blue-400 hover:bg-blue-50/50 hover:shadow-lg"
               }`}
             >
               <input {...getInputProps()} />
@@ -1739,8 +1759,13 @@ const DentalExaminationForm = () => {
               )}
               <button
                 type="button"
-                onClick={() => handleDeleteFile(idx)}
-                className="absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-red-500 to-red-600 text-white opacity-0 shadow-lg transition-all duration-300 group-hover:opacity-100 hover:scale-110 hover:shadow-xl"
+                onClick={() => !isAnyFileUploading && handleDeleteFile(idx)}
+                disabled={isAnyFileUploading}
+                className={`absolute -top-3 -right-3 flex h-8 w-8 items-center justify-center rounded-full text-white shadow-lg transition-all duration-300 group-hover:opacity-100 hover:scale-110 hover:shadow-xl ${
+                  isAnyFileUploading
+                    ? "cursor-not-allowed bg-gray-400 opacity-50"
+                    : "bg-gradient-to-r from-red-500 to-red-600 opacity-0"
+                }`}
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"

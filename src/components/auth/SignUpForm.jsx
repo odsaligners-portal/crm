@@ -55,6 +55,7 @@ export default function SignUpForm({
     experience: "",
     doctorType: "",
     address: "",
+    alternateAddresses: [], // Array to store multiple alternate addresses
     password: "",
     confirmPassword: "",
   });
@@ -130,6 +131,30 @@ export default function SignUpForm({
       [name]: value,
       // Reset state when country changes
       ...(name === "country" && { state: null }),
+    }));
+  };
+
+  // Handle alternate addresses
+  const addAlternateAddress = () => {
+    setFormData((prev) => ({
+      ...prev,
+      alternateAddresses: [...prev.alternateAddresses, ""],
+    }));
+  };
+
+  const removeAlternateAddress = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      alternateAddresses: prev.alternateAddresses.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleAlternateAddressChange = (index, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      alternateAddresses: prev.alternateAddresses.map((addr, i) =>
+        i === index ? value : addr,
+      ),
     }));
   };
 
@@ -695,6 +720,88 @@ export default function SignUpForm({
                       />
                     </div>
                   </div>
+                </div>
+
+                {/* Alternate Addresses */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover/field:text-blue-600 dark:text-gray-300">
+                      Alternate Addresses
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={addAlternateAddress}
+                      disabled={isLoading}
+                      className="flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <svg
+                        className="h-4 w-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4v16m8-8H4"
+                        />
+                      </svg>
+                      Add Address
+                    </button>
+                  </div>
+
+                  {formData.alternateAddresses.map((address, index) => (
+                    <div key={index} className="flex items-center gap-3">
+                      <div className="flex-1">
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                            <MdLocationOn className="h-5 w-5 text-gray-400 transition-colors duration-200" />
+                          </div>
+                          <Input
+                            type="text"
+                            placeholder={`Alternate address ${index + 1}`}
+                            value={address}
+                            onChange={(e) =>
+                              handleAlternateAddressChange(
+                                index,
+                                e.target.value,
+                              )
+                            }
+                            disabled={isLoading}
+                            className="pl-10 transition-all duration-200 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:border-gray-500"
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeAlternateAddress(index)}
+                        disabled={isLoading}
+                        className="flex items-center justify-center rounded-lg bg-red-100 p-2 text-red-600 transition-colors duration-200 hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+
+                  {formData.alternateAddresses.length === 0 && (
+                    <p className="text-sm text-gray-500 italic">
+                      No alternate addresses added yet. Click "Add Address" to
+                      add one.
+                    </p>
+                  )}
                 </div>
 
                 {/* Password and Confirm Password */}
