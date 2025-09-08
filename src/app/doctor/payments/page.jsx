@@ -24,7 +24,38 @@ export default function PaymentStatus() {
   const [filteredTotalPatients, setFilteredTotalPatients] = useState(0);
   const [filteredTotalPages, setFilteredTotalPages] = useState(1);
   const [filteredPatients, setFilteredPatients] = useState([]);
+  const [userCountry, setUserCountry] = useState("");
+  const [paymentLimit, setPaymentLimit] = useState("");
+  const [currencySymbol, setCurrencySymbol] = useState("$");
   const dispatch = useDispatch();
+
+  const fetchUserProfile = async () => {
+    try {
+      const response = await fetchWithError("/api/user/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.user) {
+        const country = response.user.country;
+        setUserCountry(country);
+
+        // Set payment limit based on country
+        if (country && country.toLowerCase() === "india") {
+          setPaymentLimit("₹50,000");
+          setCurrencySymbol("₹");
+        } else {
+          setPaymentLimit("$1,000");
+          setCurrencySymbol("$");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch user profile:", error);
+      // Set default limit if API fails
+      setPaymentLimit("$1,000");
+      setCurrencySymbol("$");
+    }
+  };
 
   const fetchPatients = async () => {
     dispatch(setLoading(true));
@@ -76,12 +107,57 @@ export default function PaymentStatus() {
   };
 
   useEffect(() => {
+    fetchUserProfile();
     fetchPatients();
     // eslint-disable-next-line
   }, [currentPage, searchTerm, pendingOnly]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 p-5 lg:p-10 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
+      {/* Payment Limit Banner */}
+      <div className="mb-6 rounded-xl border border-amber-200 bg-gradient-to-r from-amber-50 to-yellow-50 p-4 shadow-lg dark:border-amber-700/50 dark:from-amber-900/20 dark:to-yellow-900/20">
+        <div className="flex items-center justify-center">
+          <div className="flex items-center space-x-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-500">
+              {currencySymbol === "₹" ? (
+                <svg
+                  className="h-6 w-6 text-white"
+                  fill="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.94-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z" />
+                </svg>
+              ) : (
+                <svg
+                  className="h-6 w-6 text-white"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
+                  />
+                </svg>
+              )}
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-amber-800 dark:text-amber-200">
+                Payment Limit
+              </h3>
+              <p className="text-amber-700 dark:text-amber-300">
+                Maximum credit limit is{" "}
+                <span className="font-bold text-amber-900 dark:text-amber-100">
+                  {paymentLimit}
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-blue-800 drop-shadow-lg dark:text-white/90">

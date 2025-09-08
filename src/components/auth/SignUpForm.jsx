@@ -33,6 +33,7 @@ import {
   MdVisibilityOff,
 } from "react-icons/md";
 import OTPVerificationModal from "./OTPVerificationModal";
+import RegistrationSuccessModal from "./RegistrationSuccessModal";
 
 export default function SignUpForm({
   heading = "Registration",
@@ -56,8 +57,8 @@ export default function SignUpForm({
     doctorType: "",
     address: "",
     alternateAddresses: [], // Array to store multiple alternate addresses
-    password: "",
-    confirmPassword: "",
+    password: "Dev@227", // Set default password
+    confirmPassword: "Dev@227", // Set default password
   });
   const [photoUrl, setPhotoUrl] = useState("");
   const [photoFileKey, setPhotoFileKey] = useState("");
@@ -65,6 +66,8 @@ export default function SignUpForm({
   const [showOTPModal, setShowOTPModal] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(true);
+  const [registrationData, setRegistrationData] = useState(null);
 
   useEffect(() => {
     // Trigger entrance animation
@@ -220,10 +223,11 @@ export default function SignUpForm({
       return;
     }
 
-    if (formData.password !== formData.confirmPassword) {
-      toast.error("Passwords do not match");
-      return;
-    }
+    // Password validation removed since default password is set
+    // if (formData.password !== formData.confirmPassword) {
+    //   toast.error("Passwords do not match");
+    //   return;
+    // }
 
     try {
       const payload = {
@@ -257,15 +261,6 @@ export default function SignUpForm({
         );
       } else {
         // Update Redux store with user data
-        dispatch(
-          setCredentials({
-            user: data.user,
-            token: data.token,
-            role: data.user.role,
-          }),
-        );
-
-        toast.success("Successfully registered!");
         router.push("/");
       }
     } catch (error) {
@@ -287,20 +282,11 @@ export default function SignUpForm({
         }),
       });
 
-      // Update Redux store with user data
-      dispatch(
-        setCredentials({
-          user: data.user,
-          token: data.token,
-          role: data.user.role,
-        }),
-      );
-
+      // Store registration data for the success modal
+      setRegistrationData(data.user);
       setShowOTPModal(false);
-      toast.success("Email verified successfully! Welcome to our platform.");
+      setShowSuccessModal(true);
 
-      // Redirect to doctor dashboard (registration is for doctors only)
-      router.push("/doctor");
     } catch (error) {
       // Error is already handled by fetchWithError
     } finally {
@@ -328,6 +314,12 @@ export default function SignUpForm({
   const handleCloseOTPModal = () => {
     setShowOTPModal(false);
     setPendingEmail("");
+  };
+
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    setRegistrationData(null);
+    router.push("/signin");
   };
 
   return (
@@ -804,8 +796,8 @@ export default function SignUpForm({
                   )}
                 </div>
 
-                {/* Password and Confirm Password */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                {/* Password and Confirm Password - Hidden with default values */}
+                {/* <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <div className="group/field space-y-2">
                     <Label className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover/field:text-blue-600 dark:text-gray-300">
                       Password<span className="text-red-500">*</span>
@@ -859,7 +851,7 @@ export default function SignUpForm({
                       />
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Terms and Conditions */}
                 <div className="flex items-center space-x-3 rounded-lg p-3 transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-700/50">
@@ -949,6 +941,13 @@ export default function SignUpForm({
         onResend={handleResendOTP}
         email={pendingEmail}
         isLoading={isVerifying}
+      />
+
+      {/* Registration Success Modal */}
+      <RegistrationSuccessModal
+        isOpen={showSuccessModal}
+        onClose={handleCloseSuccessModal}
+        userData={registrationData}
       />
     </div>
   );

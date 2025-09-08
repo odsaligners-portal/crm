@@ -49,7 +49,7 @@ export async function POST(req) {
     // Delete the OTP after successful user creation
     await OTP.findByIdAndDelete(otpDoc._id);
 
-    // Generate JWT
+    // Generate JWT (but don't set cookies since we're showing a modal)
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },
       process.env.JWT_SECRET || "fallback_secret",
@@ -98,7 +98,6 @@ export async function POST(req) {
                   <h3>👤 Your Account Details</h3>
                   <p><strong>Name:</strong> ${user.name}</p>
                   <p><strong>Email:</strong> ${user.email}</p>
-                  <p><strong>Password:</strong> ${userData.password}</p>
                   <p><strong>Specialization:</strong> ${user.doctorType || "Not specified"}</p>
                   <p><strong>Experience:</strong> ${user.experience || "Not specified"}</p>
                   <p><strong>Location:</strong> ${user.city ? `${user.city}, ${user.state}` : "Not specified"}</p>
@@ -120,7 +119,9 @@ export async function POST(req) {
                   </div>
                 </div>
                 
-                <p>Your account has been successfully created and is ready to use. You can now log in and start managing your patients right away.</p>
+                <div style="background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                  <p style="margin: 0; color: #0c5460;"><strong>⏰ Account Activation:</strong> Thank you for your registration! Your account will be activated within 24 hours. You will receive another email once your account is ready to use.</p>
+                </div>
                 
                 <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
                   <p style="margin: 0; color: #856404;"><strong>🔒 Security Note:</strong> For your security, we recommend changing your password after your first login.</p>
