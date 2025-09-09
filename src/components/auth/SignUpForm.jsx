@@ -66,7 +66,7 @@ export default function SignUpForm({
   const [showOTPModal, setShowOTPModal] = useState(false);
   const [pendingEmail, setPendingEmail] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(true);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [registrationData, setRegistrationData] = useState(null);
 
   useEffect(() => {
