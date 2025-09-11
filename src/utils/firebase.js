@@ -4,12 +4,13 @@ import { getStorage } from "firebase/storage";
 
 // TODO: Add your own Firebase configuration from your Firebase console
 const firebaseConfig = {
-  apiKey: "AIzaSyBqYK5HTlcOxY5eLfVG-O7WOaxQs6Uv2lQ",
-  authDomain: "mern-blog-fa022.firebaseapp.com",
-  projectId: "mern-blog-fa022",
-  storageBucket: "mern-blog-fa022.appspot.com",
-  messagingSenderId: "766364253855",
-  appId: "1:766364253855:web:24942c51b0a8fa56586caa"
+  apiKey: "AIzaSyAXuTDYp0Yxy6rLtNlhFH404v2OReFUAvY",
+  authDomain: "odsportal-80582.firebaseapp.com",
+  projectId: "odsportal-80582",
+  storageBucket: "odsportal-80582.firebasestorage.app",
+  messagingSenderId: "641917993181",
+  appId: "1:641917993181:web:d5e0992302dc45a14f5b34",
+  measurementId: "G-M87XRC4FVG",
 };
 
 // Initialize Firebase
