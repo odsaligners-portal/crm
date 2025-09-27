@@ -35,6 +35,8 @@ const DentalExaminationForm = () => {
   const [patientId, setPatientId] = useState(null); // Add patient ID state
   const [caseId, setCaseId] = useState(null); // Add case ID state
   const [isLoading, setIsLoading] = useState(false); // Add loading state
+  const [isSubmitting, setIsSubmitting] = useState(false); // Add submit loading state
+  const [isSaving, setIsSaving] = useState(false); // Add save and next loading state
   const [formData, setFormData] = useState({
     patientName: "",
     age: "",
@@ -840,36 +842,44 @@ const DentalExaminationForm = () => {
   };
 
   const handleSaveAndNext = async (nextTab) => {
-    // Validate follow-up months when traveling is selected
-    if (
-      formData.natureOfAvailability === "traveling" &&
-      !formData.followUpMonths
-    ) {
-      toast.error(
-        "⚠️ Please specify how often the patient can return for follow-ups (e.g., every 3, 6, or 12 months)",
-      );
-      return;
-    }
-
-    // Validate case information
-    if (!formData.caseType) {
-      toast.error(
-        "📋 Please select whether this is a Single Arch or Double Arch case",
-      );
-      return;
-    }
-    if (!formData.caseCategory) {
-      toast.error(
-        "🏷️ Please select the appropriate case category for treatment planning",
-      );
-      return;
-    }
-    if (!formData.selectedPrice) {
-      toast.error("💰 Please select a treatment package to continue");
-      return;
-    }
+    // Prevent multiple submissions
+    if (isSaving) return;
+    setIsSaving(true);
 
     try {
+      // Validate follow-up months when traveling is selected
+      if (
+        formData.natureOfAvailability === "traveling" &&
+        !formData.followUpMonths
+      ) {
+        toast.error(
+          "⚠️ Please specify how often the patient can return for follow-ups (e.g., every 3, 6, or 12 months)",
+        );
+        setIsSaving(false);
+        return;
+      }
+
+      // Validate case information
+      if (!formData.caseType) {
+        toast.error(
+          "📋 Please select whether this is a Single Arch or Double Arch case",
+        );
+        setIsSaving(false);
+        return;
+      }
+      if (!formData.caseCategory) {
+        toast.error(
+          "🏷️ Please select the appropriate case category for treatment planning",
+        );
+        setIsSaving(false);
+        return;
+      }
+      if (!formData.selectedPrice) {
+        toast.error("💰 Please select a treatment package to continue");
+        setIsSaving(false);
+        return;
+      }
+
       // Prepare file data for files tab
       let fileData = {};
       if (activeTab === "files") {
@@ -1071,42 +1081,52 @@ const DentalExaminationForm = () => {
       console.error("Error saving data:", error);
       const errorMessage = error.message || "An error occurred while saving";
       toast.error(`❌ ${errorMessage}`);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate follow-up months when traveling is selected
-    if (
-      formData.natureOfAvailability === "traveling" &&
-      !formData.followUpMonths
-    ) {
-      toast.error(
-        "⚠️ Please specify how often the patient can return for follow-ups (e.g., every 3, 6, or 12 months)",
-      );
-      return;
-    }
-
-    // Validate case information
-    if (!formData.caseType) {
-      toast.error(
-        "📋 Please select whether this is a Single Arch or Double Arch case",
-      );
-      return;
-    }
-    if (!formData.caseCategory) {
-      toast.error(
-        "🏷️ Please select the appropriate case category for treatment planning",
-      );
-      return;
-    }
-    if (!formData.selectedPrice) {
-      toast.error("💰 Please select a treatment package to continue");
-      return;
-    }
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
     try {
+      // Validate follow-up months when traveling is selected
+      if (
+        formData.natureOfAvailability === "traveling" &&
+        !formData.followUpMonths
+      ) {
+        toast.error(
+          "⚠️ Please specify how often the patient can return for follow-ups (e.g., every 3, 6, or 12 months)",
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
+      // Validate case information
+      if (!formData.caseType) {
+        toast.error(
+          "📋 Please select whether this is a Single Arch or Double Arch case",
+        );
+        setIsSubmitting(false);
+        return;
+      }
+      if (!formData.caseCategory) {
+        toast.error(
+          "🏷️ Please select the appropriate case category for treatment planning",
+        );
+        setIsSubmitting(false);
+        return;
+      }
+      if (!formData.selectedPrice) {
+        toast.error("💰 Please select a treatment package to continue");
+        setIsSubmitting(false);
+        return;
+      }
+
       if (!patientId) {
         // Create new patient record
         const fileData = {
@@ -1428,6 +1448,8 @@ const DentalExaminationForm = () => {
       const errorMessage =
         error.message || "An error occurred while submitting the form";
       toast.error(`❌ ${errorMessage}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -5491,26 +5513,58 @@ const DentalExaminationForm = () => {
               <div className="w-full text-center">
                 <button
                   type="button"
+                  disabled={isSaving}
                   onClick={() => {
                     // Save data to DB and move to next tab
                     handleSaveAndNext("clinical");
                   }}
-                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-10 py-4 font-semibold text-white subpixel-antialiased shadow-xl shadow-blue-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/40"
+                  className={`group inline-flex items-center gap-3 rounded-2xl px-10 py-4 font-semibold text-white subpixel-antialiased shadow-xl transition-all duration-300 ${
+                    isSaving
+                      ? "cursor-not-allowed bg-gray-400 shadow-gray-400/30"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 shadow-blue-500/30 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/40"
+                  }`}
                 >
-                  <span>Next</span>
-                  <svg
-                    className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
+                  {isSaving ? (
+                    <>
+                      <svg
+                        className="h-5 w-5 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Next</span>
+                      <svg
+                        className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                      </svg>
+                    </>
+                  )}
                 </button>
               </div>
             )}
@@ -5519,11 +5573,16 @@ const DentalExaminationForm = () => {
               <>
                 <button
                   type="button"
+                  disabled={isSaving}
                   onClick={() => {
                     // Save data to DB and move to previous tab
                     handleSaveAndNext("general");
                   }}
-                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-gray-600 to-gray-700 px-8 py-4 font-semibold text-white subpixel-antialiased shadow-xl shadow-gray-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-gray-500/40"
+                  className={`group inline-flex items-center gap-3 rounded-2xl px-8 py-4 font-semibold text-white subpixel-antialiased shadow-xl transition-all duration-300 ${
+                    isSaving
+                      ? "cursor-not-allowed bg-gray-400 shadow-gray-400/30"
+                      : "bg-gradient-to-r from-gray-600 to-gray-700 shadow-gray-500/30 hover:scale-105 hover:shadow-2xl hover:shadow-gray-500/40"
+                  }`}
                 >
                   <svg
                     className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1"
@@ -5542,26 +5601,58 @@ const DentalExaminationForm = () => {
                 </button>
                 <button
                   type="button"
+                  disabled={isSaving}
                   onClick={() => {
                     // Save data to DB and move to next tab
                     handleSaveAndNext("files");
                   }}
-                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 px-10 py-4 font-semibold text-white subpixel-antialiased shadow-xl shadow-blue-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/40"
+                  className={`group inline-flex items-center gap-3 rounded-2xl px-10 py-4 font-semibold text-white subpixel-antialiased shadow-xl transition-all duration-300 ${
+                    isSaving
+                      ? "cursor-not-allowed bg-gray-400 shadow-gray-400/30"
+                      : "bg-gradient-to-r from-blue-600 to-indigo-600 shadow-blue-500/30 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/40"
+                  }`}
                 >
-                  <span>Next</span>
-                  <svg
-                    className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 7l5 5m0 0l-5 5m5-5H6"
-                    />
-                  </svg>
+                  {isSaving ? (
+                    <>
+                      <svg
+                        className="h-5 w-5 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Next</span>
+                      <svg
+                        className="h-5 w-5 transition-transform duration-300 group-hover:translate-x-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 7l5 5m0 0l-5 5m5-5H6"
+                        />
+                      </svg>
+                    </>
+                  )}
                 </button>
               </>
             )}
@@ -5570,11 +5661,16 @@ const DentalExaminationForm = () => {
               <>
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={() => {
                     // Save data to DB and move to previous tab
                     handleSaveAndNext("clinical");
                   }}
-                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-gray-600 to-gray-700 px-8 py-4 font-semibold text-white subpixel-antialiased shadow-xl shadow-gray-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-gray-500/40"
+                  className={`group inline-flex items-center gap-3 rounded-2xl px-8 py-4 font-semibold text-white subpixel-antialiased shadow-xl transition-all duration-300 ${
+                    isSubmitting
+                      ? "cursor-not-allowed bg-gray-400 shadow-gray-400/30"
+                      : "bg-gradient-to-r from-gray-600 to-gray-700 shadow-gray-500/30 hover:scale-105 hover:shadow-2xl hover:shadow-gray-500/40"
+                  }`}
                 >
                   <svg
                     className="h-5 w-5 transition-transform duration-300 group-hover:-translate-x-1"
@@ -5593,26 +5689,58 @@ const DentalExaminationForm = () => {
                 </button>
                 <button
                   type="button"
+                  disabled={isSubmitting}
                   onClick={() => {
                     // Submit the complete form
                     handleSubmit(new Event("submit"));
                   }}
-                  className="group inline-flex items-center gap-3 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-600 px-10 py-4 font-semibold text-white subpixel-antialiased shadow-xl shadow-green-500/30 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/40"
+                  className={`group inline-flex items-center gap-3 rounded-2xl px-10 py-4 font-semibold text-white subpixel-antialiased shadow-xl transition-all duration-300 ${
+                    isSubmitting
+                      ? "cursor-not-allowed bg-gray-400 shadow-gray-400/30"
+                      : "bg-gradient-to-r from-green-600 to-emerald-600 shadow-green-500/30 hover:scale-105 hover:shadow-2xl hover:shadow-green-500/40"
+                  }`}
                 >
-                  <svg
-                    className="h-5 w-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                  <span>Submit Case</span>
+                  {isSubmitting ? (
+                    <>
+                      <svg
+                        className="h-5 w-5 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="h-5 w-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      <span>Submit Case</span>
+                    </>
+                  )}
                 </button>
               </>
             )}

@@ -207,17 +207,213 @@ export async function POST(req) {
       }
     }
 
-    async function generateUniqueCaseId(state) {
-      const prefix = "+91";
+    function getCountryCode(country) {
+      const countryCodeMap = {
+        "United States": "+1",
+        Canada: "+1",
+        "United Kingdom": "+44",
+        Germany: "+49",
+        France: "+33",
+        Italy: "+39",
+        Spain: "+34",
+        Netherlands: "+31",
+        Belgium: "+32",
+        Switzerland: "+41",
+        Austria: "+43",
+        Sweden: "+46",
+        Norway: "+47",
+        Denmark: "+45",
+        Finland: "+358",
+        Poland: "+48",
+        "Czech Republic": "+420",
+        Hungary: "+36",
+        Romania: "+40",
+        Bulgaria: "+359",
+        Greece: "+30",
+        Portugal: "+351",
+        Ireland: "+353",
+        Iceland: "+354",
+        Luxembourg: "+352",
+        Malta: "+356",
+        Cyprus: "+357",
+        Estonia: "+372",
+        Latvia: "+371",
+        Lithuania: "+370",
+        Slovenia: "+386",
+        Slovakia: "+421",
+        Croatia: "+385",
+        Serbia: "+381",
+        Montenegro: "+382",
+        "Bosnia and Herzegovina": "+387",
+        "North Macedonia": "+389",
+        Albania: "+355",
+        Kosovo: "+383",
+        Moldova: "+373",
+        Ukraine: "+380",
+        Belarus: "+375",
+        Russia: "+7",
+        Georgia: "+995",
+        Armenia: "+374",
+        Azerbaijan: "+994",
+        Turkey: "+90",
+        Israel: "+972",
+        Lebanon: "+961",
+        Jordan: "+962",
+        Syria: "+963",
+        Iraq: "+964",
+        Iran: "+98",
+        "Saudi Arabia": "+966",
+        Kuwait: "+965",
+        Qatar: "+974",
+        Bahrain: "+973",
+        "United Arab Emirates": "+971",
+        Oman: "+968",
+        Yemen: "+967",
+        Egypt: "+20",
+        Libya: "+218",
+        Tunisia: "+216",
+        Algeria: "+213",
+        Morocco: "+212",
+        Sudan: "+249",
+        "South Sudan": "+211",
+        Ethiopia: "+251",
+        Eritrea: "+291",
+        Djibouti: "+253",
+        Somalia: "+252",
+        Kenya: "+254",
+        Uganda: "+256",
+        Tanzania: "+255",
+        Rwanda: "+250",
+        Burundi: "+257",
+        "Democratic Republic of the Congo": "+243",
+        "Republic of the Congo": "+242",
+        Gabon: "+241",
+        "Equatorial Guinea": "+240",
+        Cameroon: "+237",
+        "Central African Republic": "+236",
+        Chad: "+235",
+        Niger: "+227",
+        Nigeria: "+234",
+        Benin: "+229",
+        Togo: "+228",
+        Ghana: "+233",
+        "Ivory Coast": "+225",
+        Liberia: "+231",
+        "Sierra Leone": "+232",
+        Guinea: "+224",
+        "Guinea-Bissau": "+245",
+        Senegal: "+221",
+        "The Gambia": "+220",
+        Mauritania: "+222",
+        Mali: "+223",
+        "Burkina Faso": "+226",
+        "Cape Verde": "+238",
+        "São Tomé and Príncipe": "+239",
+        Angola: "+244",
+        Zambia: "+260",
+        Zimbabwe: "+263",
+        Botswana: "+267",
+        Namibia: "+264",
+        "South Africa": "+27",
+        Lesotho: "+266",
+        Swaziland: "+268",
+        Madagascar: "+261",
+        Mauritius: "+230",
+        Seychelles: "+248",
+        Comoros: "+269",
+        Malawi: "+265",
+        Mozambique: "+258",
+        China: "+86",
+        Japan: "+81",
+        "South Korea": "+82",
+        "North Korea": "+850",
+        Mongolia: "+976",
+        Taiwan: "+886",
+        "Hong Kong": "+852",
+        Macau: "+853",
+        Vietnam: "+84",
+        Thailand: "+66",
+        Myanmar: "+95",
+        Laos: "+856",
+        Cambodia: "+855",
+        Malaysia: "+60",
+        Singapore: "+65",
+        Brunei: "+673",
+        Philippines: "+63",
+        Indonesia: "+62",
+        "East Timor": "+670",
+        "Papua New Guinea": "+675",
+        Fiji: "+679",
+        "New Zealand": "+64",
+        Australia: "+61",
+        India: "+91",
+        Pakistan: "+92",
+        Bangladesh: "+880",
+        "Sri Lanka": "+94",
+        Maldives: "+960",
+        Nepal: "+977",
+        Bhutan: "+975",
+        Afghanistan: "+93",
+        Kazakhstan: "+7",
+        Uzbekistan: "+998",
+        Turkmenistan: "+993",
+        Tajikistan: "+992",
+        Kyrgyzstan: "+996",
+        Brazil: "+55",
+        Argentina: "+54",
+        Chile: "+56",
+        Peru: "+51",
+        Colombia: "+57",
+        Venezuela: "+58",
+        Ecuador: "+593",
+        Bolivia: "+591",
+        Paraguay: "+595",
+        Uruguay: "+598",
+        Guyana: "+592",
+        Suriname: "+597",
+        "French Guiana": "+594",
+        Mexico: "+52",
+        Guatemala: "+502",
+        Belize: "+501",
+        "El Salvador": "+503",
+        Honduras: "+504",
+        Nicaragua: "+505",
+        "Costa Rica": "+506",
+        Panama: "+507",
+        Cuba: "+53",
+        Jamaica: "+1876",
+        Haiti: "+509",
+        "Dominican Republic": "+1809",
+        "Puerto Rico": "+1787",
+        "Trinidad and Tobago": "+1868",
+        Barbados: "+1246",
+        "Saint Lucia": "+1758",
+        "Saint Vincent and the Grenadines": "+1784",
+        Grenada: "+1473",
+        "Antigua and Barbuda": "+1268",
+        "Saint Kitts and Nevis": "+1869",
+        Dominica: "+1767",
+        Bahamas: "+1242",
+      };
+
+      return countryCodeMap[country] || "+XX";
+    }
+
+    async function generateUniqueCaseId(country, state) {
+      const currentDate = new Date();
+      const year = currentDate.getFullYear().toString().slice(-2); // Last 2 digits of year
+      const month = (currentDate.getMonth() + 1).toString().padStart(2, "0"); // Month with leading zero
+      const countryCode = getCountryCode(country);
       const stateAbbr = getStateAbbreviation(state);
+
       let caseId = "";
       let isUnique = false;
       let attempts = 0;
       const maxAttempts = 100; // Prevent infinite loops
 
       while (!isUnique && attempts < maxAttempts) {
-        const randomNum = Math.floor(1000000 + Math.random() * 9000000); // 7-digit
-        caseId = `${prefix}${stateAbbr}${randomNum}`;
+        const randomNum = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
+        caseId = `${countryCode}${year}${month}${stateAbbr}${randomNum}`;
         const exists = await Patient.findOne({ caseId });
         if (!exists) isUnique = true;
         attempts++;
@@ -234,7 +430,10 @@ export async function POST(req) {
 
     // Only generate caseId if not already present (first creation)
     if (!patientData.caseId) {
-      patientData.caseId = await generateUniqueCaseId(patientData.state);
+      patientData.caseId = await generateUniqueCaseId(
+        patientData.country,
+        patientData.state,
+      );
     }
 
     // Create patient
@@ -247,7 +446,16 @@ export async function POST(req) {
         .select("name email role")
         .lean();
 
-      if (doctor && doctor.role === "doctor") {
+      console.log("Doctor found:", doctor); // Debug log
+
+      if (
+        doctor &&
+        doctor.role === "doctor" &&
+        doctor.email &&
+        doctor.email.trim()
+      ) {
+        console.log("Sending email to doctor:", doctor.email); // Debug log
+
         // Send confirmation email to doctor
         const doctorEmailHtml = `
           <!DOCTYPE html>
@@ -306,17 +514,25 @@ export async function POST(req) {
           </html>
         `;
 
-        await sendEmail({
-          to: doctor.email,
-          subject: `New Patient Created: ${patient.patientName}`,
-          html: doctorEmailHtml,
-        });
+        try {
+          await sendEmail({
+            to: doctor.email,
+            subject: `New Patient Created: ${patient.patientName}`,
+            html: doctorEmailHtml,
+          });
+          console.log("Doctor email sent successfully to:", doctor.email);
+        } catch (emailError) {
+          console.error("Error sending doctor email:", emailError);
+          // Don't fail the patient creation if doctor email fails
+        }
 
         // Send notification email to all admins
         const admins = await User.find({ role: "admin" }, "email name").lean();
         const adminEmails = admins.map((admin) => admin.email).filter(Boolean);
 
         if (adminEmails.length > 0) {
+          console.log("Sending admin emails to:", adminEmails); // Debug log
+
           const adminNotificationHtml = `
             <!DOCTYPE html>
             <html>
@@ -382,12 +598,25 @@ export async function POST(req) {
             </html>
           `;
 
-          await sendEmail({
-            to: adminEmails,
-            subject: `New Patient Registration: ${patient.patientName} by Dr. ${doctor.name}`,
-            html: adminNotificationHtml,
-          });
+          try {
+            await sendEmail({
+              to: adminEmails,
+              subject: `New Patient Registration: ${patient.patientName} by Dr. ${doctor.name}`,
+              html: adminNotificationHtml,
+            });
+            console.log("Admin emails sent successfully to:", adminEmails);
+          } catch (adminEmailError) {
+            console.error("Error sending admin emails:", adminEmailError);
+            // Don't fail the patient creation if admin emails fail
+          }
         }
+      } else {
+        console.log("Doctor email not sent - conditions not met:", {
+          doctor: !!doctor,
+          role: doctor?.role,
+          email: doctor?.email,
+          emailTrimmed: doctor?.email?.trim(),
+        });
       }
     } catch (emailError) {
       console.error("Error sending patient creation emails:", emailError);
