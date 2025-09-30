@@ -98,7 +98,7 @@ export default function ViewPatientRecords() {
     try {
       const params = new URLSearchParams({
         page: currentPage.toString(),
-        limit: "10",
+        limit: "100",
         sort: "latest",
         search: searchTerm,
         ...filters,
@@ -1026,7 +1026,7 @@ export default function ViewPatientRecords() {
                     }}
                   >
                     <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
-                      {(currentPage - 1) * 10 + idx + 1}
+                      {(currentPage - 1) * 100 + idx + 1}
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
                       {patient.caseId}
@@ -1182,8 +1182,8 @@ export default function ViewPatientRecords() {
       {totalPages > 1 && (
         <div className="mt-6 flex items-center justify-between">
           <div className="text-sm text-gray-500">
-            Showing {(currentPage - 1) * 10 + 1} to{" "}
-            {Math.min(currentPage * 10, totalPatients)} of {totalPatients}{" "}
+            Showing {(currentPage - 1) * 100 + 1} to{" "}
+            {Math.min(currentPage * 100, totalPatients)} of {totalPatients}{" "}
             patients
           </div>
           <div className="flex gap-2">
