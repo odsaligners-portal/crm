@@ -46,7 +46,11 @@ const FileDisplayComponent = ({ idx, patientData, imageLabels }) => {
     }
 
     const files = patientData.dentalExaminationFiles[key];
-    return files && files.length > 0 ? files[0] : null;
+    if (Array.isArray(files) && files.length > 0) {
+      const firstWithUrl = files.find((f) => f && f.fileUrl);
+      return firstWithUrl || files[0];
+    }
+    return null;
   };
 
   const fileData = getFileData(idx);

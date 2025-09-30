@@ -206,18 +206,19 @@ export async function POST(req) {
                   <p><strong>Case ID:</strong> ${updatedPatient.caseId}</p>
                   <p><strong>Uploaded By:</strong> ${planner?.name}</p>
                   <p><strong>Upload Date:</strong> ${new Date().toLocaleDateString()}</p>
+                  <br>
+                  <p><strong>Details:</strong> ${files?.[0]?.fileName || "Files uploaded"}</p>
                 </div>
                 
-                                  <div class="file-list">
+                  <div class="file-list">
                     <h3>📋 Uploaded Files</h3>
                     ${files
                       .map(
                         (file) => `
-                        
                           <div class="file-item">
-                        <a href="${file.fileUrl}" class="file-url" target="_blank">View File</a>
-                      </div>
-                    `,
+                            <a href="${file.fileUrl}" class="file-url" target="_blank">View File</a>
+                          </div>
+                        `,
                       )
                       .join("")}
                   </div>

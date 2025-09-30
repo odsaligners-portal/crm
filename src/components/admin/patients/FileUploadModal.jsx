@@ -34,6 +34,8 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
     },
   });
 
+  console.log(fileName)
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!files.length || !fileName.trim() || !patient?._id) return;

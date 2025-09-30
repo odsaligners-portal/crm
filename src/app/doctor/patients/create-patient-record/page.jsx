@@ -995,8 +995,8 @@ const DentalExaminationForm = () => {
           model2: imageUrls[12]
             ? [
                 {
-                  fileUrl: imageUrls[13],
-                  fileKey: fileKeys[13],
+                  fileUrl: imageUrls[12],
+                  fileKey: fileKeys[12],
                   uploadedAt: new Date().toISOString(),
                 },
               ]
@@ -1241,8 +1241,8 @@ const DentalExaminationForm = () => {
           model2: imageUrls[12]
             ? [
                 {
-                  fileUrl: imageUrls[13],
-                  fileKey: fileKeys[13],
+                  fileUrl: imageUrls[12],
+                  fileKey: fileKeys[12],
                   uploadedAt: new Date().toISOString(),
                 },
               ]
@@ -1399,8 +1399,8 @@ const DentalExaminationForm = () => {
           model2: imageUrls[12]
             ? [
                 {
-                  fileUrl: imageUrls[13],
-                  fileKey: fileKeys[13],
+                  fileUrl: imageUrls[12],
+                  fileKey: fileKeys[12],
                   uploadedAt: new Date().toISOString(),
                 },
               ]

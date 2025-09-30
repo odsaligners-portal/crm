@@ -180,15 +180,7 @@ export async function POST(req) {
     }
 
     // --- CASE ID GENERATION LOGIC ---
-    function getStateAbbreviation(state) {
-      if (!state) return "";
-      const words = state.trim().split(" ");
-      if (words.length > 1) {
-        return words.map((w) => w[0].toUpperCase()).join("");
-      } else {
-        return state.substring(0, 3).toUpperCase();
-      }
-    }
+    // Note: state abbreviation no longer used in caseId format
 
     function getCountryCode(country) {
       const countryCodeMap = {
@@ -382,40 +374,38 @@ export async function POST(req) {
       return countryCodeMap[country] || "+XX";
     }
 
-    async function generateUniqueCaseId(country, state) {
-      const currentDate = new Date();
-      const year = currentDate.getFullYear().toString().slice(-2); // Last 2 digits of year
-      const month = (currentDate.getMonth() + 1).toString().padStart(2, "0"); // Month with leading zero
-      const countryCode = getCountryCode(country);
-      const stateAbbr = getStateAbbreviation(state);
+    async function generateUniqueCaseId(country) {
+      // New format: YY + MM + countryCodeWithoutPlus (padded to 4) + nextNumber
+      const now = new Date();
+      const yy = now.getFullYear().toString().slice(-2);
+      const mm = (now.getMonth() + 1).toString().padStart(2, "0");
 
-      let caseId = "";
-      let isUnique = false;
-      let attempts = 0;
-      const maxAttempts = 100; // Prevent infinite loops
+      // Convert phone code like +91 to numeric string without +, e.g., "91"
+      const phoneCode = (getCountryCode(country) || "+XX").replace(/^\+/, "");
+      const phoneCodePadded = phoneCode.padStart(4, "0");
 
-      while (!isUnique && attempts < maxAttempts) {
-        const randomNum = Math.floor(1000 + Math.random() * 9000); // 4-digit random number
-        caseId = `${countryCode}${year}${month}${stateAbbr}${randomNum}`;
-        const exists = await Patient.findOne({ caseId });
-        if (!exists) isUnique = true;
-        attempts++;
+      // Get the latest patient irrespective of prefix
+      const lastPatient = await Patient.findOne({}, { caseId: 1 })
+        .sort({ createdAt: -1, _id: -1 })
+        .lean();
+
+      let nextFive = 1;
+      if (lastPatient && lastPatient.caseId) {
+        const lastCaseId = String(lastPatient.caseId);
+        const tail = lastCaseId.slice(-5); // last five characters
+        const numericTail = parseInt(tail.replace(/\D/g, ""), 10);
+        if (!Number.isNaN(numericTail)) {
+          nextFive = numericTail + 1;
+        }
       }
 
-      if (!isUnique) {
-        throw new Error(
-          "Failed to generate unique case ID after multiple attempts",
-        );
-      }
+      const nextFivePadded = nextFive.toString().padStart(5, "0");
 
-      return caseId;
+      return `${yy}${mm}${phoneCodePadded}${nextFivePadded}`;
     }
 
     if (!patientData.caseId) {
-      patientData.caseId = await generateUniqueCaseId(
-        patientData.country,
-        patientData.state,
-      );
+      patientData.caseId = await generateUniqueCaseId(patientData.country);
     }
 
     const patient = await Patient.create(patientData);
