@@ -144,8 +144,9 @@ export async function POST(request) {
     );
 
     let commenter;
+    console.log(doctor);
 
-    if (doctor.distributerId._id.toString() === user.id) {
+    if (doctor.distributerId && doctor.distributerId._id.toString() === user.id) {
       commenter = await Distributer.findById(user.id);
     } else {
       commenter = await User.findById(user.id);
