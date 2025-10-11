@@ -318,7 +318,7 @@ const AppSidebar = () => {
   };
 
   const renderMenuItems = (navItems, menuType) => (
-    <ul className="flex flex-col gap-1">
+    <ul className="flex flex-col gap-1"> 
       {navItems.map((nav, index) => (
         <li key={nav.name}>
           {nav.subItems ? (
