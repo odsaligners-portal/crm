@@ -35,6 +35,18 @@ export async function POST(req) {
       throw new AppError("Invalid credentials", 401);
     }
 
+    // Check if account is suspended (only for doctors, not admins or distributors)
+    if (!distributer && user.role === "doctor" && user.isSuspended) {
+      return NextResponse.json(
+        {
+          error:
+            "Your account has been suspended. Please contact the administrator for assistance.",
+          isSuspended: true,
+        },
+        { status: 403 },
+      );
+    }
+
     // Generate JWT
     const token = jwt.sign(
       { id: user._id, email: user.email, role: user.role },

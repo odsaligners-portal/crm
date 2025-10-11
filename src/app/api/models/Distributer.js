@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const distributerSchema = new mongoose.Schema(
@@ -52,6 +52,11 @@ const distributerSchema = new mongoose.Schema(
       type: String,
       default: "distributer",
     },
+    logo: {
+      url: { type: String, default: "" },
+      fileKey: { type: String, default: "" },
+      uploadedAt: { type: Date, default: null },
+    },
   },
   {
     timestamps: true,
@@ -80,6 +85,8 @@ distributerSchema.methods.comparePassword = async function (candidatePassword) {
   }
 };
 
-const Distributer = mongoose.models.Distributer || mongoose.model('Distributer', distributerSchema);
+const Distributer =
+  mongoose.models.Distributer ||
+  mongoose.model("Distributer", distributerSchema);
 
 export default Distributer;

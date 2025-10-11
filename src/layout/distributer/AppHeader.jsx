@@ -8,9 +8,13 @@ import { useSidebar } from "@/context/SidebarContext";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 
 const AppHeader = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(null);
+  const [isLogoLoading, setIsLogoLoading] = useState(true);
+  const { token } = useSelector((state) => state.auth);
 
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
 
@@ -26,6 +30,43 @@ const AppHeader = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
   const inputRef = useRef(null);
+
+  // Fetch distributor's logo
+  useEffect(() => {
+    const fetchDistributorLogo = async () => {
+      if (!token) {
+        setLogoUrl("/logo.jpeg");
+        setIsLogoLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/distributer/user/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user?.logo?.url) {
+            setLogoUrl(data.user.logo.url);
+          } else {
+            setLogoUrl("/logo.jpeg");
+          }
+        } else {
+          setLogoUrl("/logo.jpeg");
+        }
+      } catch (error) {
+        console.error("Failed to fetch distributor logo:", error);
+        setLogoUrl("/logo.jpeg");
+      } finally {
+        setIsLogoLoading(false);
+      }
+    };
+
+    fetchDistributorLogo();
+  }, [token]);
 
   useEffect(() => {
     const handleKeyDown = (event) => {
@@ -86,20 +127,28 @@ const AppHeader = () => {
           </button>
 
           <Link href="/" className="lg:hidden">
-            <Image
-              width={154}
-              height={32}
-              className="dark:hidden"
-              src="/logo.jpeg"
-              alt="Logo"
-            />
-            <Image
-              width={154}
-              height={32}
-              className="hidden dark:block"
-              src="/logo.jpeg"
-              alt="Logo"
-            />
+            {isLogoLoading ? (
+              <div className="h-8 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+            ) : (
+              <>
+                <div className="relative h-8 w-32">
+                  <Image
+                    fill
+                    className="object-contain dark:hidden"
+                    src={logoUrl}
+                    alt="Logo"
+                  />
+                </div>
+                <div className="relative h-8 w-32">
+                  <Image
+                    fill
+                    className="hidden object-contain dark:block"
+                    src={logoUrl}
+                    alt="Logo"
+                  />
+                </div>
+              </>
+            )}
           </Link>
 
           <button

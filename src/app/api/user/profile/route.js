@@ -74,6 +74,18 @@ export async function GET(req) {
       throw new AppError("User not found", 404);
     }
 
+    // Check if account is suspended (only for doctors, not admins)
+    if (user.role === "doctor" && user.isSuspended) {
+      return NextResponse.json(
+        {
+          error:
+            "Your account has been suspended. Please contact the administrator for assistance.",
+          isSuspended: true,
+        },
+        { status: 403 },
+      );
+    }
+
     return NextResponse.json({
       user: {
         id: user._id,
@@ -98,6 +110,8 @@ export async function GET(req) {
         experience: user.experience,
         doctorType: user.doctorType,
         address: user.address,
+        distributerId: user.distributerId,
+        isSuspended: user.isSuspended,
         profilePicture: user.profilePicture || {
           url: "",
           fileKey: "",

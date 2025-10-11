@@ -7,9 +7,13 @@ import { useSidebar } from "@/context/SidebarContext";
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState, useEffect, useRef } from "react";
+import { useSelector } from "react-redux";
 
 const AppHeader = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(null);
+  const [isLogoLoading, setIsLogoLoading] = useState(true);
+  const { token } = useSelector((state) => state.auth);
   const { isMobileOpen, toggleSidebar, toggleMobileSidebar } = useSidebar();
   const inputRef = useRef(null);
 
@@ -24,6 +28,51 @@ const AppHeader = () => {
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
   };
+
+  // Fetch doctor's distributor logo
+  useEffect(() => {
+    const fetchDistributorLogo = async () => {
+      if (!token) return;
+
+      try {
+        // First, get the doctor's profile to get their distributerId
+        const profileResponse = await fetch("/api/user/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          const distributerId = profileData.user?.distributerId;
+          console.log(distributerId);
+
+          if (distributerId) {
+            // Fetch the distributor's data to get logo
+            const distribResponse = await fetch(
+              `/api/admin/distributers?id=${distributerId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            );
+
+            if (distribResponse.ok) {
+              const distribData = await distribResponse.json();
+              if (distribData.distributer?.logo?.url) {
+                setLogoUrl(distribData.distributer.logo.url);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch distributor logo:", error);
+      }
+    };
+
+    fetchDistributorLogo();
+  }, [token]);
 
   // Keyboard shortcut for search
   useEffect(() => {
@@ -116,20 +165,28 @@ const AppHeader = () => {
             </button>
 
             <Link href="/" className="lg:hidden">
-              <Image
-                width={154}
-                height={32}
-                className="dark:hidden"
-                src="/logo.jpeg"
-                alt="Logo"
-              />
-              <Image
-                width={154}
-                height={32}
-                className="hidden dark:block"
-                src="/logo.jpeg"
-                alt="Logo"
-              />
+              {isLogoLoading ? (
+                <div className="h-8 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+              ) : (
+                <>
+                  <div className="relative h-8 w-32">
+                    <Image
+                      fill
+                      className="object-contain dark:hidden"
+                      src={logoUrl}
+                      alt="Logo"
+                    />
+                  </div>
+                  <div className="relative h-8 w-32">
+                    <Image
+                      fill
+                      className="hidden object-contain dark:block"
+                      src={logoUrl}
+                      alt="Logo"
+                    />
+                  </div>
+                </>
+              )}
             </Link>
 
             <button

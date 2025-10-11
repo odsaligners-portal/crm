@@ -96,9 +96,23 @@ const baseNavItems = [
   //   path: "/admin/patients/manage-status",
   // },
   {
-    icon: <MdPerson />,
     name: "Doctors",
-    path: "/admin/doctors",
+    icon: <MdPerson />,
+    subItems: [
+      { name: "View All Doctors", path: "/admin/doctors", pro: false },
+      {
+        name: "Suspend Account",
+        path: "/admin/doctors/suspend-account",
+        pro: false,
+        requirePasswordAccess: true,
+      },
+      {
+        name: "Delete Doctor",
+        path: "/admin/doctors/delete-doctor",
+        pro: false,
+        requirePasswordAccess: true,
+      },
+    ],
   },
   {
     icon: <MdManageAccounts />,
@@ -119,6 +133,18 @@ const baseNavItems = [
         name: "Assign Planner",
         path: "/admin/planners/assign-planner",
         pro: false,
+      },
+      {
+        name: "Assign Deadline Time",
+        path: "/admin/planners/deadline-time",
+        pro: false,
+        requirePlannerAccess: true,
+      },
+      {
+        name: "Planner Report",
+        path: "/admin/planners/planner-report",
+        pro: false,
+        requirePlannerAccess: true,
       },
     ],
   },
@@ -149,6 +175,12 @@ const baseNavItems = [
     path: "/admin/manage-passwords",
   },
   {
+    icon: <MdDescription />,
+    name: "Manage Terms & Conditions",
+    path: "/admin/privacy-policies",
+    requireDistributerAccess: true,
+  },
+  {
     icon: <MdPerson />,
     name: "User Profile",
     path: "/admin/profile",
@@ -162,11 +194,6 @@ const baseNavItems = [
     icon: <MdVideoLibrary />,
     name: "Tutorials",
     path: "/admin/tutorials",
-  },
-  {
-    icon: <MdDescription />,
-    name: "Terms & Conditions",
-    path: "/admin/terms-and-conditions",
   },
 ];
 
@@ -266,11 +293,36 @@ const AppSidebar = () => {
     }
   }
 
-  const dynamicNavItems = tempNavItems.filter((item) => {
-    if (item.name === "Manage Passwords") return hasPasswordAccess;
-    if (item.name === "Change Super Admin Password") return isSuperAdmin;
-    return true;
-  });
+  const dynamicNavItems = tempNavItems
+    .filter((item) => {
+      if (item.name === "Manage Passwords") return hasPasswordAccess;
+      if (item.name === "Change Super Admin Password") return isSuperAdmin;
+      if (item.requireDistributerAccess) return hasDistributerAccess;
+      return true;
+    })
+    .map((item) => {
+      // Filter sub-items based on access requirements
+      if (item.subItems) {
+        const filteredSubItems = item.subItems.filter((subItem) => {
+          if (subItem.requirePlannerAccess) return hasPlannerAccess;
+          if (subItem.requireDistributerAccess) return hasDistributerAccess;
+          if (subItem.requirePasswordAccess) return hasPasswordAccess;
+          return true;
+        });
+
+        // Special handling for Doctors menu - convert to single link if only one item
+        if (item.name === "Doctors" && filteredSubItems.length === 1) {
+          return {
+            ...item,
+            path: filteredSubItems[0].path,
+            subItems: null,
+          };
+        }
+
+        return { ...item, subItems: filteredSubItems };
+      }
+      return item;
+    });
 
   // -------------------- UI state handlers below --------------------
 
@@ -442,17 +494,23 @@ const AppSidebar = () => {
       >
         <Link href="/" className="transition-all duration-200 hover:opacity-80">
           {isExpanded || isHovered || isMobileOpen ? (
-            <div className="flex items-center">
-              <Image src="/logo.jpeg" alt="Logo" width={140} height={36} />
+            <div className="relative h-9 w-35">
+              <Image
+                fill
+                src="/logo.jpeg"
+                alt="Logo"
+                className="object-contain"
+              />
             </div>
           ) : (
-            <Image
-              src="/logo.jpeg"
-              alt="Logo"
-              width={28}
-              height={28}
-              className="rounded"
-            />
+            <div className="relative h-7 w-7">
+              <Image
+                fill
+                src="/logo.jpeg"
+                alt="Logo"
+                className="rounded object-contain"
+              />
+            </div>
           )}
         </Link>
       </div>

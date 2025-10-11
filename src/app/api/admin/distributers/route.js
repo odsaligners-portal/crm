@@ -2,7 +2,7 @@ import connectDB from "@/app/api/config/db";
 import Distributer from "@/app/api/models/Distributer";
 import User from "@/app/api/models/User";
 import { NextResponse } from "next/server";
-import { verifyAuth } from "@/app/api/middleware/authMiddleware"; 
+import { verifyAuth } from "@/app/api/middleware/authMiddleware";
 
 // Access control helper
 async function verifyAdminWithDistributerAccess(request) {
@@ -13,7 +13,7 @@ async function verifyAdminWithDistributerAccess(request) {
   }
 
   const user = await User.findById(authResult.user.id);
- 
+
   if (!user || !user.distributerAccess) {
     return {
       success: false,
@@ -25,11 +25,52 @@ async function verifyAdminWithDistributerAccess(request) {
   return { success: true, user };
 }
 
-// GET all distributers with optional search, pagination
+// GET all distributers with optional search, pagination OR get single by ID
 export async function GET(req) {
   await connectDB();
 
   const { searchParams } = new URL(req.url);
+  const id = searchParams.get("id");
+
+  // If ID is provided, fetch single distributor
+  if (id) {
+    try {
+      const distributer = await Distributer.findById(id).select("-password");
+
+      if (!distributer) {
+        return NextResponse.json(
+          { error: "Distributor not found" },
+          { status: 404 },
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        distributer: {
+          id: distributer._id,
+          name: distributer.name,
+          email: distributer.email,
+          mobile: distributer.mobile,
+          city: distributer.city,
+          state: distributer.state,
+          country: distributer.country,
+          access: distributer.access,
+          role: distributer.role,
+          logo: distributer.logo || { url: "", fileKey: "", uploadedAt: null },
+          createdAt: distributer.createdAt,
+          updatedAt: distributer.updatedAt,
+        },
+      });
+    } catch (error) {
+      console.error("Error fetching distributor:", error);
+      return NextResponse.json(
+        { success: false, message: "Failed to fetch distributor" },
+        { status: 500 },
+      );
+    }
+  }
+
+  // Otherwise, fetch list with pagination
   const page = parseInt(searchParams.get("page")) || 1;
   const limit = parseInt(searchParams.get("limit")) || 10;
   const search = searchParams.get("search") || "";

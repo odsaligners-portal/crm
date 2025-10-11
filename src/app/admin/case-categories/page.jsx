@@ -23,7 +23,8 @@ const CaseCategoriesPage = () => {
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [filterType, setFilterType] = useState("all");
-  const [filterCountry, setFilterCountry] = useState("all");
+  const [filterDistributor, setFilterDistributor] = useState("all");
+  const [distributers, setDistributers] = useState([]);
   const { token } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
@@ -38,12 +39,24 @@ const CaseCategoriesPage = () => {
   const [hasCaseCategoryUpdateAccess, setHasCaseCategoryUpdateAccess] =
     useState(false);
 
-  // Get unique countries from categories
-  const getUniqueCountries = () => {
-    const countries = categories
-      .filter((cat) => cat.categoryType === "country-specific" && cat.country)
-      .map((cat) => cat.country);
-    return [...new Set(countries)].sort();
+  // Get unique distributors from categories
+  const getUniqueDistributors = () => {
+    const distributorIds = categories
+      .filter(
+        (cat) =>
+          cat.categoryType === "distributor-specific" && cat.distributerId,
+      )
+      .map((cat) => ({
+        _id: cat.distributerId._id,
+        name: cat.distributerId.name,
+      }));
+
+    // Remove duplicates based on _id
+    const uniqueDistributors = Array.from(
+      new Map(distributorIds.map((item) => [item._id, item])).values(),
+    );
+
+    return uniqueDistributors.sort((a, b) => a.name.localeCompare(b.name));
   };
 
   // Apply filters
@@ -54,15 +67,16 @@ const CaseCategoriesPage = () => {
       filtered = filtered.filter((cat) => cat.categoryType === filterType);
     }
 
-    if (filterCountry !== "all") {
+    if (filterDistributor !== "all") {
       filtered = filtered.filter(
         (cat) =>
-          cat.categoryType === "default" || cat.country === filterCountry,
+          cat.categoryType === "default" ||
+          (cat.distributerId && cat.distributerId._id === filterDistributor),
       );
     }
 
     setFilteredCategories(filtered);
-  }, [categories, filterType, filterCountry]);
+  }, [categories, filterType, filterDistributor]);
 
   const handleOpenEditModal = (category) => {
     setSelectedCategory(category);
@@ -125,7 +139,7 @@ const CaseCategoriesPage = () => {
 
   const resetFilters = () => {
     setFilterType("all");
-    setFilterCountry("all");
+    setFilterDistributor("all");
   };
 
   useEffect(() => {
@@ -179,7 +193,7 @@ const CaseCategoriesPage = () => {
               Case Categories & Packages
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-lg text-gray-500 dark:text-gray-400">
-              Manage default and country-specific treatment categories with
+              Manage default and distributor-specific treatment categories with
               their pricing packages.
             </p>
           </div>
@@ -196,29 +210,31 @@ const CaseCategoriesPage = () => {
                 >
                   <option value="all">All Types</option>
                   <option value="default">Default Categories</option>
-                  <option value="country-specific">Country-Specific</option>
+                  <option value="distributor-specific">
+                    Distributor-Specific
+                  </option>
                 </select>
               </div>
 
-              {/* Filter by Country */}
+              {/* Filter by Distributor */}
               <div className="flex items-center gap-2">
                 <GlobeAltIcon className="h-5 w-5 text-gray-500" />
                 <select
-                  value={filterCountry}
-                  onChange={(e) => setFilterCountry(e.target.value)}
+                  value={filterDistributor}
+                  onChange={(e) => setFilterDistributor(e.target.value)}
                   className="rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
-                  <option value="all">All Countries</option>
-                  {getUniqueCountries().map((country) => (
-                    <option key={country} value={country}>
-                      {country}
+                  <option value="all">All Distributors</option>
+                  {getUniqueDistributors().map((distributor) => (
+                    <option key={distributor._id} value={distributor._id}>
+                      {distributor.name}
                     </option>
                   ))}
                 </select>
               </div>
 
               {/* Reset Filters */}
-              {(filterType !== "all" || filterCountry !== "all") && (
+              {(filterType !== "all" || filterDistributor !== "all") && (
                 <Button onClick={resetFilters} variant="outline" size="sm">
                   Reset Filters
                 </Button>
@@ -269,10 +285,10 @@ const CaseCategoriesPage = () => {
                                 🌍 Default
                               </span>
                             )}
-                            {category.categoryType === "country-specific" &&
-                              category.country && (
+                            {category.categoryType === "distributor-specific" &&
+                              category.distributerId && (
                                 <span className="inline-flex items-center rounded-full bg-purple-100 px-2 py-1 text-xs font-medium text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">
-                                  {category.country}
+                                  {category.distributerId.name}
                                 </span>
                               )}
                           </div>

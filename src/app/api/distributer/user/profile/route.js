@@ -1,29 +1,32 @@
-import connectDB from '@/app/api/config/db';
-import Distributer from '@/app/api/models/Distributer';
-import { AppError, handleError } from '@/app/api/utils/errorHandler';
-import jwt from 'jsonwebtoken';
-import { NextResponse } from 'next/server';
+import connectDB from "@/app/api/config/db";
+import Distributer from "@/app/api/models/Distributer";
+import { AppError, handleError } from "@/app/api/utils/errorHandler";
+import jwt from "jsonwebtoken";
+import { NextResponse } from "next/server";
 
 export async function GET(req) {
   try {
     await connectDB();
 
     // Get token from authorization header
-    const authHeader = req.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new AppError('Not authorized', 401);
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new AppError("Not authorized", 401);
     }
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(" ")[1];
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "fallback_secret",
+    );
 
     // Get user data
-    const user = await Distributer.findById(decoded.id).select('-password');
+    const user = await Distributer.findById(decoded.id).select("-password");
 
     if (!user) {
-      throw new AppError('User not found', 404);
+      throw new AppError("User not found", 404);
     }
 
     return NextResponse.json({
@@ -49,10 +52,14 @@ export async function GET(req) {
         experience: user.experience,
         doctorType: user.doctorType,
         address: user.address,
-        profilePicture: user.profilePicture || { url: '', fileKey: '', uploadedAt: null },
-      }
+        logo: user.logo || { url: "", fileKey: "", uploadedAt: null },
+        profilePicture: user.profilePicture || {
+          url: "",
+          fileKey: "",
+          uploadedAt: null,
+        },
+      },
     });
-
   } catch (error) {
     return handleError(error);
   }
@@ -67,7 +74,7 @@ export async function GET(req) {
 //       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
 //     }
 //     const user = authResult.user;
-    
+
 //     // Get request body
 //     const body = await req.json();
 
@@ -106,4 +113,4 @@ export async function GET(req) {
 //     console.error('Profile update error:', error);
 //     return handleError(error);
 //   }
-// } 
+// }

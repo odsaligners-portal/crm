@@ -111,6 +111,12 @@ export async function GET(req) {
 
   if (sort === "latest") {
     sortOption = { createdAt: -1 };
+  } else if (sort === "deadline") {
+    // Sort by deadline: nulls last, then soonest deadline first
+    sortOption = { plannerDeadline: 1, createdAt: -1 };
+  } else {
+    // Default: sort by deadline
+    sortOption = { plannerDeadline: 1, createdAt: -1 };
   }
 
   try {

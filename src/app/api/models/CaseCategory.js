@@ -14,16 +14,16 @@ const CaseCategorySchema = new mongoose.Schema(
     },
     categoryType: {
       type: String,
-      enum: ["default", "country-specific"],
+      enum: ["default", "distributor-specific"],
       default: "default",
       required: true,
     },
-    country: {
-      type: String,
-      trim: true,
-      // Required only when categoryType is 'country-specific'
+    distributerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Distributer",
+      // Required only when categoryType is 'distributor-specific'
       required: function () {
-        return this.categoryType === "country-specific";
+        return this.categoryType === "distributor-specific";
       },
     },
     plans: {
@@ -39,23 +39,18 @@ const CaseCategorySchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
-    // Compound index to ensure unique category names per country
-    // For default categories, country will be null
-    // For country-specific categories, combination of category and country must be unique
   },
   {
     timestamps: true,
   },
 );
 
-// Create compound index for category and country
-CaseCategorySchema.index({ category: 1, country: 1 }, { unique: true });
 
 // Pre-save middleware to handle unique constraint
 CaseCategorySchema.pre("save", function (next) {
-  // For default categories, set country to null
+  // For default categories, set distributerId to null
   if (this.categoryType === "default") {
-    this.country = null;
+    this.distributerId = null;
   }
   next();
 });

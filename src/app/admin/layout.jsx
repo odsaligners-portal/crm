@@ -22,6 +22,7 @@ export default function AdminLayout({ children }) {
     }
 
     if (role === "admin") {
+      // Admins cannot be suspended, so just authorize them
       setIsAuthorized(true);
     } else if (role === "doctor") {
       router.push("/doctor");

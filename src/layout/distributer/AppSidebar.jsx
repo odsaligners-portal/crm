@@ -104,11 +104,51 @@ const AppSidebar = () => {
   const unreadCount = useSelector(
     (state) => state.notification?.unreadCount || 0,
   );
+  const { token } = useSelector((state) => state.auth);
   const [hasMounted, setHasMounted] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(null);
+  const [isLogoLoading, setIsLogoLoading] = useState(true);
 
   useEffect(() => {
     setHasMounted(true);
   }, []);
+
+  // Fetch distributor's logo
+  useEffect(() => {
+    const fetchDistributorLogo = async () => {
+      if (!token) {
+        setLogoUrl("/logo.jpeg");
+        setIsLogoLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/distributer/user/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user?.logo?.url) {
+            setLogoUrl(data.user.logo.url);
+          } else {
+            setLogoUrl("/logo.jpeg");
+          }
+        } else {
+          setLogoUrl("/logo.jpeg");
+        }
+      } catch (error) {
+        console.error("Failed to fetch distributor logo:", error);
+        setLogoUrl("/logo.jpeg");
+      } finally {
+        setIsLogoLoading(false);
+      }
+    };
+
+    fetchDistributorLogo();
+  }, [token]);
 
   const isActive = useCallback((path) => pathname === path, [pathname]);
 
@@ -130,25 +170,38 @@ const AppSidebar = () => {
         }`}
       >
         <Link href="/">
-          {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <Image
-                className="dark:hidden"
-                src="/logo.jpeg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-              <Image
-                className="hidden dark:block"
-                src="/logo.jpeg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-            </>
+          {isLogoLoading ? (
+            <div
+              className={`animate-pulse rounded bg-gray-200 dark:bg-gray-700 ${isExpanded || isHovered || isMobileOpen ? "h-10 w-36" : "h-8 w-8"}`}
+            ></div>
           ) : (
-            <Image src="/logo.jpeg" alt="Logo" width={32} height={32} />
+            <>
+              {isExpanded || isHovered || isMobileOpen ? (
+                <div className="relative h-10 w-36">
+                  <Image
+                    fill
+                    className="object-contain dark:hidden"
+                    src={logoUrl}
+                    alt="Logo"
+                  />
+                  <Image
+                    fill
+                    className="hidden object-contain dark:block"
+                    src={logoUrl}
+                    alt="Logo"
+                  />
+                </div>
+              ) : (
+                <div className="relative h-8 w-8">
+                  <Image
+                    fill
+                    src={logoUrl}
+                    alt="Logo"
+                    className="object-contain"
+                  />
+                </div>
+              )}
+            </>
           )}
         </Link>
       </div>

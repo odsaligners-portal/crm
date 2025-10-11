@@ -286,7 +286,6 @@ export default function SignUpForm({
       setRegistrationData(data.user);
       setShowOTPModal(false);
       setShowSuccessModal(true);
-
     } catch (error) {
       // Error is already handled by fetchWithError
     } finally {
@@ -862,20 +861,8 @@ export default function SignUpForm({
                     disabled={isLoading}
                   />
                   <Label className="mb-0 cursor-pointer text-sm text-gray-700 select-none dark:text-gray-300">
-                    By creating an account means you agree to the{" "}
-                    <Link
-                      href="/terms"
-                      className="font-medium text-blue-600 transition-colors duration-200 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-                    >
-                      Terms and Conditions
-                    </Link>
-                    , and our{" "}
-                    <Link
-                      href="/privacy"
-                      className="font-medium text-blue-600 transition-colors duration-200 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
-                    >
-                      Privacy Policy
-                    </Link>
+                    By creating an account means you agree to the Terms and
+                    Conditions
                   </Label>
                 </div>
 

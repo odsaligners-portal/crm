@@ -1,5 +1,5 @@
 import dbConnect from "@/app/api/config/db";
-import { admin } from "@/app/api/middleware/authMiddleware";
+import { admin, verifyAuth } from "@/app/api/middleware/authMiddleware";
 import CaseCategory from "@/app/api/models/CaseCategory";
 import { NextResponse } from "next/server";
 
@@ -12,47 +12,73 @@ export async function GET(request) {
     const id = searchParams.get("id");
     const category = searchParams.get("category");
     const active = searchParams.get("active");
-    const country = searchParams.get("country");
+    const distributerId = searchParams.get("distributerId");
     const categoryType = searchParams.get("categoryType");
     let query = {};
+
     if (id) {
       query._id = id;
     } else if (category) {
       query.category = category;
     }
 
-    if (active !== null) {
-      query.active = active === "true";
-    }
+    // Build base query with active filter
+    const activeFilter = active !== null ? { active: active === "true" } : {};
 
-    // Filter by country if specified
-    if (country) {
-      // First, check if the country has any specific categories
-      const countrySpecificCount = await CaseCategory.countDocuments({
-        country: country,
-        active: active === "true",
+    // Apply filters based on parameters
+    if (distributerId === "default") {
+      // Doctor with no distributor: Return only default categories
+      query = {
+        ...activeFilter,
+        categoryType: "default",
+        distributerId: null,
+      };
+    } else if (distributerId && distributerId !== "") {
+      // Doctor with distributor assigned: Filter by distributor ID
+      // First, check if the distributor has any specific categories
+      const distributerSpecificCount = await CaseCategory.countDocuments({
+        distributerId: distributerId,
+        categoryType: "distributor-specific",
+        ...activeFilter,
       });
 
-      if (countrySpecificCount > 0) {
-        // Country has specific categories, include both country-specific and defaults
-        query.$or = [{ country: country }];
+      if (distributerSpecificCount > 0) {
+        // Distributor has specific categories, include both distributor-specific and defaults
+        query = {
+          ...activeFilter,
+          $or: [
+            {
+              distributerId: distributerId,
+              categoryType: "distributor-specific",
+            },
+          ],
+        };
       } else {
-        // Country has no specific categories, only return defaults
-        query.categoryType = "default";
+        // Distributor has no specific categories, only return defaults
+        query = {
+          ...activeFilter,
+          categoryType: "default",
+          distributerId: null,
+        };
       }
+    } else {
+      // Admin frontend (no distributerId parameter): Return all categories
+      query = {
+        ...activeFilter,
+      };
     }
 
-    // Filter by category type if specified
+    // Filter by category type if specified (this overrides distributor logic)
     if (categoryType) {
       query.categoryType = categoryType;
     }
 
-
-    const categories = await CaseCategory.find(query).sort({
-      categoryType: 1,
-      country: 1,
-      category: 1,
-    });
+    const categories = await CaseCategory.find(query)
+      .populate("distributerId", "name email")
+      .sort({
+        categoryType: 1,
+        category: 1,
+      });
 
     // If fetching by ID, return single object, otherwise return array
     const data = id ? categories[0] || null : categories;
@@ -75,7 +101,8 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     // Use admin middleware
-    const authResult = await admin(request);
+    const authResult = await verifyAuth(request);
+
     if (!authResult.success) {
       return NextResponse.json(
         {
@@ -86,8 +113,9 @@ export async function POST(request) {
       );
     }
     const user = authResult.user;
+    console.log(user);
     // Check if user has caseCategoryUpdateAccess
-    if (!user.caseCategoryUpdateAccess) {
+    if (user.role !== "admin") {
       return NextResponse.json(
         {
           success: false,
@@ -116,24 +144,25 @@ export async function POST(request) {
     // Validate category type
     if (
       body.categoryType &&
-      !["default", "country-specific"].includes(body.categoryType)
+      !["default", "distributor-specific"].includes(body.categoryType)
     ) {
       return NextResponse.json(
         {
           success: false,
           message:
-            'Invalid category type. Must be "default" or "country-specific"',
+            'Invalid category type. Must be "default" or "distributor-specific"',
         },
         { status: 400 },
       );
     }
 
-    // Validate country for country-specific categories
-    if (body.categoryType === "country-specific" && !body.country) {
+    // Validate distributerId for distributor-specific categories
+    if (body.categoryType === "distributor-specific" && !body.distributerId) {
       return NextResponse.json(
         {
           success: false,
-          message: "Country is required for country-specific categories",
+          message:
+            "Distributor is required for distributor-specific categories",
         },
         { status: 400 },
       );
@@ -149,24 +178,28 @@ export async function POST(request) {
       }
     }
 
-    // Check if category already exists for the same country/type
-    let existingQuery = { category: body.category };
-    if (body.categoryType === "country-specific") {
-      existingQuery.country = body.country;
-    } else {
-      existingQuery.categoryType = "default";
+    // Clean up the body data
+    const categoryData = { ...body };
+
+    // For default categories, remove or set distributerId to null
+    if (categoryData.categoryType === "default") {
+      delete categoryData.distributerId; // Remove the field entirely
+    } else if (
+      !categoryData.distributerId ||
+      categoryData.distributerId === ""
+    ) {
+      // For distributor-specific categories, ensure distributerId is not empty
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Distributor is required for distributor-specific categories",
+        },
+        { status: 400 },
+      );
     }
 
-    const existingCategory = await CaseCategory.findOne(existingQuery);
-    if (existingCategory) {
-      const message =
-        body.categoryType === "country-specific"
-          ? `Case category "${body.category}" already exists for country "${body.country}"`
-          : `Default case category "${body.category}" already exists`;
-      return NextResponse.json({ success: false, message }, { status: 409 });
-    }
-
-    const category = new CaseCategory(body);
+    const category = new CaseCategory(categoryData);
     await category.save();
 
     return NextResponse.json({
@@ -176,18 +209,6 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("Error creating case category:", error);
-
-    // Handle duplicate key error
-    if (error.code === 11000) {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "Case category already exists for this country/type",
-        },
-        { status: 409 },
-      );
-    }
-
     return NextResponse.json(
       { success: false, message: "Failed to create case category" },
       { status: 500 },
@@ -199,7 +220,7 @@ export async function POST(request) {
 export async function PUT(request) {
   try {
     // Use admin middleware
-    const authResult = await admin(request);
+    const authResult = await verifyAuth(request);
     if (!authResult.success) {
       return NextResponse.json(
         { success: false, message: authResult.error || "Invalid token" },
@@ -207,8 +228,9 @@ export async function PUT(request) {
       );
     }
     const user = authResult.user;
+
     // Check if user has caseCategoryUpdateAccess
-    if (!user.caseCategoryUpdateAccess) {
+    if (user.role !== "admin") {
       return NextResponse.json(
         {
           success: false,
@@ -241,6 +263,25 @@ export async function PUT(request) {
           );
         }
       }
+    }
+
+    // Clean up the update data
+    if (updateData.categoryType === "default") {
+      // For default categories, remove distributerId
+      updateData.distributerId = null;
+    } else if (
+      updateData.categoryType === "distributor-specific" &&
+      (!updateData.distributerId || updateData.distributerId === "")
+    ) {
+      // For distributor-specific categories, ensure distributerId is not empty
+      return NextResponse.json(
+        {
+          success: false,
+          message:
+            "Distributor is required for distributor-specific categories",
+        },
+        { status: 400 },
+      );
     }
 
     const category = await CaseCategory.findByIdAndUpdate(id, updateData, {

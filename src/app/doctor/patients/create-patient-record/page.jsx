@@ -162,6 +162,8 @@ const DentalExaminationForm = () => {
     [],
   );
   const [defaultCategories, setDefaultCategories] = useState([]);
+  const [doctorDistributerId, setDoctorDistributerId] = useState(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   // File upload state
   const [fileKeys, setFileKeys] = useState(Array(13).fill(undefined));
@@ -185,7 +187,7 @@ const DentalExaminationForm = () => {
             `/api/patients/update-details?id=${patientIdFromUrl}`,
             {
               headers: {
-                Authorization: `Bearer ${localStorage.getItem("token") || "dummy-token"}`,
+                Authorization: `Bearer ${token}`,
               },
             },
           );
@@ -533,8 +535,12 @@ const DentalExaminationForm = () => {
   }, [searchParams]);
 
   useEffect(() => {
-    loadCaseCategories(formData.country);
-  }, [formData.country]);
+    // Only load categories after we've attempted to fetch the doctor profile
+    // doctorDistributerId will be set to a value (could be null if no distributor assigned)
+    if (doctorDistributerId !== null) {
+      loadCaseCategories(doctorDistributerId);
+    }
+  }, [doctorDistributerId]);
 
   // Fetch doctor profile data and autofill primary address
   useEffect(() => {
@@ -548,12 +554,17 @@ const DentalExaminationForm = () => {
           },
         });
 
-        if (response.user && response.user.address) {
+        if (response.user) {
+          // Store distributor ID (set to empty string if not assigned, to trigger the effect)
+          setDoctorDistributerId(response.user.distributerId || "");
+
           // Autofill primary address with doctor's address
-          setFormData((prevData) => ({
-            ...prevData,
-            primaryAddress: response.user.address,
-          }));
+          if (response.user.address) {
+            setFormData((prevData) => ({
+              ...prevData,
+              primaryAddress: response.user.address,
+            }));
+          }
         }
       } catch (error) {
         console.error("Failed to fetch doctor profile:", error);
@@ -565,19 +576,24 @@ const DentalExaminationForm = () => {
   }, [token]);
 
   // Load case categories function - moved outside useEffect for accessibility
-  const loadCaseCategories = async (country = null) => {
+  const loadCaseCategories = async (distributerId = null) => {
     try {
       setIsLoadingCaseCategories(true);
 
-      // Simple API call - the API automatically handles country + defaults
+      // API call with distributerId - the API automatically handles distributor-specific + defaults
       let url = "/api/case-categories?active=true";
-      if (country) {
-        url += `&country=${encodeURIComponent(country)}`;
+      if (distributerId && distributerId !== "") {
+        // Doctor with distributor assigned - send the distributor ID
+        url += `&distributerId=${encodeURIComponent(distributerId)}`;
+      } else if (distributerId === "") {
+        // Doctor with NO distributor assigned - request only defaults
+        url += `&distributerId=default`;
       }
+      // If distributerId is null/undefined, don't add parameter (admin case - returns all)
 
       const response = await fetch(url, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("token") || "dummy-token"}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -589,14 +605,16 @@ const DentalExaminationForm = () => {
         setCaseCategories(categories);
 
         // Update the breakdown for UI display
-        const countrySpecific = categories.filter(
-          (cat) => cat.country === country,
+        const distributorSpecific = categories.filter(
+          (cat) =>
+            cat.categoryType === "distributor-specific" &&
+            cat.distributerId === distributerId,
         );
         const defaults = categories.filter(
           (cat) => cat.categoryType === "default",
         );
 
-        setCountrySpecificCategories(countrySpecific);
+        setCountrySpecificCategories(distributorSpecific);
         setDefaultCategories(defaults);
       } else {
         console.error("Failed to load case categories");
@@ -654,31 +672,15 @@ const DentalExaminationForm = () => {
         setFormData((prev) => ({ ...prev, selectedPrice: "" }));
       }
 
-      // Handle country change - fetch case categories and reset related fields
+      // Handle country change - reset state and city since they depend on country
       if (name === "country") {
         setFormData((prev) => ({
           ...prev,
           [name]: value,
-          // Reset case category related fields when country changes
-          caseCategory: "",
-          selectedPrice: "",
-          caseCategoryDetails: "",
           // Also reset state and city since they depend on country
           state: "",
           city: "",
         }));
-
-        // Reset category breakdown when country changes
-        setCountrySpecificCategories([]);
-        setDefaultCategories([]);
-
-        // Load case categories for the selected country
-        if (value) {
-          loadCaseCategories(value);
-        } else {
-          // If no country selected, load default categories
-          loadCaseCategories();
-        }
         return; // Return early to avoid setting the value again
       }
 
@@ -859,26 +861,7 @@ const DentalExaminationForm = () => {
         return;
       }
 
-      // Validate case information
-      if (!formData.caseType) {
-        toast.error(
-          "📋 Please select whether this is a Single Arch or Double Arch case",
-        );
-        setIsSaving(false);
-        return;
-      }
-      if (!formData.caseCategory) {
-        toast.error(
-          "🏷️ Please select the appropriate case category for treatment planning",
-        );
-        setIsSaving(false);
-        return;
-      }
-      if (!formData.selectedPrice) {
-        toast.error("💰 Please select a treatment package to continue");
-        setIsSaving(false);
-        return;
-      }
+      // Validate case information - removed validation for caseCategory and selectedPrice
 
       // Prepare file data for files tab
       let fileData = {};
@@ -1016,7 +999,7 @@ const DentalExaminationForm = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token") || "dummy-token"}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(requestBody),
         });
@@ -1058,7 +1041,7 @@ const DentalExaminationForm = () => {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token") || "dummy-token"}`,
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(requestBody),
           },
@@ -1094,6 +1077,15 @@ const DentalExaminationForm = () => {
     setIsSubmitting(true);
 
     try {
+      // Validate terms acceptance
+      if (!termsAccepted) {
+        toast.error(
+          "📋 Please read and accept the Terms and Conditions to continue",
+        );
+        setIsSubmitting(false);
+        return;
+      }
+
       // Validate follow-up months when traveling is selected
       if (
         formData.natureOfAvailability === "traveling" &&
@@ -1106,26 +1098,7 @@ const DentalExaminationForm = () => {
         return;
       }
 
-      // Validate case information
-      if (!formData.caseType) {
-        toast.error(
-          "📋 Please select whether this is a Single Arch or Double Arch case",
-        );
-        setIsSubmitting(false);
-        return;
-      }
-      if (!formData.caseCategory) {
-        toast.error(
-          "🏷️ Please select the appropriate case category for treatment planning",
-        );
-        setIsSubmitting(false);
-        return;
-      }
-      if (!formData.selectedPrice) {
-        toast.error("💰 Please select a treatment package to continue");
-        setIsSubmitting(false);
-        return;
-      }
+      // Validate case information - removed validation for caseCategory and selectedPrice
 
       if (!patientId) {
         // Create new patient record
@@ -1259,7 +1232,7 @@ const DentalExaminationForm = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token") || "dummy-token"}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify(requestBody),
         });
@@ -1419,7 +1392,7 @@ const DentalExaminationForm = () => {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${localStorage.getItem("token") || "dummy-token"}`,
+              Authorization: `Bearer ${token}`,
             },
             body: JSON.stringify(requestBody),
           },
@@ -1774,6 +1747,7 @@ const DentalExaminationForm = () => {
   const caseCategoryOptions = caseCategories.map((cat) => ({
     label: cat.category,
     value: cat.category,
+    description: cat.description || "",
     isCountrySpecific: !!cat.country,
     isDefault: cat.categoryType === "default",
   }));
@@ -2787,158 +2761,110 @@ const DentalExaminationForm = () => {
                   </div>
                 </div>
 
-                {/* Case Information Section */}
-                <div className="rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-8 shadow-lg transition-all duration-300 hover:shadow-xl">
-                  <div className="mb-6 flex items-center gap-3">
-                    <div className="rounded-xl bg-orange-100 p-3">
-                      <svg
-                        className="h-6 w-6 text-orange-600"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                    </div>
-                    <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
-                      Case Information
-                    </h2>
-                  </div>
-                  <div className="space-y-6">
-                    {/* Case Type */}
-                    <div>
-                      <label className="mb-2 block text-sm font-medium text-gray-700">
-                        Case Type *
-                      </label>
-                      <div className="flex items-center space-x-6">
-                        <label className="flex cursor-pointer items-center">
-                          <input
-                            type="radio"
-                            name="caseType"
-                            value="Single Arch"
-                            checked={
-                              formData.caseType === "Single Arch" ||
-                              formData.caseType === "Upper Arch" ||
-                              formData.caseType === "Lower Arch"
-                            }
-                            onChange={handleInputChange}
-                            className="mr-2 accent-blue-500"
-                            required
-                          />
-                          Single Arch
-                        </label>
-                        <label className="flex cursor-pointer items-center">
-                          <input
-                            type="radio"
-                            name="caseType"
-                            value="Double Arch"
-                            checked={formData.caseType === "Double Arch"}
-                            onChange={handleInputChange}
-                            className="mr-2 accent-blue-500"
-                            required
-                          />
-                          Double Arch
-                        </label>
-                      </div>
-                      {/* Show dropdown if Single Arch is selected */}
-                      {(formData.caseType === "Single Arch" ||
-                        formData.caseType === "Upper Arch" ||
-                        formData.caseType === "Lower Arch") && (
-                        <div className="mt-4">
-                          <label className="mb-2 block text-sm font-medium text-gray-700">
-                            Arch *
-                          </label>
-                          <select
-                            name="singleArchType"
-                            value={formData.singleArchType}
-                            onChange={handleInputChange}
-                            className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                          >
-                            <option value="">Select Arch Type</option>
-                            <option value="Upper Arch">Upper Arch</option>
-                            <option value="Lower Arch">Lower Arch</option>
-                          </select>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Case Category - Fetched based on selected country + default categories */}
-                    <div className="group">
-                      <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased transition-colors duration-200 group-focus-within:text-blue-600">
-                        Case Category *
-                      </label>
-                      <div className="relative">
-                        <select
-                          name="caseCategory"
-                          value={formData.caseCategory}
-                          onChange={handleInputChange}
-                          className="w-full cursor-pointer appearance-none rounded-xl border-2 border-gray-200 bg-white/80 px-4 py-3 text-gray-900 backdrop-blur-sm transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-100"
-                          required
-                          disabled={isLoadingCaseCategories}
+                {/* Case Information Section - Only show if there are categories */}
+                {caseCategories.length > 0 && (
+                  <div className="rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-gray-50 p-8 shadow-lg transition-all duration-300 hover:shadow-xl">
+                    <div className="mb-6 flex items-center gap-3">
+                      <div className="rounded-xl bg-orange-100 p-3">
+                        <svg
+                          className="h-6 w-6 text-orange-600"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
                         >
-                          <option value="">
-                            {isLoadingCaseCategories
-                              ? "Loading categories..."
-                              : caseCategoryOptions.length === 0
-                                ? "No categories available"
-                                : "Select Case Category"}
-                          </option>
-                          {caseCategoryOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                          <svg
-                            className="h-5 w-5 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 9l-7 7-7-7"
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                      </div>
+                      <h2 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
+                        Case Information
+                      </h2>
+                    </div>
+                    <div className="space-y-6">
+                      {/* Case Type */}
+                      <div>
+                        <label className="mb-2 block text-sm font-medium text-gray-700">
+                          Case Type
+                        </label>
+                        <div className="flex items-center space-x-6">
+                          <label className="flex cursor-pointer items-center">
+                            <input
+                              type="radio"
+                              name="caseType"
+                              value="Single Arch"
+                              checked={
+                                formData.caseType === "Single Arch" ||
+                                formData.caseType === "Upper Arch" ||
+                                formData.caseType === "Lower Arch"
+                              }
+                              onChange={handleInputChange}
+                              className="mr-2 accent-blue-500"
                             />
-                          </svg>
+                            Single Arch
+                          </label>
+                          <label className="flex cursor-pointer items-center">
+                            <input
+                              type="radio"
+                              name="caseType"
+                              value="Double Arch"
+                              checked={formData.caseType === "Double Arch"}
+                              onChange={handleInputChange}
+                              className="mr-2 accent-blue-500"
+                            />
+                            Double Arch
+                          </label>
                         </div>
-                        {isLoadingCaseCategories && (
-                          <div className="absolute top-1/2 right-12 -translate-y-1/2">
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                        {/* Show dropdown if Single Arch is selected */}
+                        {(formData.caseType === "Single Arch" ||
+                          formData.caseType === "Upper Arch" ||
+                          formData.caseType === "Lower Arch") && (
+                          <div className="mt-4">
+                            <label className="mb-2 block text-sm font-medium text-gray-700">
+                              Arch
+                            </label>
+                            <select
+                              name="singleArchType"
+                              value={formData.singleArchType}
+                              onChange={handleInputChange}
+                              className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                            >
+                              <option value="">Select Arch Type</option>
+                              <option value="Upper Arch">Upper Arch</option>
+                              <option value="Lower Arch">Lower Arch</option>
+                            </select>
                           </div>
                         )}
                       </div>
-                    </div>
 
-                    {/* Package Selection appears when case category is selected */}
-                    {formData.caseCategory && (
+                      {/* Case Category - Fetched based on selected country + default categories */}
                       <div className="group">
                         <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased transition-colors duration-200 group-focus-within:text-blue-600">
-                          Package *
+                          Case Category
                         </label>
                         <div className="relative">
                           <select
-                            name="selectedPrice"
-                            value={formData.selectedPrice}
+                            name="caseCategory"
+                            value={formData.caseCategory}
                             onChange={handleInputChange}
-                            className="w-full cursor-pointer appearance-none rounded-xl border-2 border-gray-200 bg-white/80 px-4 py-3 text-gray-900 backdrop-blur-sm transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
-                            required
+                            className="w-full cursor-pointer appearance-none rounded-xl border-2 border-gray-200 bg-white/80 px-4 py-3 text-gray-900 backdrop-blur-sm transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-100"
+                            disabled={isLoadingCaseCategories}
                           >
-                            <option value="">Select Package</option>
-                            {(priceOptions[formData.caseCategory] || []).map(
-                              (option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ),
-                            )}
+                            <option value="">
+                              {isLoadingCaseCategories
+                                ? "Loading categories..."
+                                : caseCategoryOptions.length === 0
+                                  ? "No categories available"
+                                  : "Select Case Category"}
+                            </option>
+                            {caseCategoryOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
                           </select>
                           <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
                             <svg
@@ -2955,69 +2881,178 @@ const DentalExaminationForm = () => {
                               />
                             </svg>
                           </div>
+                          {isLoadingCaseCategories && (
+                            <div className="absolute top-1/2 right-12 -translate-y-1/2">
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    )}
 
-                    {/* Case Category Details */}
-                    <div className="group">
-                      <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased transition-colors duration-200 group-focus-within:text-blue-600">
-                        Case Category Comments
-                      </label>
-                      <div className="relative">
-                        <textarea
-                          name="caseCategoryDetails"
-                          value={formData.caseCategoryDetails}
-                          onChange={handleInputChange}
-                          placeholder="Enter case category details..."
-                          rows="4"
-                          maxLength={1500}
-                          className={`w-full resize-none rounded-xl border-2 bg-white/80 px-4 py-3 text-gray-900 placeholder-gray-400 backdrop-blur-sm transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none ${
-                            formData.caseCategoryDetails &&
-                            formData.caseCategoryDetails.length > 1500
-                              ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
-                              : "border-gray-200 focus:border-blue-500 focus:ring-blue-500/10"
-                          }`}
-                        />
-                        <div className="absolute top-3 right-3">
-                          <svg
-                            className="h-5 w-5 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                            />
-                          </svg>
-                        </div>
+                        {/* Display case category description if available */}
+                        {formData.caseCategory &&
+                          (() => {
+                            const selectedCategory = caseCategoryOptions.find(
+                              (opt) => opt.value === formData.caseCategory,
+                            );
+                            return selectedCategory?.description ? (
+                              <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 p-3">
+                                <div className="flex items-start gap-2">
+                                  <svg
+                                    className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                                    />
+                                  </svg>
+                                  <p className="text-sm leading-relaxed text-blue-800">
+                                    {selectedCategory.description}
+                                  </p>
+                                </div>
+                              </div>
+                            ) : null;
+                          })()}
                       </div>
-                      <div className="mt-3 flex justify-between text-sm">
-                        <span className="font-medium text-gray-500">
-                          Character limit: 1500
-                        </span>
-                        <span
-                          className={`font-semibold subpixel-antialiased ${
-                            formData.caseCategoryDetails &&
-                            formData.caseCategoryDetails.length > 1500
-                              ? "text-red-600"
-                              : formData.caseCategoryDetails &&
-                                  formData.caseCategoryDetails.length > 1400
-                                ? "text-orange-500"
-                                : "text-blue-600"
-                          }`}
-                        >
-                          {formData.caseCategoryDetails
-                            ? formData.caseCategoryDetails.length
-                            : 0}
-                          /1500
-                        </span>
+
+                      {/* Package Selection appears when case category is selected */}
+                      {formData.caseCategory && (
+                        <div className="group">
+                          <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased transition-colors duration-200 group-focus-within:text-blue-600">
+                            Package
+                          </label>
+                          <div className="relative">
+                            <select
+                              name="selectedPrice"
+                              value={formData.selectedPrice}
+                              onChange={handleInputChange}
+                              className="w-full cursor-pointer appearance-none rounded-xl border-2 border-gray-200 bg-white/80 px-4 py-3 text-gray-900 backdrop-blur-sm transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none"
+                            >
+                              <option value="">Select Package</option>
+                              {(priceOptions[formData.caseCategory] || []).map(
+                                (option) => (
+                                  <option
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                              <svg
+                                className="h-5 w-5 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 9l-7 7-7-7"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Case Category Details */}
+                      <div className="group">
+                        <label className="mb-3 block text-sm font-semibold text-gray-700 subpixel-antialiased transition-colors duration-200 group-focus-within:text-blue-600">
+                          Case Category Comments
+                        </label>
+                        <div className="relative">
+                          <textarea
+                            name="caseCategoryDetails"
+                            value={formData.caseCategoryDetails}
+                            onChange={handleInputChange}
+                            placeholder="Enter case category details..."
+                            rows="4"
+                            maxLength={1500}
+                            className={`w-full resize-none rounded-xl border-2 bg-white/80 px-4 py-3 text-gray-900 placeholder-gray-400 backdrop-blur-sm transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none ${
+                              formData.caseCategoryDetails &&
+                              formData.caseCategoryDetails.length > 1500
+                                ? "border-red-500 focus:border-red-500 focus:ring-red-500/10"
+                                : "border-gray-200 focus:border-blue-500 focus:ring-blue-500/10"
+                            }`}
+                          />
+                          <div className="absolute top-3 right-3">
+                            <svg
+                              className="h-5 w-5 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                              />
+                            </svg>
+                          </div>
+                        </div>
+                        <div className="mt-3 flex justify-between text-sm">
+                          <span className="font-medium text-gray-500">
+                            Character limit: 1500
+                          </span>
+                          <span
+                            className={`font-semibold subpixel-antialiased ${
+                              formData.caseCategoryDetails &&
+                              formData.caseCategoryDetails.length > 1500
+                                ? "text-red-600"
+                                : formData.caseCategoryDetails &&
+                                    formData.caseCategoryDetails.length > 1400
+                                  ? "text-orange-500"
+                                  : "text-blue-600"
+                            }`}
+                          >
+                            {formData.caseCategoryDetails
+                              ? formData.caseCategoryDetails.length
+                              : 0}
+                            /1500
+                          </span>
+                        </div>
                       </div>
                     </div>
                   </div>
+                )}
+
+                {/* Terms and Conditions Checkbox */}
+                <div className="mt-8 flex items-start gap-3 rounded-xl border-2 border-blue-200 bg-blue-50/50 p-4">
+                  <input
+                    type="checkbox"
+                    id="termsAccepted"
+                    checked={termsAccepted}
+                    onChange={(e) => setTermsAccepted(e.target.checked)}
+                    className="mt-1 h-5 w-5 cursor-pointer rounded border-gray-300 text-blue-600 transition-all focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  />
+                  <label
+                    htmlFor="termsAccepted"
+                    className="flex-1 cursor-pointer text-sm text-gray-700"
+                  >
+                    I have read and agree to the{" "}
+                    <a
+                      href="/doctor/terms-and-conditions"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-blue-600 underline transition-colors hover:text-blue-800"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        window.open("/doctor/terms-and-conditions", "_blank");
+                      }}
+                    >
+                      Terms and Conditions
+                    </a>
+                    {" *"}
+                  </label>
                 </div>
               </div>
             </div>
