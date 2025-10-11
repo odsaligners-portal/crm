@@ -4,7 +4,7 @@ import { HorizontaLDots } from "@/icons/index";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState, useEffect } from "react";
 import {
   MdAdd,
   MdComment,
@@ -134,6 +134,69 @@ const AppSidebar = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
   const pathname = usePathname();
   const unreadCount = useSelector((state) => state.notification.unreadCount);
+  const { token } = useSelector((state) => state.auth);
+  const [logoUrl, setLogoUrl] = useState(null);
+  const [isLogoLoading, setIsLogoLoading] = useState(true);
+
+  // Fetch doctor's distributor logo
+  useEffect(() => {
+    const fetchDistributorLogo = async () => {
+      if (!token) {
+        setLogoUrl("/logo.jpeg");
+        setIsLogoLoading(false);
+        return;
+      }
+
+      try {
+        // First, get the doctor's profile to get their distributerId
+        const profileResponse = await fetch("/api/user/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (profileResponse.ok) {
+          const profileData = await profileResponse.json();
+          const distributerId = profileData.user?.distributerId;
+
+          if (distributerId) {
+            // Fetch the distributor's data to get logo
+            const distribResponse = await fetch(
+              `/api/admin/distributers?id=${distributerId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              },
+            );
+
+            if (distribResponse.ok) {
+              const distribData = await distribResponse.json();
+              if (distribData.distributer?.logo?.url) {
+                setLogoUrl(distribData.distributer.logo.url);
+              } else {
+                setLogoUrl("/logo.jpeg");
+              }
+            } else {
+              setLogoUrl("/logo.jpeg");
+            }
+          } else {
+            // No distributor assigned, use default logo
+            setLogoUrl("/logo.jpeg");
+          }
+        } else {
+          setLogoUrl("/logo.jpeg");
+        }
+      } catch (error) {
+        console.error("Failed to fetch distributor logo:", error);
+        setLogoUrl("/logo.jpeg");
+      } finally {
+        setIsLogoLoading(false);
+      }
+    };
+
+    fetchDistributorLogo();
+  }, [token]);
 
   const isActive = useCallback((path) => path === pathname, [pathname]);
 
@@ -155,25 +218,38 @@ const AppSidebar = () => {
         }`}
       >
         <Link href="/">
-          {isExpanded || isHovered || isMobileOpen ? (
-            <>
-              <Image
-                className="dark:hidden"
-                src="/logo.jpeg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-              <Image
-                className="hidden dark:block"
-                src="/logo.jpeg"
-                alt="Logo"
-                width={150}
-                height={40}
-              />
-            </>
+          {isLogoLoading ? (
+            <div
+              className={`animate-pulse rounded bg-gray-200 dark:bg-gray-700 ${isExpanded || isHovered || isMobileOpen ? "h-10 w-36" : "h-8 w-8"}`}
+            ></div>
           ) : (
-            <Image src="/logo.jpeg" alt="Logo" width={32} height={32} />
+            <>
+              {isExpanded || isHovered || isMobileOpen ? (
+                <div className="relative h-10 w-36">
+                  <Image
+                    fill
+                    className="object-contain dark:hidden"
+                    src={logoUrl}
+                    alt="Logo"
+                  />
+                  <Image
+                    fill
+                    className="hidden object-contain dark:block"
+                    src={logoUrl}
+                    alt="Logo"
+                  />
+                </div>
+              ) : (
+                <div className="relative h-8 w-8">
+                  <Image
+                    fill
+                    src={logoUrl}
+                    alt="Logo"
+                    className="object-contain"
+                  />
+                </div>
+              )}
+            </>
           )}
         </Link>
       </div>

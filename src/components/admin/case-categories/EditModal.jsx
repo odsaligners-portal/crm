@@ -8,8 +8,9 @@ import { PlusIcon, TrashIcon } from "@heroicons/react/24/solid";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "react-toastify";
+import { fetchWithError } from "@/utils/apiErrorHandler";
 
-// List of countries for selection
+// List of countries for selection (kept for reference, but not used now)
 const COUNTRIES = [
   "United States",
   "Canada",
@@ -218,16 +219,36 @@ const EditCaseCategoryModal = ({
   onCategoryUpdated,
 }) => {
   const [formData, setFormData] = useState(null);
+  const [distributers, setDistributers] = useState([]);
   const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
   const { isLoading: isSubmitting } = useSelector((state) => state.ui);
+
+  // Fetch distributors when modal opens
+  useEffect(() => {
+    if (isOpen && token) {
+      fetchDistributers();
+    }
+  }, [isOpen, token]);
+
+  const fetchDistributers = async () => {
+    try {
+      const result = await fetchWithError("/api/admin/distributers/list", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setDistributers(result.distributers || []);
+    } catch (err) {
+      // fetchWithError handles toast
+    }
+  };
 
   useEffect(() => {
     if (category) {
       setFormData({
         category: category.category,
         categoryType: category.categoryType || "default",
-        country: category.country || "",
+        distributerId:
+          category.distributerId?._id || category.distributerId || "",
         description: category.description || "",
         plans: JSON.parse(JSON.stringify(category.plans)),
         active: category.active,
@@ -239,9 +260,9 @@ const EditCaseCategoryModal = ({
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
 
-    // Reset country when switching to default type
+    // Reset distributerId when switching to default type
     if (name === "categoryType" && value === "default") {
-      setFormData((prev) => ({ ...prev, [name]: value, country: "" }));
+      setFormData((prev) => ({ ...prev, [name]: value, distributerId: "" }));
     }
   };
 
@@ -279,8 +300,13 @@ const EditCaseCategoryModal = ({
       return;
     }
 
-    if (formData.categoryType === "country-specific" && !formData.country) {
-      toast.error("Please select a country for country-specific categories.");
+    if (
+      formData.categoryType === "distributor-specific" &&
+      !formData.distributerId
+    ) {
+      toast.error(
+        "Please select a distributor for distributor-specific categories.",
+      );
       return;
     }
 
@@ -358,27 +384,29 @@ const EditCaseCategoryModal = ({
                   className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                 >
                   <option value="default">
-                    Default (Available for all countries)
+                    Default (Available for all distributors)
                   </option>
-                  <option value="country-specific">Country-Specific</option>
+                  <option value="distributor-specific">
+                    Distributor-Specific
+                  </option>
                 </select>
               </div>
 
-              {formData.categoryType === "country-specific" && (
+              {formData.categoryType === "distributor-specific" && (
                 <div>
-                  <Label htmlFor="country">Country</Label>
+                  <Label htmlFor="distributerId">Distributor</Label>
                   <select
-                    id="country"
-                    name="country"
-                    value={formData.country}
+                    id="distributerId"
+                    name="distributerId"
+                    value={formData.distributerId}
                     onChange={handleInputChange}
                     required
                     className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-white"
                   >
-                    <option value="">Select a country</option>
-                    {COUNTRIES.map((country) => (
-                      <option key={country} value={country}>
-                        {country}
+                    <option value="">Select a distributor</option>
+                    {distributers.map((distributor) => (
+                      <option key={distributor._id} value={distributor._id}>
+                        {distributor.name} ({distributor.email})
                       </option>
                     ))}
                   </select>

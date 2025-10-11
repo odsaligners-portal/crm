@@ -1,6 +1,7 @@
 import { admin } from "@/app/api/middleware/authMiddleware";
 import dbConnect from "@/app/api/config/db";
 import Patient from "@/app/api/models/Patient";
+import DeadlineTime from "@/app/api/models/DeadlineTime";
 import mongoose from "mongoose";
 import { NextResponse } from "next/server";
 
@@ -62,6 +63,12 @@ export async function PUT(req) {
 
     const body = await req.json();
 
+    // Get current patient to check if planner is being changed
+    const currentPatient = await Patient.findById(id);
+    if (!currentPatient) {
+      return NextResponse.json({ error: "Patient not found" }, { status: 404 });
+    }
+
     const fieldsToUpdate = Object.fromEntries(
       Object.entries({
         // Step-1 fields
@@ -108,6 +115,39 @@ export async function PUT(req) {
         userId: body.userId,
       }).filter(([v]) => v !== undefined),
     );
+
+    // If plannerId is being assigned or changed, calculate and set deadline
+    if (
+      body.plannerId !== undefined &&
+      body.plannerId !== null &&
+      String(currentPatient.plannerId) !== String(body.plannerId)
+    ) {
+      // Fetch deadline time from database
+      const deadlineTime = await DeadlineTime.findOne();
+
+      if (deadlineTime) {
+        // Calculate deadline: current time + deadline duration
+        const now = new Date();
+        const deadlineDate = new Date(now);
+
+        // Add days, hours, and minutes
+        deadlineDate.setDate(deadlineDate.getDate() + (deadlineTime.days || 0));
+        deadlineDate.setHours(
+          deadlineDate.getHours() + (deadlineTime.hours || 0),
+        );
+        deadlineDate.setMinutes(
+          deadlineDate.getMinutes() + (deadlineTime.minutes || 0),
+        );
+
+        // Add deadline fields
+        fieldsToUpdate.plannerAssignedAt = now;
+        fieldsToUpdate.plannerDeadline = deadlineDate;
+      } else {
+        // If no deadline time is set, still record the assignment time
+        fieldsToUpdate.plannerAssignedAt = new Date();
+        fieldsToUpdate.plannerDeadline = null;
+      }
+    }
 
     const updatedPatient = await Patient.findOneAndUpdate(
       {

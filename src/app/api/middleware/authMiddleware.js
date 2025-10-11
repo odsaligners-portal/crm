@@ -1,29 +1,39 @@
-import jwt from 'jsonwebtoken';
-import User from '../models/User';
+import jwt from "jsonwebtoken";
+import User from "../models/User";
 
 export const protect = async (req) => {
   try {
-    const authorization = req.headers.get('authorization');
-    if (!authorization || !authorization.startsWith('Bearer ')) {
-      return { success: false, error: 'Not authorized to access this route' };
+    const authorization = req.headers.get("authorization");
+    if (!authorization || !authorization.startsWith("Bearer ")) {
+      return { success: false, error: "Not authorized to access this route" };
     }
-    const token = authorization.split(' ')[1];
+    const token = authorization.split(" ")[1];
 
     if (!token) {
       return {
         success: false,
-        error: 'Not authorized to access this route',
+        error: "Not authorized to access this route",
       };
     }
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await User.findById(decoded.id).select('-password');
+      const user = await User.findById(decoded.id).select("-password");
 
       if (!user) {
         return {
           success: false,
-          error: 'User not found',
+          error: "User not found",
+        };
+      }
+
+      // Check if account is suspended (only for doctors, not admins)
+      if (user.role === "doctor" && user.isSuspended) {
+        return {
+          success: false,
+          error:
+            "Your account has been suspended. Please contact the administrator.",
+          isSuspended: true,
         };
       }
 
@@ -34,8 +44,8 @@ export const protect = async (req) => {
     } catch (err) {
       return {
         success: false,
-        error: 'Not authorized to access this route',
-        err : err.message,
+        error: "Not authorized to access this route",
+        err: err.message,
       };
     }
   } catch (error) {
@@ -51,11 +61,11 @@ export const admin = async (req) => {
     const authResult = await protect(req);
     if (!authResult.success) {
       return authResult;
-    } 
-    if (authResult.user.role !== 'admin') {
+    }
+    if (authResult.user.role !== "admin") {
       return {
         success: false,
-        error: 'Not authorized as an admin',
+        error: "Not authorized as an admin",
       };
     }
 
@@ -71,19 +81,18 @@ export const admin = async (req) => {
   }
 };
 
-
 export async function verifyAuth(request) {
   try {
-    const token = request.headers.get('Authorization')?.replace('Bearer ', '');
+    const token = request.headers.get("Authorization")?.replace("Bearer ", "");
     if (!token) {
-      return { success: false, error: 'No token provided' };
+      return { success: false, error: "No token provided" };
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     return { success: true, user: decoded };
   } catch (error) {
-    return { success: false, error: 'Invalid token', err: error };
+    return { success: false, error: "Invalid token", err: error };
   }
 }
 
-export default { protect, admin }; 
+export default { protect, admin };

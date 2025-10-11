@@ -23,6 +23,8 @@ export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [isSuspended, setIsSuspended] = useState(false);
+  const [suspensionMessage, setSuspensionMessage] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -59,7 +61,16 @@ export default function SignInForm() {
       const data = await response.json();
 
       if (!response.ok) {
-        toast.error(data.message || "Login failed");
+        // Check if account is suspended
+        if (data.isSuspended) {
+          setIsSuspended(true);
+          setSuspensionMessage(
+            data.error ||
+              "Your account has been suspended. Please contact the administrator.",
+          );
+          return;
+        }
+        toast.error(data.message || data.error || "Login failed");
         return;
       }
 
@@ -255,7 +266,7 @@ export default function SignInForm() {
                     }}
                     disabled={isLoading}
                   />
-                  <Label className="cursor-pointer text-sm mb-0 text-gray-700 select-none dark:text-gray-300">
+                  <Label className="mb-0 cursor-pointer text-sm text-gray-700 select-none dark:text-gray-300">
                     Sign in as a Distributer
                   </Label>
                 </div>
@@ -313,6 +324,112 @@ export default function SignInForm() {
           </div>
         </div>
       </div>
+
+      {/* Uncloseable Suspension Modal */}
+      {isSuspended && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md overflow-hidden rounded-2xl border-2 border-red-500 bg-white shadow-2xl dark:bg-gray-900">
+            {/* Modal Header */}
+            <div className="border-b border-red-200 bg-gradient-to-r from-red-500 to-red-600 px-6 py-5 dark:border-red-800">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                  <svg
+                    className="h-10 w-10 animate-pulse text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white subpixel-antialiased">
+                    Account Suspended
+                  </h3>
+                  <p className="text-red-100">Access Denied</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 py-8">
+              <div className="mb-6 rounded-lg border-2 border-red-200 bg-red-50 p-6 dark:border-red-800 dark:bg-red-900/20">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 flex-shrink-0">
+                    <svg
+                      className="h-6 w-6 text-red-600 dark:text-red-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-base leading-relaxed font-semibold text-red-900 dark:text-red-100">
+                      {suspensionMessage}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+                <p className="font-medium">
+                  Your account has been temporarily suspended and you cannot
+                  access the system.
+                </p>
+                <p>
+                  Please contact your administrator for more information or to
+                  request account reactivation.
+                </p>
+              </div>
+
+              {/* Contact Info (Optional) */}
+              <div className="mt-6 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+                <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Need Help?
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Contact your system administrator for assistance with your
+                  account status.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex items-center justify-center">
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                  <span className="font-medium">Account Access Restricted</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
