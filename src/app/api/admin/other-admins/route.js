@@ -13,6 +13,6 @@ export async function GET(req) {
   }
   const query = {};
   if (role) query.role = role;
-  const admins = await User.find(query).select('name email mobile role distributerId distributerAccess');
+  const admins = await User.find(query).select('name email mobile role distributerId distributerAccess distributerName');
   return NextResponse.json({ admins });
 } 

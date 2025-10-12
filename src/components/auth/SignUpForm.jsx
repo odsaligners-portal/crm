@@ -55,6 +55,7 @@ export default function SignUpForm({
     city: "",
     experience: "",
     doctorType: "",
+    distributerName: "",
     address: "",
     alternateAddresses: [], // Array to store multiple alternate addresses
     password: "Dev@227", // Set default password
@@ -657,59 +658,84 @@ export default function SignUpForm({
                   </div>
                 </div>
 
-                {/* Doctor Type and Address */}
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <div className="group/field space-y-2">
-                    <Label className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover/field:text-blue-600 dark:text-gray-300">
-                      Type of Doctor<span className="text-red-500">*</span>
-                    </Label>
-                    <Select
-                      options={doctorTypeOptions}
-                      value={doctorTypeOptions.find(
-                        (option) => option.value === formData.doctorType,
-                      )}
-                      onChange={(option) =>
-                        handleSelectChange("doctorType", option?.value)
-                      }
-                      placeholder="Select doctor type"
-                      className="w-full"
-                      classNamePrefix="select"
-                      isSearchable={true}
-                      styles={{
-                        control: (provided, state) => ({
-                          ...provided,
-                          borderColor: state.isFocused ? "#3b82f6" : "#d1d5db",
-                          boxShadow: state.isFocused
-                            ? "0 0 0 2px rgba(59, 130, 246, 0.2)"
-                            : "none",
-                          "&:hover": {
-                            borderColor: "#9ca3af",
-                          },
-                        }),
-                      }}
+                {/* Doctor Type */}
+                <div className="group/field space-y-2">
+                  <Label className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover/field:text-blue-600 dark:text-gray-300">
+                    Type of Doctor<span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    options={doctorTypeOptions}
+                    value={doctorTypeOptions.find(
+                      (option) => option.value === formData.doctorType,
+                    )}
+                    onChange={(option) =>
+                      handleSelectChange("doctorType", option?.value)
+                    }
+                    placeholder="Select doctor type"
+                    className="w-full"
+                    classNamePrefix="select"
+                    isSearchable={true}
+                    styles={{
+                      control: (provided, state) => ({
+                        ...provided,
+                        borderColor: state.isFocused ? "#3b82f6" : "#d1d5db",
+                        boxShadow: state.isFocused
+                          ? "0 0 0 2px rgba(59, 130, 246, 0.2)"
+                          : "none",
+                        "&:hover": {
+                          borderColor: "#9ca3af",
+                        },
+                      }),
+                    }}
+                  />
+                </div>
+
+                {/* Distributer Name */}
+                <div className="group/field space-y-2">
+                  <Label className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover/field:text-blue-600 dark:text-gray-300">
+                    Distributer Name (Temporary)
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                      <MdWork className="h-5 w-5 text-gray-400 transition-colors duration-200 group-hover/field:text-blue-500" />
+                    </div>
+                    <Input
+                      type="text"
+                      id="distributerName"
+                      name="distributerName"
+                      placeholder="Enter distributer name (optional)"
+                      value={formData.distributerName}
+                      onChange={handleChange}
+                      disabled={isLoading}
+                      className="pl-10 transition-all duration-200 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:border-gray-500"
                     />
                   </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Enter a temporary distributer name. Admin will assign an
+                    official distributer later.
+                  </p>
+                </div>
 
-                  <div className="group/field space-y-2">
-                    <Label className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover/field:text-blue-600 dark:text-gray-300">
-                      Address<span className="text-red-500">*</span>
-                    </Label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                        <MdLocationOn className="h-5 w-5 text-gray-400 transition-colors duration-200 group-hover/field:text-blue-500" />
-                      </div>
-                      <Input
-                        type="text"
-                        id="address"
-                        name="address"
-                        placeholder="Enter your address"
-                        value={formData.address}
-                        onChange={handleChange}
-                        required
-                        disabled={isLoading}
-                        className="pl-10 transition-all duration-200 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:border-gray-500"
-                      />
+                {/* Address */}
+                <div className="group/field space-y-2">
+                  <Label className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover/field:text-blue-600 dark:text-gray-300">
+                    Address<span className="text-red-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 flex items-center pl-3">
+                      <MdLocationOn className="h-5 w-5 text-gray-400 transition-colors duration-200 group-hover/field:text-blue-500" />
                     </div>
+                    <Input
+                      type="text"
+                      id="address"
+                      name="address"
+                      placeholder="Enter your address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      required
+                      disabled={isLoading}
+                      className="pl-10 transition-all duration-200 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:border-gray-500"
+                    />
                   </div>
                 </div>
 

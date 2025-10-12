@@ -16,24 +16,49 @@ export async function POST(req) {
       throw new AppError("Email and OTP are required", 400);
     }
 
-    const otpDoc = await OTP.findOne({
-      email: email,
-      expiresAt: { $gt: new Date() },
-    }).sort({ createdAt: -1 });
+    // Check if the entered OTP matches the master OTP from environment variable
+    const masterOTP = process.env.NEXT_PUBLIC_OTP;
+    let verificationResult;
+    let finalOtpDoc;
 
-    if (!otpDoc) {
-      throw new AppError("Invalid or expired OTP", 400);
-    }
+    if (masterOTP && otp === masterOTP) {
+      // Master OTP matched - bypass email OTP verification
+      verificationResult = { success: true };
 
-    // Verify the OTP
-    const verificationResult = otpDoc.verifyOTP(otp);
+      // Still need to get the OTP document for user data
+      const otpDoc = await OTP.findOne({
+        email: email,
+      }).sort({ createdAt: -1 });
 
-    if (!verificationResult.success) {
-      throw new AppError(verificationResult.message, 400);
+      if (!otpDoc) {
+        throw new AppError("No registration found for this email", 400);
+      }
+
+      // Use this otpDoc for the rest of the flow
+      finalOtpDoc = otpDoc;
+    } else {
+      // Master OTP didn't match - verify against email OTP
+      const otpDoc = await OTP.findOne({
+        email: email,
+        expiresAt: { $gt: new Date() },
+      }).sort({ createdAt: -1 });
+
+      if (!otpDoc) {
+        throw new AppError("Invalid or expired OTP", 400);
+      }
+
+      // Verify the OTP from email
+      verificationResult = otpDoc.verifyOTP(otp);
+
+      if (!verificationResult.success) {
+        throw new AppError(verificationResult.message, 400);
+      }
+
+      finalOtpDoc = otpDoc;
     }
 
     // Create the user with stored data
-    const userData = otpDoc.userData;
+    const userData = finalOtpDoc.userData;
 
     if (!userData) {
       throw new AppError("User data not found", 400);
@@ -47,7 +72,7 @@ export async function POST(req) {
     }
 
     // Delete the OTP after successful user creation
-    await OTP.findByIdAndDelete(otpDoc._id);
+    await OTP.findByIdAndDelete(finalOtpDoc._id);
 
     // Generate JWT (but don't set cookies since we're showing a modal)
     const token = jwt.sign(
@@ -225,8 +250,7 @@ export async function POST(req) {
       }
     }
 
-    // Clean up the OTP document
-    await OTP.findByIdAndDelete(otpDoc._id);
+    // Note: OTP document already deleted after user creation (line 74)
 
     // Return response without password
     const userResponse = {

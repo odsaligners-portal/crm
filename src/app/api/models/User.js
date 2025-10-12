@@ -108,6 +108,11 @@ const userSchema = new mongoose.Schema(
       ref: "Distributer",
       default: null,
     },
+    distributerName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
     distributerAccess: {
       type: Boolean,
       default: false,

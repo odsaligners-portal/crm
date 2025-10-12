@@ -198,7 +198,8 @@
 } */
 
 body {
-  font-family: "Righteous", sans-serif;
+  /* font-family: "Outfit", sans-serif; */
+  font-family: "Outfit", sans-serif;
 }
 
 @utility menu-item {

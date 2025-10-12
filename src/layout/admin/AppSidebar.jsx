@@ -1,34 +1,27 @@
 "use client";
 import { useSidebar } from "@/context/SidebarContext";
-import {
-  MdDashboard,
-  MdTableChart,
-  MdAdd,
-  MdComment,
-  MdEvent,
-  MdPerson,
-  MdDescription,
-  MdPieChart,
-  MdWidgets,
-  MdLogin,
-  MdList,
-  MdPageview,
-  MdMenuBook,
-  MdVideoLibrary,
-  MdNotifications,
-  MdAdminPanelSettings,
-  MdLoop,
-  MdLockReset,
-  MdMoney,
-  MdMoneyOffCsred,
-  MdAttachMoney,
-  MdManageAccounts,
-} from "react-icons/md";
+import { ChevronDownIcon } from "@/icons";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDownIcon } from "@/icons";
+import {
+  MdAdminPanelSettings,
+  MdAttachMoney,
+  MdComment,
+  MdDashboard,
+  MdDescription,
+  MdEvent,
+  MdList,
+  MdLockReset,
+  MdLogin,
+  MdManageAccounts,
+  MdMenuBook,
+  MdNotifications,
+  MdPerson,
+  MdTableChart,
+  MdVideoLibrary,
+} from "react-icons/md";
 import { useSelector } from "react-redux";
 
 const baseNavItems = [
@@ -135,6 +128,12 @@ const baseNavItems = [
         pro: false,
       },
       {
+        name: "Reassign Planner",
+        path: "/admin/planners/reassign-planner",
+        pro: false,
+        requirePlannerAccess: true,
+      },
+      {
         name: "Assign Deadline Time",
         path: "/admin/planners/deadline-time",
         pro: false,
@@ -145,6 +144,11 @@ const baseNavItems = [
         path: "/admin/planners/planner-report",
         pro: false,
         requirePlannerAccess: true,
+      },
+      {
+        name: "Upload STL File",
+        path: "/admin/upload-stl",
+        pro: false,
       },
     ],
   },
@@ -370,7 +374,7 @@ const AppSidebar = () => {
   };
 
   const renderMenuItems = (navItems, menuType) => (
-    <ul className="flex flex-col gap-1"> 
+    <ul className="flex flex-col gap-1">
       {navItems.map((nav, index) => (
         <li key={nav.name}>
           {nav.subItems ? (

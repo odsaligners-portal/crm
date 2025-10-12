@@ -23,6 +23,7 @@ export async function POST(req) {
       address,
       alternateAddresses,
       profilePicture,
+      distributerName,
     } = await req.json();
 
     if (!name || !email || !password) {
@@ -56,6 +57,7 @@ export async function POST(req) {
       doctorType,
       address,
       alternateAddresses: alternateAddresses || [],
+      ...(distributerName ? { distributerName } : {}),
       ...(profilePicture ? { profilePicture } : {}),
     };
 

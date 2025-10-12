@@ -12,13 +12,13 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
   const [fileName, setFileName] = useState("");
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [editorKey, setEditorKey] = useState(0); // Key to force re-render
+  const [editorKey, setEditorKey] = useState(0); 
 
   useEffect(() => {
     if (isOpen) {
       setFileName("");
       setFiles([]);
-      setEditorKey((prevKey) => prevKey + 1); // Change key to re-mount the editor
+      setEditorKey((prevKey) => prevKey + 1); 
     }
   }, [isOpen, patient]);
 
@@ -34,7 +34,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
     },
   });
 
-  console.log(fileName)
+  console.log(fileName);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -136,7 +136,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="mb-2 block font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
-                File Name
+                Set-Up Remark/Rx Remarks
               </label>
               <Editor
                 key={editorKey}

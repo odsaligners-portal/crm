@@ -228,7 +228,13 @@ export default function AssignDistributer() {
                 isHeader
                 className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
               >
-                Distributer
+                Temp. Distributer Name
+              </TableCell>
+              <TableCell
+                isHeader
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
+              >
+                Assigned Distributer
               </TableCell>
               <TableCell
                 isHeader
@@ -241,13 +247,13 @@ export default function AssignDistributer() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center">
+                <TableCell colSpan={8} className="py-8 text-center">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : filteredDoctors.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-8 text-center">
+                <TableCell colSpan={8} className="py-8 text-center">
                   No doctors found.
                 </TableCell>
               </TableRow>
@@ -272,6 +278,17 @@ export default function AssignDistributer() {
                   </TableCell>
                   <TableCell className="px-2 py-1 text-center font-medium">
                     {doctor.mobile}
+                  </TableCell>
+                  <TableCell className="px-2 py-1 text-center font-medium">
+                    {doctor.distributerName ? (
+                      <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 dark:bg-amber-900/40 dark:text-amber-200">
+                        {doctor.distributerName}
+                      </span>
+                    ) : (
+                      <span className="text-gray-400 dark:text-gray-500">
+                        -
+                      </span>
+                    )}
                   </TableCell>
                   <TableCell className="px-2 py-1 text-center font-medium">
                     <select

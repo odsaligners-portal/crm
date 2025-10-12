@@ -8,9 +8,12 @@ import { setLoading as setGlobalLoading } from "@/store/features/uiSlice";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useRouter } from "next/navigation";
+import { toast } from "react-toastify";
 
 export default function NotificationsPage() {
   const dispatch = useDispatch();
+  const router = useRouter();
   const { token, user } = useSelector((state) => state.auth);
   const notifications = useSelector(
     (state) => state.notification.notifications,
@@ -77,6 +80,55 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleNotificationClick = async (notification) => {
+    // Extract caseId from the notification title
+    // Handles formats like "(Case ID: ABC123)" or "(Case ID: +1-ABC123)"
+    const caseIdMatch = notification.title.match(/\(Case ID:\s*([+\-\w]+)\)/);
+
+    if (!caseIdMatch || !caseIdMatch[1]) {
+      toast.error("Unable to find Case ID in notification");
+      return;
+    }
+
+    const caseId = caseIdMatch[1].trim();
+
+    try {
+      dispatch(setGlobalLoading(true));
+
+      // Find patient by caseId
+      const response = await fetch(
+        `/api/doctor/patients/find-by-case-id?caseId=${encodeURIComponent(caseId)}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.patientId) {
+          // Mark as read before navigating
+          await handleMarkAsRead(notification._id);
+
+          // Navigate to patient details page
+          router.push(
+            `/doctor/patients/view-patient-details?id=${data.patientId}`,
+          );
+        } else {
+          toast.error("Patient not found");
+        }
+      } else {
+        const errorData = await response.json();
+        toast.error(errorData.error || "Failed to find patient");
+      }
+    } catch (error) {
+      toast.error("Error navigating to patient details");
+    } finally {
+      dispatch(setGlobalLoading(false));
+    }
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <h1 className="mb-6 text-3xl font-semibold subpixel-antialiased">
@@ -91,7 +143,8 @@ export default function NotificationsPage() {
             return (
               <div
                 key={n._id}
-                className={`group relative flex items-center justify-between rounded-xl p-3 transition-all duration-300 ${
+                onClick={() => handleNotificationClick(n)}
+                className={`group relative flex cursor-pointer items-center justify-between rounded-xl p-3 transition-all duration-300 ${
                   isRead
                     ? "border border-gray-200/70 bg-white/60 shadow-md backdrop-blur-md hover:-translate-y-1 hover:shadow-lg"
                     : "animate-fade-in border-2 border-transparent bg-gradient-to-br from-blue-50 via-white to-purple-50 bg-clip-padding shadow-xl hover:scale-[1.025] hover:shadow-blue-200"
@@ -138,14 +191,17 @@ export default function NotificationsPage() {
                     {!isRead && (
                       <button
                         className="mt-2 rounded bg-gradient-to-r from-blue-600 to-purple-500 px-3 py-1 text-xs font-semibold text-white subpixel-antialiased shadow-lg transition hover:from-blue-700 hover:to-purple-600 hover:shadow-xl"
-                        onClick={() => handleMarkAsRead(n._id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleMarkAsRead(n._id);
+                        }}
                       >
                         Mark as Read
                       </button>
                     )}
                   </div>
                 </div>
-                <div className="flex min-w-[40px] flex-col items-end">
+                <div className="flex min-w-[40px] flex-col items-end gap-2">
                   <span
                     className={`text-[11px] font-semibold tracking-wide subpixel-antialiased ${
                       isRead
@@ -155,6 +211,19 @@ export default function NotificationsPage() {
                   >
                     {isRead ? "Read" : "Unread"}
                   </span>
+                  <svg
+                    className="h-5 w-5 text-blue-500 transition-transform group-hover:translate-x-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5l7 7-7 7"
+                    />
+                  </svg>
                 </div>
               </div>
             );
