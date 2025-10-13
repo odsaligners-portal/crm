@@ -908,7 +908,7 @@ const DentalExaminationForm = () => {
     }
     if (!formData.caseCategory) {
       toast.error(
-        "🏷️ Please select the appropriate case category for treatment planning",
+        "🏷️ Please select the appropriate case category for Treatment Setup",
       );
       return;
     }
@@ -1153,7 +1153,7 @@ const DentalExaminationForm = () => {
     }
     if (!formData.caseCategory) {
       toast.error(
-        "🏷️ Please select the appropriate case category for treatment planning",
+        "🏷️ Please select the appropriate case category for Treatment Setup",
       );
       return;
     }
@@ -5624,7 +5624,7 @@ const DentalExaminationForm = () => {
                         🎯 3D Models (PLY/STL)
                       </h2>
                       <p className="text-orange-600">
-                        Upload 3D model files for treatment planning and
+                        Upload 3D model files for Treatment Setup and
                         visualization
                       </p>
                     </div>

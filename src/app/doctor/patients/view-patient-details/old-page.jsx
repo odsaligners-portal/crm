@@ -1539,7 +1539,7 @@ export default function ViewPatientDetails() {
             🎯 3D Models (PLY/STL)
           </h3>
           <p className="mb-4 text-sm text-orange-700">
-            3D model files for treatment planning and visualization
+            3D model files for Treatment Setup and visualization
           </p>
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {[...Array(2)].map((_, idx) => {

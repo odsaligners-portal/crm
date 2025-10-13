@@ -179,6 +179,9 @@ export async function POST(req) {
       patientData.scanFiles = scanFiles;
     }
 
+    // Set createdBy to the authenticated admin user
+    patientData.createdBy = authResult.user.id;
+
     // --- CASE ID GENERATION LOGIC ---
     // Note: state abbreviation no longer used in caseId format
 
@@ -423,9 +426,9 @@ export async function POST(req) {
           ? await User.findById(patient.userId).select("name email").lean()
           : null;
 
-        // Send notification email to all other admins
+        // Send notification email to ALL admins (including the one who created the patient)
         const allAdmins = await User.find(
-          { role: "admin", _id: { $ne: authResult.user.id } },
+          { role: "admin" },
           "email name",
         ).lean();
         const adminEmails = allAdmins

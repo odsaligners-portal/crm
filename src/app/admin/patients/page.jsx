@@ -1005,7 +1005,7 @@ export default function ViewPatientRecords() {
                     isHeader
                     className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
-                    Actions
+                    Case Details
                   </TableCell>
                 </TableRow>
               </TableHeader>

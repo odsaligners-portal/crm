@@ -685,7 +685,7 @@ export default function ViewPatientDetails() {
               >
                 <DocumentArrowDownIcon className="h-5 w-5" />
               </div>
-              <span className="text-sm">Scan Files</span>
+              <span className="text-sm">Setup Update</span>
             </button>
 
             <button
@@ -2781,7 +2781,7 @@ export default function ViewPatientDetails() {
                         🎯 3D Models (PLY/STL)
                       </h2>
                       <p className="text-orange-600">
-                        3D model files for treatment planning and visualization
+                        3D model files for Treatment Setup and visualization
                       </p>
                     </div>
                   </div>

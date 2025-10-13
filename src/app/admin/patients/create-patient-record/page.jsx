@@ -697,6 +697,9 @@ const DentalExaminationForm = () => {
 
       // Handle userId (doctor) change - reset case categories
       if (name === "userId") {
+        // Find the selected doctor from the doctors array
+        const selectedDoctor = doctors.find((doctor) => doctor._id === value);
+
         setFormData((prev) => ({
           ...prev,
           [name]: value,
@@ -704,6 +707,8 @@ const DentalExaminationForm = () => {
           caseCategory: "",
           selectedPrice: "",
           caseCategoryDetails: "",
+          // Auto-fill primary address with doctor's address
+          primaryAddress: selectedDoctor?.address || "",
         }));
 
         // Reset category breakdown when doctor changes
@@ -1037,7 +1042,7 @@ const DentalExaminationForm = () => {
           plannerId: formData.plannerId,
         };
 
-        const response = await fetch("/api/patients", {
+        const response = await fetch("/api/admin/patients", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -1262,7 +1267,7 @@ const DentalExaminationForm = () => {
           plannerId: formData.plannerId,
         };
 
-        const response = await fetch("/api/patients", {
+        const response = await fetch("/api/admin/patients", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -2368,16 +2373,17 @@ const DentalExaminationForm = () => {
                       {formData.shippingAddressType === "Primary Address" ? (
                         <div>
                           <label className="mb-2 block text-sm font-medium text-gray-700">
-                            Primary Address
+                            Primary Address (Auto-filled from Doctor's Address)
                           </label>
                           <textarea
                             name="primaryAddress"
                             value={formData.primaryAddress}
                             onChange={handleInputChange}
-                            placeholder="Enter primary address"
+                            placeholder="Select a doctor to auto-fill address"
                             rows="3"
                             maxLength={1500}
-                            className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none ${
+                            disabled={true}
+                            className={`w-full rounded-md border px-3 py-2 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none disabled:cursor-not-allowed disabled:bg-gray-100 ${
                               formData.primaryAddress &&
                               formData.primaryAddress.length > 1500
                                 ? "border-red-500"
@@ -5627,7 +5633,7 @@ const DentalExaminationForm = () => {
                         🎯 3D Models (PLY/STL)
                       </h2>
                       <p className="text-orange-600">
-                        Upload 3D model files for treatment planning and
+                        Upload 3D model files for Treatment Setup and
                         visualization
                       </p>
                     </div>

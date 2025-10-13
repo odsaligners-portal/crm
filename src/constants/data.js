@@ -70,7 +70,7 @@ export const terms = [
   {
     title: "2. Treatment Responsibility",
     content:
-      "Aligners treatment depends upon the following:\n- Treatment planning of the Doctor.\n- Compliance of the patient. Patient needs to wear the aligners for 20–22 hours/day for optimal results. Failing to do so will lead to inadequate results or ill-fitting as the teeth won’t be moving as planned by the software.\n- The Company’s role is limited only to fabricate the appliance as per the details or specifications provided by the Doctor. Appliances are fabricated on the basis of aligners biomechanics & tooth movements from the clear aligner therapy (response of which may vary from patient to patient). Under no circumstances shall the Company be liable towards the end-user i.e. the patient.",
+      "Aligners treatment depends upon the following:\n- Treatment Setup of the Doctor.\n- Compliance of the patient. Patient needs to wear the aligners for 20–22 hours/day for optimal results. Failing to do so will lead to inadequate results or ill-fitting as the teeth won’t be moving as planned by the software.\n- The Company’s role is limited only to fabricate the appliance as per the details or specifications provided by the Doctor. Appliances are fabricated on the basis of aligners biomechanics & tooth movements from the clear aligner therapy (response of which may vary from patient to patient). Under no circumstances shall the Company be liable towards the end-user i.e. the patient.",
   },
   {
     title: "3. 3D Video Disclaimer",

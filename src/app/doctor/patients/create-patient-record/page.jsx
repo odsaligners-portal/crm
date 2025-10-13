@@ -5527,7 +5527,7 @@ const DentalExaminationForm = () => {
                         🎯 3D Models (PLY/STL)
                       </h2>
                       <p className="text-orange-600">
-                        Upload 3D model files for treatment planning and
+                        Upload 3D model files for Treatment Setup and
                         visualization
                       </p>
                     </div>
