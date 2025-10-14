@@ -1,6 +1,7 @@
 import dbConnect from "@/app/api/config/db";
 import { admin, verifyAuth } from "@/app/api/middleware/authMiddleware";
 import CaseCategory from "@/app/api/models/CaseCategory";
+import "@/app/api/models/Distributer"; // Import to register the model for populate
 import { NextResponse } from "next/server";
 
 // GET - Fetch all case categories or fetch one by ID

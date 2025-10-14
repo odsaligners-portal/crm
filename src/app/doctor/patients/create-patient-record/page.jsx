@@ -282,9 +282,14 @@ const DentalExaminationForm = () => {
               }));
             }
             if (data.selectedPrice) {
+              // Convert the original price value to composite format for the select dropdown
+              const compositePrice = getCompositePriceValue(
+                data.selectedPrice,
+                data.caseCategory,
+              );
               setFormData((prev) => ({
                 ...prev,
-                selectedPrice: data.selectedPrice,
+                selectedPrice: compositePrice || data.selectedPrice,
               }));
             }
             if (data.caseCategoryDetails) {
@@ -843,6 +848,31 @@ const DentalExaminationForm = () => {
     }));
   };
 
+  // Helper function to extract original price value from the composite value
+  const getOriginalPriceValue = (compositeValue) => {
+    if (!compositeValue) return "";
+    // Extract the original value from format: "category__value__index"
+    const parts = compositeValue.split("__");
+    return parts.length >= 2 ? parts[1] : compositeValue;
+  };
+
+  // Helper function to convert original price value to composite format
+  const getCompositePriceValue = (originalValue, category) => {
+    if (!originalValue || !category) return "";
+    // Find the matching option in the case categories
+    const categoryData = caseCategories.find(
+      (cat) => cat.category === category,
+    );
+    if (!categoryData) return originalValue;
+
+    const planIndex = categoryData.plans.findIndex(
+      (plan) => plan.value === originalValue,
+    );
+    if (planIndex === -1) return originalValue;
+
+    return `${category}__${originalValue}__${planIndex}`;
+  };
+
   const handleSaveAndNext = async (nextTab) => {
     // Prevent multiple submissions
     if (isSaving) return;
@@ -989,9 +1019,14 @@ const DentalExaminationForm = () => {
 
       // If this is the first time, create a new patient record
       if (!patientId) {
+        const originalPrice = getOriginalPriceValue(formData.selectedPrice);
         const requestBody = {
           ...formData,
-          dentalExamination: formData,
+          selectedPrice: originalPrice, // Extract original value for backend
+          dentalExamination: {
+            ...formData,
+            selectedPrice: originalPrice, // Also update in dentalExamination
+          },
           dentalExaminationFiles: fileData,
         };
 
@@ -1029,9 +1064,14 @@ const DentalExaminationForm = () => {
       } else {
         // Update existing patient record
 
+        const originalPrice = getOriginalPriceValue(formData.selectedPrice);
         const requestBody = {
           ...formData,
-          dentalExamination: formData,
+          selectedPrice: originalPrice, // Extract original value for backend
+          dentalExamination: {
+            ...formData,
+            selectedPrice: originalPrice, // Also update in dentalExamination
+          },
           dentalExaminationFiles: fileData,
         };
 
@@ -1222,9 +1262,14 @@ const DentalExaminationForm = () => {
             : [],
         };
 
+        const originalPrice = getOriginalPriceValue(formData.selectedPrice);
         const requestBody = {
           ...formData,
-          dentalExamination: formData,
+          selectedPrice: originalPrice, // Extract original value for backend
+          dentalExamination: {
+            ...formData,
+            selectedPrice: originalPrice, // Also update in dentalExamination
+          },
           dentalExaminationFiles: fileData,
         };
 
@@ -1380,9 +1425,14 @@ const DentalExaminationForm = () => {
             : [],
         };
 
+        const originalPrice = getOriginalPriceValue(formData.selectedPrice);
         const requestBody = {
           ...formData,
-          dentalExamination: formData,
+          selectedPrice: originalPrice, // Extract original value for backend
+          dentalExamination: {
+            ...formData,
+            selectedPrice: originalPrice, // Also update in dentalExamination
+          },
           dentalExaminationFiles: fileData,
         };
 
@@ -1753,9 +1803,10 @@ const DentalExaminationForm = () => {
   }));
 
   const priceOptions = caseCategories.reduce((acc, cat) => {
-    acc[cat.category] = cat.plans.map((plan) => ({
+    acc[cat.category] = cat.plans.map((plan, index) => ({
       label: plan.label,
-      value: plan.value,
+      value: `${cat.category}__${plan.value}__${index}`, // Make value unique by combining category, plan value, and index
+      originalValue: plan.value, // Store original value for backend
     }));
     return acc;
   }, {});
