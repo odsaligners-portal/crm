@@ -155,6 +155,9 @@ export default function PlannerPatientRecords() {
       // Basic Patient Information
       "Case ID": patient.caseId,
       "Patient Name": patient.patientName,
+      "Doctor Name": patient.userId?.name
+        ? `Dr. ${patient.userId.name}`
+        : "Not Assigned",
       Age: patient.age,
       Gender: patient.gender,
       "Treatment For": patient.treatmentFor,
@@ -356,6 +359,7 @@ export default function PlannerPatientRecords() {
     const colWidths = [
       { wch: 20 }, // Case ID
       { wch: 20 }, // Patient Name
+      { wch: 20 }, // Doctor Name
       { wch: 8 }, // Age
       { wch: 10 }, // Gender
       { wch: 15 }, // Treatment For
@@ -729,6 +733,12 @@ export default function PlannerPatientRecords() {
                     isHeader
                     className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
+                    Doctor Name
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
+                  >
                     Location
                   </TableCell>
                   <TableCell
@@ -804,6 +814,13 @@ export default function PlannerPatientRecords() {
                             </span>
                           )}
                         </span>
+                      </TableCell>
+                      <TableCell className="px-2 py-1 text-center">
+                        <div className="text-[10px] leading-tight font-medium text-gray-900 dark:text-gray-100">
+                          {patient.userId?.name
+                            ? `Dr. ${patient.userId.name}`
+                            : "Not Assigned"}
+                        </div>
                       </TableCell>
                       <TableCell className="px-2 py-1 text-center">
                         <div className="text-[10px] leading-tight">
