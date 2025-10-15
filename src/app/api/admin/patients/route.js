@@ -3,6 +3,7 @@ import dbConnect from "@/app/api/config/db";
 import { NextResponse } from "next/server";
 import Patient from "@/app/api/models/Patient";
 import User from "@/app/api/models/User";
+import DeadlineTime from "@/app/api/models/DeadlineTime";
 import { admin } from "../../middleware/authMiddleware";
 import { sendEmail } from "@/app/api/utils/mailer";
 
@@ -411,6 +412,35 @@ export async function POST(req) {
       patientData.caseId = await generateUniqueCaseId(patientData.country);
     }
 
+    // If plannerId is provided, calculate and set deadline
+    if (patientData.plannerId) {
+      // Fetch deadline time from database
+      const deadlineTime = await DeadlineTime.findOne();
+
+      if (deadlineTime) {
+        // Calculate deadline: current time + deadline duration
+        const now = new Date();
+        const deadlineDate = new Date(now);
+
+        // Add days, hours, and minutes
+        deadlineDate.setDate(deadlineDate.getDate() + (deadlineTime.days || 0));
+        deadlineDate.setHours(
+          deadlineDate.getHours() + (deadlineTime.hours || 0),
+        );
+        deadlineDate.setMinutes(
+          deadlineDate.getMinutes() + (deadlineTime.minutes || 0),
+        );
+
+        // Add deadline fields
+        patientData.plannerAssignedAt = now;
+        patientData.plannerDeadline = deadlineDate;
+      } else {
+        // If no deadline time is set, still record the assignment time
+        patientData.plannerAssignedAt = new Date();
+        patientData.plannerDeadline = null;
+      }
+    }
+
     const patient = await Patient.create(patientData);
 
     // Send email notifications for new patient creation by admin
@@ -598,6 +628,94 @@ export async function POST(req) {
             subject: `New Patient Assigned to You: ${patient.patientName}`,
             html: doctorNotificationHtml,
           });
+        }
+
+        // Send notification email to assigned planner (if any)
+        if (patient.plannerId) {
+          const assignedPlanner = await User.findById(patient.plannerId)
+            .select("name email")
+            .lean();
+
+          if (assignedPlanner && assignedPlanner.email) {
+            const plannerNotificationHtml = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>New Patient Assignment</title>
+                <style>
+                  body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
+                  .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  .header { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
+                  .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+                  .content { margin-bottom: 30px; }
+                  .patient-info { background: #eff6ff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3b82f6; }
+                  .patient-info h3 { margin: 0 0 15px 0; color: #3b82f6; font-size: 18px; }
+                  .patient-info p { margin: 5px 0; }
+                  .deadline-box { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 15px; margin: 20px 0; }
+                  .deadline-box h4 { margin: 0 0 10px 0; color: #92400e; }
+                  .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #6b7280; font-size: 14px; }
+                  .cta-button { display: inline-block; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
+                  .cta-button:hover { opacity: 0.9; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="header">
+                    <h1>🎯 New Patient Assigned</h1>
+                  </div>
+                  
+                  <div class="content">
+                    <p>Hello ${assignedPlanner.name || "Planner"},</p>
+                    
+                    <p>You have been assigned to a new patient case that needs your attention.</p>
+                    
+                    <div class="patient-info">
+                      <h3>👤 Patient Information</h3>
+                      <p><strong>Patient Name:</strong> ${patient.patientName}</p>
+                      <p><strong>Case ID:</strong> ${patient.caseId}</p>
+                      <p><strong>Doctor:</strong> ${assignedDoctor ? `Dr. ${assignedDoctor.name}` : "Not assigned yet"}</p>
+                      <p><strong>Assigned By:</strong> ${adminUser.name}</p>
+                      <p><strong>Assignment Date:</strong> ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    
+                    ${
+                      patient.plannerDeadline
+                        ? `
+                    <div class="deadline-box">
+                      <h4>⏰ Deadline Information</h4>
+                      <p><strong>Deadline:</strong> ${new Date(patient.plannerDeadline).toLocaleString()}</p>
+                      <p style="margin-top: 10px; font-size: 14px;">Please complete the setup before this deadline.</p>
+                    </div>
+                    `
+                        : ""
+                    }
+                    
+                    <p>Please log in to your dashboard to start working on this case.</p>
+                    
+                    <div style="text-align: center;">
+                      <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/planner/patients" class="cta-button">
+                        🔗 Go to Dashboard
+                      </a>
+                    </div>
+                  </div>
+                  
+                  <div class="footer">
+                    <p>This is an automated notification from the Patient Management System.</p>
+                    <p>Please do not reply to this email.</p>
+                  </div>
+                </div>
+              </body>
+              </html>
+            `;
+
+            await sendEmail({
+              to: assignedPlanner.email,
+              subject: `New Patient Assignment - ${patient.patientName} (Case ID: ${patient.caseId})`,
+              html: plannerNotificationHtml,
+            });
+          }
         }
       }
     } catch (emailError) {

@@ -11,9 +11,9 @@ import Distributer from "@/app/api/models/Distributer";
 export const GET = async (req) => {
   try {
     await dbConnect();
-  
+
     const authResult = await verifyAuth(req);
-    
+
     if (!authResult.success) {
       return NextResponse.json({ message: authResult.error }, { status: 401 });
     }
@@ -146,7 +146,10 @@ export async function POST(request) {
     let commenter;
     console.log(doctor);
 
-    if (doctor.distributerId && doctor.distributerId._id.toString() === user.id) {
+    if (
+      doctor.distributerId &&
+      doctor.distributerId._id.toString() === user.id
+    ) {
       commenter = await Distributer.findById(user.id);
     } else {
       commenter = await User.findById(user.id);
@@ -224,13 +227,20 @@ export async function POST(request) {
 
       // Set up based on commenter role
       if (commenter.role === "admin") {
-        // Notify doctor and distributer
+        // Notify doctor, distributer, and all other admins
         if (patient?.userId?.email) recipients.push(patient?.userId.email);
         if (doctor?.distributerId?.email)
           recipients.push(doctor?.distributerId?.email);
 
+        // Add all admins except the commenter
+        adminEmails.forEach((email) => {
+          if (email !== commenter.email) {
+            recipients.push(email);
+          }
+        });
+
         subjectPrefix = "An Admin has added a new comment";
-        greeting = "Hello,";
+        greeting = "Hello Team,";
       } else if (commenter.role === "doctor") {
         // Notify admins and distributer
         recipients = [...adminEmails];
@@ -313,6 +323,17 @@ export async function POST(request) {
 
       // Notify distributor
       addUserIfValid(doctor?.distributerId, "distributor");
+
+      // Notify all other admins
+      admins.forEach((admin) => {
+        if (admin._id.toString() !== commenter._id.toString()) {
+          notificationUsers.push({
+            user: admin._id,
+            role: "admin",
+            read: false,
+          });
+        }
+      });
     } else if (commenterRole === "doctor") {
       // Notify all admins
       admins.forEach((admin) => {

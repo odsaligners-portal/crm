@@ -15,6 +15,7 @@ import {
   FolderIcon,
   DocumentArrowDownIcon,
   ChatBubbleLeftRightIcon,
+  TrashIcon,
 } from "@heroicons/react/24/solid";
 
 // File Display Component
@@ -186,11 +187,12 @@ export default function ViewPatientDetails() {
   const searchParams = useSearchParams();
   const dispatch = useDispatch();
   const { loading } = useSelector((state) => state.ui);
-  const { token } = useSelector((state) => state.auth);
+  const { token, user } = useSelector((state) => state.auth);
   const [comments, setComments] = useState([]);
   const [patientFiles, setPatientFiles] = useState([]);
   const [specialComments, setSpecialComments] = useState([]);
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   // Clinic Images Modal States
   const [isClinicImagesModalOpen, setIsClinicImagesModalOpen] = useState(false);
@@ -199,6 +201,30 @@ export default function ViewPatientDetails() {
 
   // Clinic Images Section States
   const [expandedSection, setExpandedSection] = useState(null);
+
+  // Check if user is superadmin
+  useEffect(() => {
+    const checkSuperAdmin = async () => {
+      try {
+        const response = await fetch("/api/auth/check-superadmin", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setIsSuperAdmin(data.isSuperAdmin || false);
+        }
+      } catch (error) {
+        console.error("Error checking superadmin status:", error);
+        setIsSuperAdmin(false);
+      }
+    };
+
+    if (token) {
+      checkSuperAdmin();
+    }
+  }, [token]);
 
   // Load patient data when component mounts
   useEffect(() => {
@@ -297,6 +323,41 @@ export default function ViewPatientDetails() {
       const errorMsg = e.message || "Error fetching patient files";
       toast.error(errorMsg);
       setPatientFiles([]);
+    }
+  };
+
+  const handleDeleteFile = async (fileId) => {
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this setup update? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/api/admin/patients/files?fileId=${fileId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        toast.success("✅ Setup update deleted successfully!");
+        // Refresh the patient files list
+        fetchPatientFiles();
+      } else {
+        toast.error(`❌ ${data.message || "Failed to delete file"}`);
+      }
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      toast.error("❌ Failed to delete file");
     }
   };
 
@@ -3536,6 +3597,17 @@ export default function ViewPatientDetails() {
                                     </svg>
                                     Preview
                                   </a>
+                                )}
+
+                                {isSuperAdmin && (
+                                  <button
+                                    onClick={() => handleDeleteFile(file._id)}
+                                    className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none"
+                                    title="Delete setup update (Superadmin only)"
+                                  >
+                                    <TrashIcon className="h-4 w-4" />
+                                    Delete
+                                  </button>
                                 )}
                               </div>
                             </div>
