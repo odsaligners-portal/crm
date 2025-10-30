@@ -23,12 +23,12 @@ const MetricCard = ({ title, value, icon, colorClass }) => {
     >
       {/* Outer glow effect */}
       <div
-        className={`absolute -inset-1 bg-gradient-to-br ${colorClass} rounded-3xl opacity-30 blur-xl transition-opacity duration-500 group-hover:opacity-60`}
+        className={`absolute -inset-1 ${colorClass} rounded-3xl opacity-30 blur-xl transition-opacity duration-500 group-hover:opacity-60`}
       ></div>
 
       {/* Main card */}
       <div
-        className={`relative rounded-3xl bg-gradient-to-br p-8 ${colorClass} overflow-hidden border border-white/20 text-white shadow-2xl`}
+        className={`relative rounded-3xl p-8 ${colorClass} overflow-hidden border border-white/20 text-white shadow-2xl`}
       >
         {/* Animated background patterns */}
         <div className="absolute inset-0">
