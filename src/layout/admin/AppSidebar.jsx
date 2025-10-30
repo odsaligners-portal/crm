@@ -146,7 +146,7 @@ const baseNavItems = [
         requirePlannerAccess: true,
       },
       {
-        name: "Upload STL File",
+        name: "Re-Assign for STLs",
         path: "/admin/upload-stl",
         pro: false,
       },
@@ -384,7 +384,7 @@ const AppSidebar = () => {
                 openSubmenu?.type === menuType && openSubmenu?.index === index
                   ? "bg-blue-50 text-blue-700 dark:bg-slate-700 dark:text-blue-300"
                   : "text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-slate-800"
-              } ${!isExpanded && !isHovered ? "justify-center" : "justify-start"}`}
+              } ${!isExpanded && !isHovered ? "justify-center" : "justify-center"}`}
             >
               <span
                 className={`text-xl ${openSubmenu?.type === menuType && openSubmenu?.index === index ? "text-blue-600" : "text-gray-500"}`}
