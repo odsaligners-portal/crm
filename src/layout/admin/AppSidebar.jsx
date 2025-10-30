@@ -494,7 +494,7 @@ const AppSidebar = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`flex py-6 ${!isExpanded && !isHovered ? "justify-center" : "justify-start"}`}
+        className={`flex py-6 ${!isExpanded && !isHovered ? "justify-center" : "justify-center"}`}
       >
         <Link href="/" className="transition-all duration-200 hover:opacity-80">
           {isExpanded || isHovered || isMobileOpen ? (
