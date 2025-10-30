@@ -1,29 +1,31 @@
 "use client";
-import { useState } from "react";
-import { useSelector } from "react-redux";
 import Input from "@/components/form/input/InputField";
 import Button from "@/components/ui/button/Button";
-import STLUploadModal from "@/components/admin/STLUploadModal";
-import { toast } from "react-toastify";
 import { BoxCubeIcon } from "@/icons";
-
+import { useState } from "react";
+import { useSelector } from "react-redux";
+import { toast } from "react-toastify";
+ 
 export default function AdminUploadSTL() {
   const { token } = useSelector((state) => state.auth);
   const [caseId, setCaseId] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [patient, setPatient] = useState(null);
-  const [showSTLUploadModal, setShowSTLUploadModal] = useState(false);
-
+  const [planners, setPlanners] = useState([]);
+  const [loadingPlanners, setLoadingPlanners] = useState(false);
+  const [selectedPlannerId, setSelectedPlannerId] = useState("");
+  const [isReassigning, setIsReassigning] = useState(false);
+ 
   const handleSearch = async (e) => {
     e.preventDefault();
-
+ 
     if (!caseId.trim()) {
       toast.error("Please enter a case ID");
       return;
     }
-
+ 
     setIsSearching(true);
-
+ 
     try {
       const response = await fetch(
         `/api/admin/patients/find-by-case-id?caseId=${encodeURIComponent(caseId.trim())}`,
@@ -33,13 +35,13 @@ export default function AdminUploadSTL() {
           },
         },
       );
-
+ 
       const data = await response.json();
-
+ 
       if (!response.ok) {
         throw new Error(data.error || "Failed to find patient");
       }
-
+ 
       // Set patient data with the patientId from the response
       setPatient({
         _id: data.patientId,
@@ -54,19 +56,61 @@ export default function AdminUploadSTL() {
       setIsSearching(false);
     }
   };
-
-  const handleUploadClick = () => {
-    setShowSTLUploadModal(true);
+ 
+  const fetchPlanners = async () => {
+    if (!token) return;
+    setLoadingPlanners(true);
+    try {
+      const res = await fetch("/api/admin/other-admins?role=planner", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to fetch planners");
+      setPlanners(data.admins || []);
+    } catch (err) {
+      toast.error(err.message || "Failed to fetch planners");
+      setPlanners([]);
+    } finally {
+      setLoadingPlanners(false);
+    }
   };
-
-  const handleUploadSuccess = () => {
-    toast.success("STL file uploaded successfully!");
-    // Reset form
-    setCaseId("");
-    setPatient(null);
-    setShowSTLUploadModal(false);
+ 
+  const handleReassign = async () => {
+    if (!patient?._id) {
+      toast.error("No patient selected");
+      return;
+    }
+    if (!selectedPlannerId) {
+      toast.error("Please select a planner");
+      return;
+    }
+    setIsReassigning(true);
+    try {
+      const res = await fetch("/api/admin/patients/stl-reassign", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          patientId: patient._id,
+          plannerId: selectedPlannerId,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to reassign STL");
+      toast.success("STL cleared and reassigned to planner successfully");
+      // reset form
+      setCaseId("");
+      setPatient(null);
+      setSelectedPlannerId("");
+    } catch (err) {
+      toast.error(err.message || "Failed to reassign STL");
+    } finally {
+      setIsReassigning(false);
+    }
   };
-
+ 
   return (
     <div className="mx-auto max-w-4xl p-6">
       {/* Header Section */}
@@ -77,14 +121,15 @@ export default function AdminUploadSTL() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-              Upload STL File
+              Reassign STL to Planner
             </h1>
             <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
-              Upload STL files for patients without affecting planner deadlines
+              Clear the existing STL file and allow a planner to upload a new
+              one
             </p>
           </div>
         </div>
-
+ 
         {/* Info Banner */}
         <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20">
           <div className="flex items-start gap-3">
@@ -107,23 +152,24 @@ export default function AdminUploadSTL() {
               <h3 className="mb-1 font-semibold text-blue-900 dark:text-blue-100">
                 Important Information
               </h3>
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                When you upload STL files through this admin panel, the
-                planner's deadline monitoring will NOT be
-                modified. This ensures accurate deadline tracking for planner
-                performance.
-              </p>
+              <ul className="list-disc pl-5 text-sm text-blue-800 dark:text-blue-200">
+                <li>Reassignment clears existing STL file and comments.</li>
+                <li>Planner will be able to upload a new STL immediately.</li>
+                <li>
+                  Planner deadline is recalculated based on configured SLA.
+                </li>
+              </ul>
             </div>
           </div>
         </div>
       </div>
-
+ 
       {/* Search Section */}
       <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
           Search Patient by Case ID
         </h2>
-
+ 
         <form onSubmit={handleSearch} className="space-y-4">
           <div>
             <Input
@@ -134,7 +180,7 @@ export default function AdminUploadSTL() {
               required
             />
           </div>
-
+ 
           <Button
             type="submit"
             disabled={isSearching}
@@ -166,14 +212,14 @@ export default function AdminUploadSTL() {
           </Button>
         </form>
       </div>
-
-      {/* Patient Info and Upload Section */}
+ 
+      {/* Patient Info and Reassign Section */}
       {patient && (
         <div className="mb-8 rounded-2xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
           <h2 className="mb-4 text-xl font-semibold text-gray-900 dark:text-white">
             Patient Information
           </h2>
-
+ 
           <div className="mb-6 space-y-3 rounded-xl border border-green-100 bg-gradient-to-r from-green-50 to-blue-50 p-4 dark:border-gray-600 dark:from-gray-700 dark:to-gray-700">
             <div className="flex items-center space-x-3">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-500 text-white">
@@ -191,44 +237,59 @@ export default function AdminUploadSTL() {
               </div>
             </div>
           </div>
-
-          <div className="flex gap-3">
-            <Button
-              onClick={handleUploadClick}
-              className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg"
-            >
-              <div className="flex items-center justify-center space-x-2">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-                  />
-                </svg>
-                <span>Upload STL File</span>
-              </div>
-            </Button>
-
-            <Button
-              onClick={() => {
-                setCaseId("");
-                setPatient(null);
-              }}
-              variant="outline"
-              className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-            >
-              Clear
-            </Button>
+ 
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Select Planner
+              </label>
+              <select
+                className="w-full rounded-xl border-2 border-gray-200 bg-white/80 px-4 py-3 text-gray-900 backdrop-blur-sm transition-all duration-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 focus:outline-none disabled:cursor-not-allowed disabled:border-gray-300 disabled:bg-gray-100 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100"
+                value={selectedPlannerId}
+                onChange={(e) => setSelectedPlannerId(e.target.value)}
+                onFocus={() => planners.length === 0 && fetchPlanners()}
+                disabled={loadingPlanners}
+              >
+                <option value="">
+                  {loadingPlanners
+                    ? "Loading planners..."
+                    : planners.length === 0
+                      ? "No planners available"
+                      : "Select Planner"}
+                </option>
+                {planners.map((planner) => (
+                  <option key={planner._id} value={planner._id}>
+                    {planner.name} ({planner.email})
+                  </option>
+                ))}
+              </select>
+            </div>
+ 
+            <div className="flex items-end gap-3">
+              <Button
+                onClick={handleReassign}
+                disabled={isReassigning || !selectedPlannerId}
+                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 text-white shadow-md transition-all duration-300 hover:from-green-600 hover:to-green-700 hover:shadow-lg disabled:opacity-60"
+              >
+                {isReassigning ? "Reassigning..." : "Reassign STL to Planner"}
+              </Button>
+ 
+              <Button
+                onClick={() => {
+                  setCaseId("");
+                  setPatient(null);
+                  setSelectedPlannerId("");
+                }}
+                variant="outline"
+                className="border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              >
+                Clear
+              </Button>
+            </div>
           </div>
         </div>
       )}
-
+ 
       {/* No Results Message */}
       {!patient && caseId && !isSearching && (
         <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center dark:border-gray-700 dark:bg-gray-800">
@@ -250,17 +311,8 @@ export default function AdminUploadSTL() {
           </p>
         </div>
       )}
-
-      {/* STL Upload Modal */}
-      {showSTLUploadModal && patient && (
-        <STLUploadModal
-          isOpen={showSTLUploadModal}
-          onClose={() => setShowSTLUploadModal(false)}
-          patient={patient}
-          token={token}
-          onSuccess={handleUploadSuccess}
-        />
-      )}
+ 
+      {/* No modal needed for reassignment */}
     </div>
   );
 }
