@@ -155,7 +155,7 @@ export default function AdminDashboard() {
                 title="Total Patients"
                 value={stats?.totalPatients ?? "..."}
                 icon={<MdPeople className="h-8 w-8" />}
-                colorClass="from-blue-500 to-blue-600"
+                colorClass="bg-[#00b9fc]"
               />
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function AdminDashboard() {
                 title="Total Doctors"
                 value={stats?.totalDoctors ?? "..."}
                 icon={<MdLocalHospital className="h-8 w-8" />}
-                colorClass="from-purple-500 to-purple-600"
+                colorClass="bg-yellow"
               />
             </div>
           </div>
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
                 title="New Patients (This Month)"
                 value={stats?.newPatientsThisMonth ?? "..."}
                 icon={<MdPersonAdd className="h-8 w-8" />}
-                colorClass="from-green-500 to-green-600"
+                 colorClass="bg-green"
               />
             </div>
           </div>
