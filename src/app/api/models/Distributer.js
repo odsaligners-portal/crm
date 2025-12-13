@@ -20,6 +20,11 @@ const distributerSchema = new mongoose.Schema(
       lowercase: true,
       match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
     },
+    oldEmail: {
+      type: String,
+      default: null,
+      trim: true,
+    },
     password: {
       type: String,
       required: [true, "Please provide a password"],

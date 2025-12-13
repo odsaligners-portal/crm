@@ -42,6 +42,7 @@ export default function Profile() {
             id: response.user.id || "-",
             name: response.user.name || "-",
             email: response.user.email || "-",
+            oldEmail: response.user.oldEmail || null,
             mobile: response.user.mobile || "-",
             gender: response.user.gender || "-",
             country: response.user.country || "-",

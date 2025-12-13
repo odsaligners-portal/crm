@@ -91,6 +91,7 @@ export async function GET(req) {
         id: user._id,
         name: user.name,
         email: user.email,
+        oldEmail: user.oldEmail || null,
         role: user.role,
         userDeleteAccess: user.userDeleteAccess,
         eventUpdateAccess: user.eventUpdateAccess,
@@ -137,8 +138,11 @@ export async function PUT(req) {
     // Get request body
     const body = await req.json();
 
-    // Allow updating all fields provided in the body
+    // Allow updating all fields provided in the body, but exclude email and oldEmail
+    // Email can only be changed through the OTP verification endpoint
     const updateData = { ...body };
+    delete updateData.email;
+    delete updateData.oldEmail;
 
     const updatedUser = await User.findByIdAndUpdate(
       user.id,
@@ -155,6 +159,7 @@ export async function PUT(req) {
         id: updatedUser._id,
         name: updatedUser.name,
         email: updatedUser.email,
+        oldEmail: updatedUser.oldEmail || null,
         role: updatedUser.role,
         mobile: updatedUser.mobile,
         gender: updatedUser.gender,

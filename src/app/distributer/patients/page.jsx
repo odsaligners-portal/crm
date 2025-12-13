@@ -752,6 +752,12 @@ export default function ViewPatientRecords() {
                     isHeader
                     className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
+                    Doctor Name
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
+                  >
                     Location
                   </TableCell>
                   <TableCell
@@ -802,6 +808,11 @@ export default function ViewPatientRecords() {
                           </span>
                         )}
                       </span>
+                    </TableCell>
+                    <TableCell className="px-2 py-1 text-center">
+                      <div className="text-[10px] font-medium text-blue-600 dark:text-blue-400">
+                        {patient.userId?.name || "-"}
+                      </div>
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center">
                       <div className="text-[10px] leading-tight">

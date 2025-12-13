@@ -16,7 +16,12 @@ import {
 export default function UserInfoCard({ userData }) {
   const userInfo = [
     { label: "Full Name", value: userData.name, icon: <FaUser /> },
-    { label: "Email", value: userData.email, icon: <FaEnvelope /> },
+    {
+      label: "Email",
+      value: userData.email,
+      icon: <FaEnvelope />,
+      oldValue: userData.oldEmail,
+    },
     { label: "Mobile", value: userData.mobile, icon: <FaPhone /> },
     { label: "Gender", value: userData.gender, icon: <FaVenusMars /> },
     { label: "Country", value: userData.country, icon: <FaFlag /> },
@@ -61,6 +66,11 @@ export default function UserInfoCard({ userData }) {
               <p className="font-medium text-gray-800 dark:text-white/90">
                 {info.value}
               </p>
+              {info.oldValue && (
+                <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                  Previous: {info.oldValue}
+                </p>
+              )}
             </div>
           </div>
         ))}

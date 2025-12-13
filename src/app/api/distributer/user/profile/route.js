@@ -34,6 +34,7 @@ export async function GET(req) {
         id: user._id,
         name: user.name,
         email: user.email,
+        oldEmail: user.oldEmail || null,
         role: user.role,
         userDeleteAccess: user.userDeleteAccess,
         eventUpdateAccess: user.eventUpdateAccess,
@@ -65,52 +66,64 @@ export async function GET(req) {
   }
 }
 
-// export async function PUT(req) {
-//   try {
-//     await connectDB();
+export async function PUT(req) {
+  try {
+    await connectDB();
 
-//     const authResult = await verifyAuth(req);
-//     if (!authResult.success) {
-//       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
-//     }
-//     const user = authResult.user;
+    // Get token from authorization header
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      throw new AppError("Not authorized", 401);
+    }
 
-//     // Get request body
-//     const body = await req.json();
+    const token = authHeader.split(" ")[1];
 
-//     // Allow updating all fields provided in the body
-//     const updateData = { ...body };
+    // Verify token
+    const decoded = jwt.verify(
+      token,
+      process.env.JWT_SECRET || "fallback_secret",
+    );
 
-//     const updatedUser = await User.findByIdAndUpdate(
-//       user.id,
-//       { $set: updateData },
-//       { new: true, runValidators: true }
-//     ).select('-password');
+    // Get request body
+    const body = await req.json();
 
-//     if (!updatedUser) {
-//       throw new AppError('User not found', 404);
-//     }
+    // Allow updating all fields provided in the body, but exclude email and oldEmail
+    // Email can only be changed through the OTP verification endpoint
+    const updateData = { ...body };
+    delete updateData.email;
+    delete updateData.oldEmail;
 
-//     return NextResponse.json({
-//       user: {
-//         id: updatedUser._id,
-//         name: updatedUser.name,
-//         email: updatedUser.email,
-//         role: updatedUser.role,
-//         mobile: updatedUser.mobile,
-//         gender: updatedUser.gender,
-//         country: updatedUser.country,
-//         state: updatedUser.state,
-//         city: updatedUser.city,
-//         experience: updatedUser.experience,
-//         doctorType: updatedUser.doctorType,
-//         address: updatedUser.address,
-//         profilePicture: updatedUser.profilePicture || { url: '', fileKey: '', uploadedAt: null },
-//       }
-//     });
+    const updatedUser = await Distributer.findByIdAndUpdate(
+      decoded.id,
+      { $set: updateData },
+      { new: true, runValidators: true },
+    ).select("-password");
 
-//   } catch (error) {
-//     console.error('Profile update error:', error);
-//     return handleError(error);
-//   }
-// }
+    if (!updatedUser) {
+      throw new AppError("User not found", 404);
+    }
+
+    return NextResponse.json({
+      user: {
+        id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        oldEmail: updatedUser.oldEmail || null,
+        role: updatedUser.role,
+        mobile: updatedUser.mobile,
+        country: updatedUser.country,
+        state: updatedUser.state,
+        city: updatedUser.city,
+        logo: updatedUser.logo || { url: "", fileKey: "", uploadedAt: null },
+        profilePicture: updatedUser.profilePicture || {
+          url: "",
+          fileKey: "",
+          uploadedAt: null,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Profile update error:", error);
+    return handleError(error);
+  }
+}

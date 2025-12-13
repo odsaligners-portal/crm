@@ -15,6 +15,8 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { MdEmail, MdLock, MdVisibility, MdVisibilityOff } from "react-icons/md";
+import ForgotPasswordModal from "./ForgotPasswordModal";
+import PasswordResetModal from "./PasswordResetModal";
 
 export default function SignInForm() {
   const router = useRouter();
@@ -25,6 +27,9 @@ export default function SignInForm() {
   const [isVisible, setIsVisible] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
   const [suspensionMessage, setSuspensionMessage] = useState("");
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showPasswordReset, setShowPasswordReset] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -220,9 +225,18 @@ export default function SignInForm() {
 
                 {/* Password Field */}
                 <div className="group/field space-y-2">
-                  <Label className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover/field:text-blue-600 dark:text-gray-300">
-                    Password
-                  </Label>
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover/field:text-blue-600 dark:text-gray-300">
+                      Password
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={() => setShowForgotPassword(true)}
+                      className="text-xs font-medium text-blue-600 transition-colors duration-200 hover:text-blue-500 dark:text-blue-400 dark:hover:text-blue-300"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 flex items-center pl-3">
                       <MdLock className="h-5 w-5 text-gray-400 transition-colors duration-200 group-hover/field:text-blue-500" />
@@ -430,6 +444,24 @@ export default function SignInForm() {
           </div>
         </div>
       )}
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        onOTPSent={(email) => {
+          setResetEmail(email);
+          setShowForgotPassword(false);
+          setShowPasswordReset(true);
+        }}
+      />
+
+      {/* Password Reset Modal */}
+      <PasswordResetModal
+        isOpen={showPasswordReset}
+        onClose={() => setShowPasswordReset(false)}
+        email={resetEmail}
+      />
     </div>
   );
 }

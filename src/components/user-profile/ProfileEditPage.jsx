@@ -17,9 +17,18 @@ export default function ProfileEditPage() {
     const fetchUser = async () => {
       dispatch(setLoading(true));
       try {
-        const res = await fetchWithError('/api/user/profile', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
+        // Try to fetch from user profile first
+        let res;
+        try {
+          res = await fetchWithError('/api/user/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        } catch (error) {
+          // If user profile fails, try distributer profile
+          res = await fetchWithError('/api/distributer/user/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+        }
         setUserData(res.user || {});
       } catch (e) {
         setUserData(null);

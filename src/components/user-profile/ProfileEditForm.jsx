@@ -16,11 +16,13 @@ import { toast } from "react-toastify";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { useSelector, useDispatch } from "react-redux";
 import { setLoading } from "@/store/features/uiSlice";
+import OTPVerificationModal from "@/components/auth/OTPVerificationModal";
 
 export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
   const { token } = useSelector((state) => state.auth);
   const { isLoading: isSubmitting } = useSelector((state) => state.ui);
   const dispatch = useDispatch();
+  const [originalEmail, setOriginalEmail] = useState(initialValues.email || "");
   const [formData, setFormData] = useState({
     name: initialValues.name || "",
     email: initialValues.email || "",
@@ -46,6 +48,12 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
   const [photoUploadedAt, setPhotoUploadedAt] = useState(
     initialValues.profilePicture?.uploadedAt || null,
   );
+  const [oldEmail, setOldEmail] = useState(initialValues.oldEmail || null);
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [pendingNewEmail, setPendingNewEmail] = useState("");
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false);
+  const [isSendingOTP, setIsSendingOTP] = useState(false);
+  const [emailError, setEmailError] = useState("");
 
   const countryOptions = useMemo(
     () =>
@@ -137,14 +145,163 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
     multiple: false,
   });
 
+  const handleEmailChange = (e) => {
+    const newEmail = e.target.value;
+    setFormData((prev) => ({ ...prev, email: newEmail }));
+    // Clear error when user starts typing
+    if (emailError) {
+      setEmailError("");
+    }
+  };
+
+  const handleEmailBlur = async (e) => {
+    const newEmail = e.target.value.trim();
+    setEmailError(""); // Clear any previous errors
+
+    // If email changed from original and is valid, trigger OTP flow
+    if (
+      newEmail &&
+      newEmail.toLowerCase() !== originalEmail.toLowerCase() &&
+      /^\S+@\S+\.\S+$/.test(newEmail)
+    ) {
+      setPendingNewEmail(newEmail);
+      setShowOTPModal(true);
+      await handleSendOTP(newEmail);
+    }
+  };
+
+  const handleSendOTP = async (email) => {
+    if (!email) return;
+    setIsSendingOTP(true);
+    setEmailError(""); // Clear any previous errors
+    try {
+      // Determine API endpoint based on user role
+      const apiEndpoint =
+        initialValues.role === "distributer"
+          ? "/api/distributer/change-email/send-otp"
+          : "/api/user/change-email/send-otp";
+
+      await fetchWithError(apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newEmail: email }),
+        suppressToast: true, // Suppress toast since we show error below email field
+      });
+      toast.success("OTP sent to your new email address!");
+    } catch (error) {
+      setShowOTPModal(false);
+      setPendingNewEmail("");
+      // Revert email to original
+      setFormData((prev) => ({ ...prev, email: originalEmail }));
+      if (error && error.message) {
+        setEmailError(error.message);
+      } else {
+        setEmailError("Failed to send OTP. Please try again.");
+      }
+    } finally {
+      setIsSendingOTP(false);
+    }
+  };
+
+  const handleOTPVerify = async (otp) => {
+    if (!pendingNewEmail) return;
+    setIsVerifyingOTP(true);
+    setEmailError(""); // Clear any previous errors
+    try {
+      // Determine API endpoint based on user role
+      const apiEndpoint =
+        initialValues.role === "distributer"
+          ? "/api/distributer/change-email/verify-otp"
+          : "/api/user/change-email/verify-otp";
+
+      const res = await fetchWithError(apiEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newEmail: pendingNewEmail, otp }),
+        suppressToast: true, // Suppress toast since we show error below email field
+      });
+      toast.success("Email changed successfully!");
+      setShowOTPModal(false);
+      setPendingNewEmail("");
+      setEmailError(""); // Clear error on success
+      // Update oldEmail state and originalEmail
+      if (res.user) {
+        setOldEmail(res.user.oldEmail);
+        // Update formData email to the new email
+        setFormData((prev) => ({ ...prev, email: res.user.email }));
+        // Update originalEmail so future changes are compared against the new email
+        setOriginalEmail(res.user.email);
+        if (onSuccess) onSuccess(res);
+      }
+    } catch (error) {
+      if (error && error.message) {
+        setEmailError(error.message);
+      } else {
+        setEmailError("Failed to verify OTP. Please try again.");
+      }
+    } finally {
+      setIsVerifyingOTP(false);
+    }
+  };
+
+  const handleOTPResend = async () => {
+    if (pendingNewEmail) {
+      await handleSendOTP(pendingNewEmail);
+    }
+  };
+
+  const handleCloseOTPModal = () => {
+    setShowOTPModal(false);
+    setPendingNewEmail("");
+    setEmailError(""); // Clear error when modal is closed
+    // Revert email to original
+    setFormData((prev) => ({ ...prev, email: originalEmail }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Prevent submission if email has changed but OTP hasn't been verified
+    if (
+      formData.email.toLowerCase() !== originalEmail.toLowerCase() &&
+      !showOTPModal
+    ) {
+      setEmailError(
+        "Please verify your new email address with OTP before saving.",
+      );
+      // Trigger OTP flow if email is valid
+      const trimmedEmail = formData.email.trim();
+      if (trimmedEmail && /^\S+@\S+\.\S+$/.test(trimmedEmail)) {
+        setPendingNewEmail(trimmedEmail);
+        setShowOTPModal(true);
+        await handleSendOTP(trimmedEmail);
+      }
+      return;
+    }
+
+    // If OTP modal is open, don't allow form submission
+    if (showOTPModal) {
+      setEmailError(
+        "Please complete email verification before saving profile.",
+      );
+      return;
+    }
+
     try {
       const payload = {
         ...formData,
         country: formData.country?.label,
         state: formData.state?.label,
       };
+      // Never include email in payload - email can only be changed through OTP flow
+      delete payload.email;
+
       if (photoUrl && photoFileKey && photoUploadedAt) {
         payload.profilePicture = {
           url: photoUrl,
@@ -152,7 +309,13 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
           uploadedAt: photoUploadedAt,
         };
       }
-      const res = await fetchWithError("/api/user/profile", {
+      // Determine API endpoint based on user role
+      const profileApiEndpoint =
+        initialValues.role === "distributer"
+          ? "/api/distributer/user/profile"
+          : "/api/user/profile";
+
+      const res = await fetchWithError(profileApiEndpoint, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -239,7 +402,7 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
             required
           />
         </div>
-        {/* Email (disabled) */}
+        {/* Email (editable) */}
         <div>
           <Label>
             Email<span className="text-error-500">*</span>
@@ -250,11 +413,34 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
             name="email"
             placeholder="Enter your email"
             value={formData.email}
-            onChange={handleChange}
+            onChange={handleEmailChange}
+            onBlur={handleEmailBlur}
             required
-            disabled
-            className="cursor-not-allowed bg-gray-100 opacity-70 dark:bg-gray-800"
+            className={
+              emailError
+                ? "border-red-500"
+                : formData.email.toLowerCase() !== originalEmail.toLowerCase()
+                  ? "border-yellow-400"
+                  : ""
+            }
           />
+          {emailError && (
+            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+              {emailError}
+            </p>
+          )}
+          {oldEmail && !emailError && (
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+              Previous email: <span className="font-medium">{oldEmail}</span>
+            </p>
+          )}
+          {formData.email.toLowerCase() !== originalEmail.toLowerCase() &&
+            !emailError &&
+            !showOTPModal && (
+              <p className="mt-1 text-sm text-yellow-600 dark:text-yellow-400">
+                Please verify the OTP sent to your new email address
+              </p>
+            )}
         </div>
         {/* Mobile */}
         <div>
@@ -372,6 +558,16 @@ export default function ProfileEditForm({ initialValues = {}, onSuccess }) {
           {isSubmitting ? "Submitting..." : "Save Changes"}
         </button>
       </div>
+
+      {/* OTP Verification Modal */}
+      <OTPVerificationModal
+        isOpen={showOTPModal}
+        onClose={handleCloseOTPModal}
+        onVerify={handleOTPVerify}
+        onResend={handleOTPResend}
+        email={pendingNewEmail}
+        isLoading={isVerifyingOTP || isSendingOTP}
+      />
     </form>
   );
 }
