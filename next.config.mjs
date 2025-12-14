@@ -1,7 +1,7 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ['firebasestorage.googleapis.com'],
+    domains: ["firebasestorage.googleapis.com"],
   },
   eslint: {
     ignoreDuringBuilds: true,
@@ -9,8 +9,8 @@ const nextConfig = {
   async rewrites() {
     return [
       {
-        source: '/api/:path*',
-        destination: 'http://localhost:3000/api/:path*',
+        source: "/api/:path*",
+        destination: "http://localhost:3000/api/:path*",
       },
     ];
   },
@@ -19,10 +19,11 @@ const nextConfig = {
     config.module.rules = config.module.rules || [];
     config.module.rules.push({
       test: /\.svg$/,
-      use: ['@svgr/webpack'],
+      use: ["@svgr/webpack"],
     });
     return config;
   },
+  turbopack: {},
 };
 
 export default nextConfig;
