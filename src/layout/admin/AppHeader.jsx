@@ -115,16 +115,16 @@ const AppHeader = () => {
             <div className="relative overflow-hidden rounded-lg p-1">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 opacity-0 blur transition-opacity duration-500 group-hover:opacity-100"></div>
               <Image
-                width={154}
-                height={32}
-                className="relative z-10 transition-transform duration-300 group-hover:scale-105 dark:hidden"
+                width={200}
+                height={48}
+                className="relative z-10 opacity-80 transition-transform duration-300 group-hover:scale-105 dark:hidden"
                 src="/logo.jpeg"
                 alt="Logo"
               />
               <Image
-                width={154}
-                height={32}
-                className="relative z-10 hidden transition-transform duration-300 group-hover:scale-105 dark:block"
+                width={200}
+                height={48}
+                className="relative z-10 hidden opacity-80 transition-transform duration-300 group-hover:scale-105 dark:block"
                 src="/logo.jpeg"
                 alt="Logo"
               />

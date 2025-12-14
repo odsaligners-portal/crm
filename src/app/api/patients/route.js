@@ -426,6 +426,8 @@ export async function POST(req) {
       patientData.caseId = await generateUniqueCaseId(patientData.country);
     }
 
+    // Case start date will be set by admin on case dates page, not automatically
+
     // Create patient
     const patient = await Patient.create(patientData);
 
@@ -574,9 +576,11 @@ export async function POST(req) {
                     <p><strong>Doctor Email:</strong> ${doctor.email}</p>
                   </div>
                   
-                  <p>Please review the patient's information and take any necessary administrative actions.</p>
+                  <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                    <p style="margin: 0; color: #856404;"><strong>📅 Action Required:</strong> Please assign an end date for this case from the admin dashboard.</p>
+                  </div>
                   
-                
+                  <p>Please review the patient's information and take any necessary administrative actions.</p>
                 </div>
                 
                 <div class="footer">

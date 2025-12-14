@@ -73,19 +73,19 @@ export default function DistributerDashboard() {
           title="Total Patients"
           value={stats?.totalPatients ?? "..."}
           icon={<MdPeople className="h-8 w-8" />}
-          colorClass="from-blue-500 to-blue-600"
+          colorClass="bg-[#00b9fc]"
         />
         <MetricCard
           title="Approved Cases"
           value={stats?.approvedCases ?? "..."}
           icon={<MdEvent className="h-8 w-8" />}
-          colorClass="from-green-500 to-green-600"
+          colorClass="bg-[#eab308]"
         />
         <MetricCard
           title="Approval Pending"
           value={stats?.approvalPending ?? "..."}
           icon={<MdApproval className="h-8 w-8" />}
-          colorClass="from-yellow-500 to-yellow-600"
+          colorClass="bg-[#22c55e]"
         />
       </div>
 

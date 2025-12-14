@@ -11,6 +11,7 @@ import {
 import UpcomingEvents from "@/components/doctor/dashboard/UpcomingEvents";
 import DoctorQuickLinks from "@/components/doctor/dashboard/QuickLinks";
 import AtAGlancePatients from "@/components/doctor/dashboard/AtAGlancePatients";
+import CaseCountdownTimer from "@/components/common/CaseCountdownTimer";
 import { setLoading } from "@/store/features/uiSlice";
 
 export default function DoctorDashboard() {
@@ -19,6 +20,7 @@ export default function DoctorDashboard() {
   const [stats, setStats] = useState(null);
   const [events, setEvents] = useState([]);
   const [atAGlanceData, setAtAGlanceData] = useState([]);
+  const [casesWithEndDates, setCasesWithEndDates] = useState([]);
   const [loading, setLocalLoading] = useState(true);
   const dispatch = useDispatch();
 
@@ -39,8 +41,10 @@ export default function DoctorDashboard() {
         ]);
 
         const statsResult = await statsRes.json();
-        if (statsRes.ok) setStats(statsResult.data);
-        else toast.error(statsResult.message || "Failed to fetch stats.");
+        if (statsRes.ok) {
+          setStats(statsResult.data);
+          setCasesWithEndDates(statsResult.data?.casesWithEndDates || []);
+        } else toast.error(statsResult.message || "Failed to fetch stats.");
 
         const eventsResult = await eventsRes.json();
         if (eventsRes.ok) setEvents(eventsResult);
@@ -83,19 +87,19 @@ export default function DoctorDashboard() {
           title="My Patients"
           value={stats?.myPatients ?? "..."}
           icon={<MdFolderShared className="h-8 w-8" />}
-          colorClass="from-cyan-500 to-cyan-600"
+          colorClass="bg-[#00b9fc]"
         />
         <MetricCard
           title="Pending Cases"
           value={stats?.pendingCases ?? "..."}
           icon={<MdHourglassEmpty className="h-8 w-8" />}
-          colorClass="from-amber-500 to-amber-600"
+          colorClass="bg-[#eab308]"
         />
         <MetricCard
           title="Unread Notifications"
           value={unreadCount ?? "..."}
           icon={<MdNotifications className="h-8 w-8" />}
-          colorClass="from-indigo-500 to-indigo-600"
+          colorClass="bg-[#22c55e]"
         />
       </div>
 
@@ -104,6 +108,25 @@ export default function DoctorDashboard() {
           <AtAGlancePatients patients={atAGlanceData} />
         </div>
         <div className="space-y-6">
+          {/* Case Countdown Timers */}
+          {casesWithEndDates && casesWithEndDates.length > 0 && (
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+              <h2 className="mb-4 text-lg font-semibold text-gray-800 dark:text-gray-200">
+                ⏰ Case Countdown Timers
+              </h2>
+              <div className="space-y-4">
+                {casesWithEndDates.map((caseItem) => (
+                  <CaseCountdownTimer
+                    key={caseItem._id}
+                    endDate={caseItem.caseEndDate}
+                    startDate={caseItem.caseStartDate}
+                    caseId={caseItem.caseId}
+                    patientName={caseItem.patientName}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
           <DoctorQuickLinks />
           <UpcomingEvents events={events} />
         </div>

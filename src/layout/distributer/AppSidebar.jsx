@@ -184,32 +184,32 @@ const AppSidebar = () => {
         <Link href="/">
           {isLogoLoading ? (
             <div
-              className={`animate-pulse rounded bg-gray-200 dark:bg-gray-700 ${isExpanded || isHovered || isMobileOpen ? "h-10 w-36" : "h-8 w-8"}`}
+              className={`animate-pulse rounded bg-gray-200 dark:bg-gray-700 ${isExpanded || isHovered || isMobileOpen ? "h-14 w-56" : "h-12 w-12"}`}
             ></div>
           ) : (
             <>
               {isExpanded || isHovered || isMobileOpen ? (
-                <div className="relative h-10 w-36">
+                <div className="relative h-14 w-56">
                   <Image
                     fill
-                    className="object-contain dark:hidden"
+                    className="object-contain opacity-80 dark:hidden"
                     src={logoUrl}
                     alt="Logo"
                   />
                   <Image
                     fill
-                    className="hidden object-contain dark:block"
+                    className="hidden object-contain opacity-80 dark:block"
                     src={logoUrl}
                     alt="Logo"
                   />
                 </div>
               ) : (
-                <div className="relative h-8 w-8">
+                <div className="relative h-12 w-12">
                   <Image
                     fill
                     src={logoUrl}
                     alt="Logo"
-                    className="object-contain"
+                    className="object-contain opacity-80"
                   />
                 </div>
               )}

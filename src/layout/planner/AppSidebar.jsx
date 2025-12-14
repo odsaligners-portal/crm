@@ -133,22 +133,28 @@ const AppSidebar = () => {
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <Image
-                className="dark:hidden"
+                className="opacity-80 dark:hidden"
                 src="/logo.jpeg"
                 alt="Logo"
-                width={150}
-                height={40}
+                width={200}
+                height={56}
               />
               <Image
-                className="hidden dark:block"
+                className="hidden opacity-80 dark:block"
                 src="/logo.jpeg"
                 alt="Logo"
-                width={150}
-                height={40}
+                width={200}
+                height={56}
               />
             </>
           ) : (
-            <Image src="/logo.jpeg" alt="Logo" width={32} height={32} />
+            <Image
+              src="/logo.jpeg"
+              alt="Logo"
+              width={48}
+              height={48}
+              className="opacity-80"
+            />
           )}
         </Link>
       </div>

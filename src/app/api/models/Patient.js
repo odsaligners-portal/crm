@@ -95,6 +95,14 @@ const patientSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    caseStartDate: {
+      type: Date,
+      default: null,
+    },
+    caseEndDate: {
+      type: Date,
+      default: null,
+    },
 
     // Chief complaint & case
     chiefComplaint: {
@@ -540,166 +548,16 @@ const patientSchema = new mongoose.Schema(
       ],
     },
 
-    // Middle Clinic Images (11 images without models)
+    // Middle Clinic Images - Dynamic array of image sets
     middleClinicImages: {
-      img1: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img2: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img3: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img4: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img5: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img6: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img7: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img8: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img9: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img10: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img11: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
+      type: mongoose.Schema.Types.Mixed,
+      default: [],
     },
 
-    // Post Clinic Images (11 images without models)
+    // Post Clinic Images - Dynamic array of image sets
     postClinicImages: {
-      img1: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img2: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img3: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img4: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img5: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img6: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img7: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img8: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img9: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img10: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
-      img11: [
-        {
-          fileUrl: { type: String },
-          fileKey: { type: String },
-          uploadedAt: { type: Date, default: Date.now },
-        },
-      ],
+      type: mongoose.Schema.Types.Mixed,
+      default: [],
     },
   },
   {

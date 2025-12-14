@@ -8,14 +8,15 @@ import { setLoading } from "@/store/features/uiSlice";
 
 import TeethSelector from "@/components/all/TeethSelector";
 import { imageLabels } from "@/constants/data";
-import ClinicImagesModal from "@/components/common/ClinicImagesModal";
-import ClinicImagesDisplay from "@/components/common/ClinicImagesDisplay";
+import DynamicClinicImagesModal from "@/components/common/DynamicClinicImagesModal";
+import DynamicClinicImagesDisplay from "@/components/common/DynamicClinicImagesDisplay";
 import {
   DocumentTextIcon,
   FolderIcon,
   DocumentArrowDownIcon,
   ChatBubbleLeftRightIcon,
 } from "@heroicons/react/24/solid";
+import { MdDownload } from "react-icons/md";
 
 // File Display Component
 const FileDisplayComponent = ({ idx, patientData }) => {
@@ -189,14 +190,62 @@ export default function ViewPatientDetails() {
   const { token } = useSelector((state) => state.auth);
   const [comments, setComments] = useState([]);
   const [patientFiles, setPatientFiles] = useState([]);
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
+
+  // Check if case has expired
+  const isCaseExpired =
+    patientData?.caseEndDate && new Date(patientData.caseEndDate) < new Date();
 
   // Clinic Images Modal States
   const [isClinicImagesModalOpen, setIsClinicImagesModalOpen] = useState(false);
   const [clinicImageType, setClinicImageType] = useState(null); // "middle" or "post"
-  const [clinicImageAction, setClinicImageAction] = useState(null); // "add" or "update"
+  const [editingImageSetId, setEditingImageSetId] = useState(null);
 
   // Clinic Images Section States
   const [expandedSection, setExpandedSection] = useState(null); // "middle", "post", or null
+
+  // Helper function to extract error messages from API responses
+  const extractErrorMessage = (errorData) => {
+    if (typeof errorData === "string") return errorData;
+    if (errorData?.message) return errorData.message;
+    if (errorData?.error) return errorData.error;
+    return "An unknown error occurred";
+  };
+
+  const handleDownloadPDF = async () => {
+    setIsDownloadingPDF(true);
+    try {
+      const patientId = searchParams.get("id");
+      const response = await fetch(
+        `/api/doctor/patients/download-pdf?id=${patientId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `Patient_${patientData?.caseId || patientId}_Details.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success("✅ PDF downloaded successfully!");
+      } else {
+        const errorData = await response.json();
+        toast.error(`❌ ${errorData.error || "Failed to download PDF"}`);
+      }
+    } catch (error) {
+      toast.error("❌ Failed to download PDF");
+    } finally {
+      setIsDownloadingPDF(false);
+    }
+  };
 
   // Load patient data when component mounts
   useEffect(() => {
@@ -243,14 +292,6 @@ export default function ViewPatientDetails() {
       fetchPatientFiles();
     }
   }, [patientData?.caseId, activeTab]);
-
-  // Helper function to extract error messages from API responses
-  const extractErrorMessage = (errorData) => {
-    if (typeof errorData === "string") return errorData;
-    if (errorData?.message) return errorData.message;
-    if (errorData?.error) return errorData.error;
-    return "An unknown error occurred";
-  };
 
   const fetchPatientFiles = async () => {
     try {
@@ -319,19 +360,64 @@ export default function ViewPatientDetails() {
   };
 
   // Clinic Images Modal Functions
-  const openClinicImagesModal = (type, action) => {
+  const openClinicImagesModal = (type, setId = null) => {
     setClinicImageType(type);
-    setClinicImageAction(action);
+    setEditingImageSetId(setId);
     setIsClinicImagesModalOpen(true);
   };
 
   const closeClinicImagesModal = () => {
     setIsClinicImagesModalOpen(false);
-    // Add a small delay before clearing the state to ensure the modal closes properly
     setTimeout(() => {
       setClinicImageType(null);
-      setClinicImageAction(null);
+      setEditingImageSetId(null);
     }, 100);
+  };
+
+  const handleEditImageSet = (type, setId) => {
+    openClinicImagesModal(type, setId);
+  };
+
+  const handleDeleteImageSet = async (type, setId) => {
+    try {
+      const imageSets = Array.isArray(
+        type === "middle"
+          ? patientData?.middleClinicImages
+          : patientData?.postClinicImages,
+      )
+        ? type === "middle"
+          ? patientData.middleClinicImages
+          : patientData.postClinicImages
+        : [];
+
+      const updatedSets = imageSets.filter((set) => set._id !== setId);
+
+      const response = await fetch(
+        `/api/patients/update-details?id=${searchParams.get("id")}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            [type === "middle" ? "middleClinicImages" : "postClinicImages"]:
+              updatedSets,
+          }),
+        },
+      );
+
+      if (response.ok) {
+        toast.success("Image set deleted successfully!");
+        handleClinicImagesUpdated();
+      } else {
+        const errorData = await response.json();
+        toast.error(`❌ ${errorData.message || "Failed to delete image set"}`);
+      }
+    } catch (error) {
+      console.error("Error deleting image set:", error);
+      toast.error("❌ An error occurred while deleting the image set");
+    }
   };
 
   const toggleClinicSection = (sectionId) => {
@@ -398,27 +484,52 @@ export default function ViewPatientDetails() {
       {patientData.caseId && (
         <div className="sticky top-20 z-10 border-b border-gray-200 bg-white/80 shadow-sm backdrop-blur-md">
           <div className="mx-auto max-w-7xl px-6 py-4">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-semibold text-gray-800 subpixel-antialiased">
-                {patientData.patientName}
-              </h1>
-              <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 px-6 py-3 text-white shadow-lg">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div className="flex-1">
+                <h1 className="mb-2 text-2xl font-semibold text-gray-800 subpixel-antialiased">
+                  {patientData.patientName}
+                </h1>
+              </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 px-6 py-3 text-white shadow-lg">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  <span className="font-semibold tracking-wide subpixel-antialiased">
+                    Case ID: {patientData.caseId}
+                  </span>
+                </div>
+                {/* Case Status - Active/Closed */}
+                <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 shadow-lg">
+                  <span
+                    className={`rounded-full px-4 py-2 text-sm font-semibold ${
+                      isCaseExpired
+                        ? "text-red-700 dark:bg-gray-800 dark:text-gray-300"
+                        : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                    }`}
+                  >
+                    {isCaseExpired ? " Case Is Expired Now" : "Case Is Active"}
+                  </span>
+                </div>
+                {/* Download Button */}
+                <button
+                  onClick={handleDownloadPDF}
+                  disabled={isDownloadingPDF}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-emerald-700 hover:shadow-xl disabled:opacity-50"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <span className="font-semibold tracking-wide subpixel-antialiased">
-                  Case ID: {patientData.caseId}
-                </span>
+                  <MdDownload className="h-4 w-4" />
+                  {isDownloadingPDF ? "Downloading..." : "Download PDF"}
+                </button>
               </div>
             </div>
           </div>
@@ -2194,101 +2305,112 @@ export default function ViewPatientDetails() {
                 </p>
               </div>
 
-              {/* Clinic Images Management Buttons */}
-              <div className="mb-8 flex flex-wrap justify-center gap-4">
-                <div className="flex flex-col items-center gap-2">
-                  {patientData.middleClinicImages &&
-                  Object.values(patientData.middleClinicImages).some(
-                    (imgArray) => imgArray && imgArray.length > 0,
-                  ) ? (
-                    <button
-                      onClick={() => openClinicImagesModal("middle", "update")}
-                      className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-amber-700 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none"
-                    >
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+              {/* Clinic Images Management Buttons - Hide if case expired */}
+              {!isCaseExpired && (
+                <div className="mb-8 flex flex-wrap justify-center gap-4">
+                  <div className="flex flex-col items-center gap-2">
+                    {patientData.middleClinicImages &&
+                    Object.values(patientData.middleClinicImages).some(
+                      (imgArray) => imgArray && imgArray.length > 0,
+                    ) ? (
+                      <button
+                        onClick={() =>
+                          openClinicImagesModal("middle", "update")
+                        }
+                        className="inline-flex items-center gap-2 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-amber-700 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                      Update Mid Treatment Records
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => openClinicImagesModal("middle", "add")}
-                      className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-amber-600 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none"
-                    >
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                        Update Mid Treatment Records
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => openClinicImagesModal("middle", "add")}
+                        className="inline-flex items-center gap-2 rounded-lg bg-amber-500 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-amber-600 focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:outline-none"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                      </svg>
-                      Add Mid Treatment Records
-                    </button>
-                  )}
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
+                        Add Mid Treatment Records
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex flex-col items-center gap-2">
+                    {patientData.postClinicImages &&
+                    Object.values(patientData.postClinicImages).some(
+                      (imgArray) => imgArray && imgArray.length > 0,
+                    ) ? (
+                      <button
+                        onClick={() => openClinicImagesModal("post", "update")}
+                        className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                          />
+                        </svg>
+                        Update Post Treatment Records
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => openClinicImagesModal("post", "add")}
+                        className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
+                      >
+                        <svg
+                          className="h-4 w-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+                          />
+                        </svg>
+                        Add Post Treatment Records
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-col items-center gap-2">
-                  {patientData.postClinicImages &&
-                  Object.values(patientData.postClinicImages).some(
-                    (imgArray) => imgArray && imgArray.length > 0,
-                  ) ? (
-                    <button
-                      onClick={() => openClinicImagesModal("post", "update")}
-                      className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
-                    >
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
-                        />
-                      </svg>
-                      Update Post Treatment Records
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => openClinicImagesModal("post", "add")}
-                      className="inline-flex items-center gap-2 rounded-lg bg-green-500 px-4 py-2 text-sm font-medium text-white transition-all duration-200 hover:bg-green-600 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:outline-none"
-                    >
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                        />
-                      </svg>
-                      Add Post Treatment Records
-                    </button>
-                  )}
+              )}
+              {isCaseExpired && (
+                <div className="mb-8 rounded-lg border-2 border-red-300 bg-red-50 p-4 text-center dark:border-red-800 dark:bg-red-900/20">
+                  <p className="text-sm font-medium text-red-700 dark:text-red-400">
+                    ⚠️ Case has expired.
+                  </p>
                 </div>
-              </div>
+              )}
 
               <div className="space-y-8">
                 {/* Intraoral Photo Section - First 6 uploads (slots 0-5) */}
@@ -2452,8 +2574,12 @@ export default function ViewPatientDetails() {
 
                 {/* Middle Clinic Images Section */}
                 <div className="mb-8">
-                  <ClinicImagesDisplay
-                    images={patientData.middleClinicImages}
+                  <DynamicClinicImagesDisplay
+                    imageSets={
+                      Array.isArray(patientData.middleClinicImages)
+                        ? patientData.middleClinicImages
+                        : []
+                    }
                     title="🔄 Mid Treatment Records"
                     description="Images taken during the treatment process"
                     colorScheme={{
@@ -2467,13 +2593,20 @@ export default function ViewPatientDetails() {
                     isExpanded={expandedSection === "middle"}
                     onToggle={toggleClinicSection}
                     sectionId="middle"
+                    onEdit={(setId) => handleEditImageSet("middle", setId)}
+                    onDelete={(setId) => handleDeleteImageSet("middle", setId)}
+                    isCaseExpired={isCaseExpired}
                   />
                 </div>
 
                 {/* Post Clinic Images Section */}
                 <div className="mb-8">
-                  <ClinicImagesDisplay
-                    images={patientData.postClinicImages}
+                  <DynamicClinicImagesDisplay
+                    imageSets={
+                      Array.isArray(patientData.postClinicImages)
+                        ? patientData.postClinicImages
+                        : []
+                    }
                     title="✅ Post Treatment Records"
                     description="Images taken after treatment completion"
                     colorScheme={{
@@ -2487,6 +2620,9 @@ export default function ViewPatientDetails() {
                     isExpanded={expandedSection === "post"}
                     onToggle={toggleClinicSection}
                     sectionId="post"
+                    onEdit={(setId) => handleEditImageSet("post", setId)}
+                    onDelete={(setId) => handleDeleteImageSet("post", setId)}
+                    isCaseExpired={isCaseExpired}
                   />
                 </div>
               </div>
@@ -2919,17 +3055,22 @@ export default function ViewPatientDetails() {
       </div>
 
       {/* Clinic Images Modal */}
-      <ClinicImagesModal
-        key={`${clinicImageType}-${clinicImageAction}`}
+      <DynamicClinicImagesModal
+        key={`${clinicImageType}-${editingImageSetId}`}
         isOpen={isClinicImagesModalOpen}
         onClose={closeClinicImagesModal}
         patientId={searchParams.get("id")}
         imageType={clinicImageType}
-        existingImages={
+        existingImageSets={
           clinicImageType === "middle"
-            ? patientData?.middleClinicImages
-            : patientData?.postClinicImages
+            ? Array.isArray(patientData?.middleClinicImages)
+              ? patientData.middleClinicImages
+              : []
+            : Array.isArray(patientData?.postClinicImages)
+              ? patientData.postClinicImages
+              : []
         }
+        editingImageSetId={editingImageSetId}
         onImagesUpdated={handleClinicImagesUpdated}
       />
     </div>

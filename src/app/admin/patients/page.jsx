@@ -985,6 +985,12 @@ export default function ViewPatientRecords() {
                     isHeader
                     className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
+                    Status
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
+                  >
                     Comments
                   </TableCell>
                   <TableCell
@@ -1071,6 +1077,26 @@ export default function ViewPatientRecords() {
                       >
                         {patient.caseStatus || "Not specified"}
                       </span>
+                    </TableCell>
+                    <TableCell className="px-2 py-1.5 text-center">
+                      <div className="mx-auto flex justify-center">
+                        {(() => {
+                          const isExpired =
+                            patient.caseEndDate &&
+                            new Date(patient.caseEndDate) < new Date();
+                          return (
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                isExpired
+                                  ? "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                  : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                              }`}
+                            >
+                              {isExpired ? "Expired" : "Active"}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center">
                       <div className="flex justify-center gap-1">

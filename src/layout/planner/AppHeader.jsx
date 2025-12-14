@@ -86,16 +86,16 @@ const AppHeader = () => {
 
           <Link href="/" className="lg:hidden">
             <Image
-              width={154}
-              height={32}
-              className="dark:hidden"
+              width={200}
+              height={48}
+              className="opacity-80 dark:hidden"
               src="/logo.jpeg"
               alt="Logo"
             />
             <Image
-              width={154}
-              height={32}
-              className="hidden dark:block"
+              width={200}
+              height={48}
+              className="hidden opacity-80 dark:block"
               src="/logo.jpeg"
               alt="Logo"
             />

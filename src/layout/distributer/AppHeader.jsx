@@ -128,21 +128,21 @@ const AppHeader = () => {
 
           <Link href="/" className="lg:hidden">
             {isLogoLoading ? (
-              <div className="h-8 w-32 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
+              <div className="h-12 w-48 animate-pulse rounded bg-gray-200 dark:bg-gray-700"></div>
             ) : (
               <>
-                <div className="relative h-8 w-32">
+                <div className="relative h-12 w-48">
                   <Image
                     fill
-                    className="object-contain dark:hidden"
+                    className="object-contain opacity-80 dark:hidden"
                     src={logoUrl}
                     alt="Logo"
                   />
                 </div>
-                <div className="relative h-8 w-32">
+                <div className="relative h-12 w-48">
                   <Image
                     fill
-                    className="hidden object-contain dark:block"
+                    className="hidden object-contain opacity-80 dark:block"
                     src={logoUrl}
                     alt="Logo"
                   />

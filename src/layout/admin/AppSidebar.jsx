@@ -40,6 +40,11 @@ const baseNavItems = [
         path: "/admin/patients/create-patient-record",
         pro: false,
       },
+      {
+        name: "Case Dates",
+        path: "/admin/patients/case-dates",
+        pro: false,
+      },
     ],
   },
   {
@@ -498,21 +503,21 @@ const AppSidebar = () => {
       >
         <Link href="/" className="transition-all duration-200 hover:opacity-80">
           {isExpanded || isHovered || isMobileOpen ? (
-            <div className="relative h-9 w-35">
+            <div className="relative h-14 w-56">
               <Image
                 fill
                 src="/logo.jpeg"
                 alt="Logo"
-                className="object-contain"
+                className="object-contain opacity-80"
               />
             </div>
           ) : (
-            <div className="relative h-7 w-7">
+            <div className="relative h-12 w-12">
               <Image
                 fill
                 src="/logo.jpeg"
                 alt="Logo"
-                className="rounded object-contain"
+                className="rounded object-contain opacity-80"
               />
             </div>
           )}

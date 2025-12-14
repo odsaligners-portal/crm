@@ -5,7 +5,6 @@ import User from "@/app/api/models/User";
 import { verifyAuth } from "@/app/api/middleware/authMiddleware";
 import AccountsTeam from "@/app/api/models/AccountsTeam";
 import { sendEmail } from "@/app/api/utils/mailer";
-import Distributer from "@/app/api/models/Distributer";
 
 export async function PUT(req) {
   await dbConnect();
@@ -60,22 +59,11 @@ export async function PUT(req) {
     { new: true },
   ).populate("userId");
 
-  const distributerData = await Distributer.findById(
-    updatedPatient?.userId?.distributer,
-  );
-
-  const distributerEmail = distributerData?.email;
-
-  // Notify Accounts team
+  // Notify Accounts team only (doctor and distributor emails removed as per requirement)
   try {
     // Get accounts team emails
     const accounts = await AccountsTeam.find({}, "email");
-    const toEmails = accounts.map((a) => a.email).filter(Boolean); // TO field
-
-    // Get doctor and distributor emails
-    const doctorEmail = updatedPatient.userId?.email;
-
-    const ccEmails = [doctorEmail, distributerEmail].filter(Boolean); // CC field
+    const toEmails = accounts.map((a) => a.email).filter(Boolean);
 
     if (toEmails.length > 0) {
       const doctorName = updatedPatient.userId?.name || "Unknown";
@@ -93,7 +81,6 @@ export async function PUT(req) {
 
       await sendEmail({
         to: [...new Set(toEmails)],
-        cc: [...new Set(ccEmails)],
         subject,
         html,
       });

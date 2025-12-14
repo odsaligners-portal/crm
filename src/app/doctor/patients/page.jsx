@@ -867,6 +867,12 @@ export default function ViewPatientRecords() {
                     isHeader
                     className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
                   >
+                    Case Status
+                  </TableCell>
+                  <TableCell
+                    isHeader
+                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
+                  >
                     Case Details
                   </TableCell>
                 </TableRow>
@@ -910,22 +916,35 @@ export default function ViewPatientRecords() {
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center">
                       <div className="flex justify-center gap-1">
-                        <Button
-                          onClick={() => handleOpenUploadModal(patient)}
-                          size="xs"
-                          variant="outline"
-                          className="flex items-center gap-1 border-purple-400 p-1 text-purple-600 shadow-sm transition-transform hover:scale-105 hover:bg-purple-100/60 dark:hover:bg-purple-900/40"
-                        >
-                          Upload
-                        </Button>
-                        <Button
-                          onClick={() => handleOpenViewCommentsModal(patient)}
-                          size="xs"
-                          variant="outline"
-                          className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
-                        >
-                          See
-                        </Button>
+                        {(() => {
+                          const isExpired =
+                            patient.caseEndDate &&
+                            new Date(patient.caseEndDate) < new Date();
+                          return (
+                            <>
+                              {!isExpired && (
+                                <Button
+                                  onClick={() => handleOpenUploadModal(patient)}
+                                  size="xs"
+                                  variant="outline"
+                                  className="flex items-center gap-1 border-purple-400 p-1 text-purple-600 shadow-sm transition-transform hover:scale-105 hover:bg-purple-100/60 dark:hover:bg-purple-900/40"
+                                >
+                                  Upload
+                                </Button>
+                              )}
+                              <Button
+                                onClick={() =>
+                                  handleOpenViewCommentsModal(patient)
+                                }
+                                size="xs"
+                                variant="outline"
+                                className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
+                              >
+                                See
+                              </Button>
+                            </>
+                          );
+                        })()}
                       </div>
                     </TableCell>
                     <TableCell className="px-2 py-1 text-center">
@@ -943,76 +962,124 @@ export default function ViewPatientRecords() {
                         </Button>
                       </div>
                     </TableCell>
+                    <TableCell className="px-2 py-1.5 text-center">
+                      <div className="mx-auto flex justify-center">
+                        {(() => {
+                          const isExpired =
+                            patient.caseEndDate &&
+                            new Date(patient.caseEndDate) < new Date();
+                          return (
+                            <span
+                              className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                                isExpired
+                                  ? "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                  : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
+                              }`}
+                            >
+                              {isExpired ? "Expired" : "Active"}
+                            </span>
+                          );
+                        })()}
+                      </div>
+                    </TableCell>
                     <TableCell className="gap-1 px-2 py-1 text-center">
-                      <div className="flex justify-center gap-1">
-                        <Button
-                          onClick={() =>
-                            router.push(
-                              `/doctor/patients/view-patient-details?id=${patient._id}`,
-                            )
-                          }
-                          size="xs"
-                          variant="outline"
-                          className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
-                        >
-                          <EyeIcon className="h-3 w-3" /> View
-                        </Button>
-                        {/* Status Dropdown */}
-                        <div className="flex items-center justify-center text-center">
-                          {patient.caseStatus === "setup pending" && (
-                            <span
-                              disabled
-                              className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-500"
-                            >
-                              Setup Pending
-                            </span>
-                          )}
-                          {patient.caseStatus === "approval pending" && (
-                            <select
-                              className="rounded border border-blue-300 bg-blue-100 px-2 py-1 text-xs text-blue-700"
-                              value="approval pending"
-                              onChange={(e) =>
-                                handleStatusChange(patient, e.target.value)
-                              }
-                            >
-                              <option value="approval pending">
-                                Approval Pending
-                              </option>
-                              <option value="approved">Approve</option>
-                              <option value="rejected">Reject</option>
-                              <option value="modify">Modify</option>
-                            </select>
-                          )}
-                          {patient.caseStatus === "approved" && (
-                            <span
-                              disabled
-                              className="rounded bg-green-100 px-2 py-1 text-xs text-green-700"
-                            >
-                              Approved
-                            </span>
-                          )}
-                          {patient.caseStatus === "rejected" && (
-                            <span
-                              disabled
-                              className="rounded bg-red-100 px-2 py-1 text-xs text-red-700"
-                            >
-                              Rejected
-                            </span>
-                          )}
-                          {patient.caseStatus === "modify" && (
+                      {(() => {
+                        const isExpired =
+                          patient.caseEndDate &&
+                          new Date(patient.caseEndDate) < new Date();
+                        return (
+                          <div className="flex justify-center gap-1">
                             <Button
+                              onClick={() =>
+                                router.push(
+                                  `/doctor/patients/view-patient-details?id=${patient._id}`,
+                                )
+                              }
                               size="xs"
                               variant="outline"
-                              className="flex items-center gap-1 border-yellow-400 bg-yellow-50 p-1 text-yellow-700 shadow-sm transition-transform hover:scale-105 hover:bg-yellow-100"
-                              onClick={() =>
-                                setModificationModalPatient(patient)
-                              }
+                              className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
                             >
-                              Submit Modification
+                              <EyeIcon className="h-3 w-3" /> View
                             </Button>
-                          )}
-                        </div>
-                      </div>
+                            {/* Status - Show in disabled form if expired */}
+                            <div className="flex items-center justify-center text-center">
+                              {patient.caseStatus === "setup pending" && (
+                                <span
+                                  className={`rounded px-2 py-1 text-xs ${
+                                    isExpired
+                                      ? "bg-gray-100 text-gray-400 opacity-60"
+                                      : "bg-gray-100 text-gray-500"
+                                  }`}
+                                >
+                                  Setup Pending
+                                </span>
+                              )}
+                              {patient.caseStatus === "approval pending" && (
+                                <select
+                                  disabled={isExpired}
+                                  className={`rounded border px-2 py-1 text-xs ${
+                                    isExpired
+                                      ? "cursor-not-allowed border-gray-300 bg-gray-100 text-gray-400 opacity-60"
+                                      : "border-blue-300 bg-blue-100 text-blue-700"
+                                  }`}
+                                  value="approval pending"
+                                  onChange={(e) =>
+                                    !isExpired &&
+                                    handleStatusChange(patient, e.target.value)
+                                  }
+                                >
+                                  <option value="approval pending">
+                                    Approval Pending
+                                  </option>
+                                  <option value="approved">Approve</option>
+                                  <option value="rejected">Reject</option>
+                                  <option value="modify">Modify</option>
+                                </select>
+                              )}
+                              {patient.caseStatus === "approved" && (
+                                <span
+                                  className={`rounded px-2 py-1 text-xs ${
+                                    isExpired
+                                      ? "bg-green-100 text-green-400 opacity-60"
+                                      : "bg-green-100 text-green-700"
+                                  }`}
+                                >
+                                  Approved
+                                </span>
+                              )}
+                              {patient.caseStatus === "rejected" && (
+                                <span
+                                  className={`rounded px-2 py-1 text-xs ${
+                                    isExpired
+                                      ? "bg-red-100 text-red-400 opacity-60"
+                                      : "bg-red-100 text-red-700"
+                                  }`}
+                                >
+                                  Rejected
+                                </span>
+                              )}
+                              {patient.caseStatus === "modify" && (
+                                <Button
+                                  disabled={isExpired}
+                                  size="xs"
+                                  variant="outline"
+                                  className={`flex items-center gap-1 border-yellow-400 p-1 shadow-sm transition-transform ${
+                                    isExpired
+                                      ? "cursor-not-allowed bg-yellow-50 text-yellow-400 opacity-60"
+                                      : "bg-yellow-50 text-yellow-700 hover:scale-105 hover:bg-yellow-100"
+                                  }`}
+                                  onClick={() =>
+                                    !isExpired &&
+                                    setModificationModalPatient(patient)
+                                  }
+                                >
+                                  Submit Modification
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </TableCell>
                   </TableRow>
                 ))}

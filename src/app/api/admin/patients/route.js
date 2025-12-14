@@ -412,6 +412,8 @@ export async function POST(req) {
       patientData.caseId = await generateUniqueCaseId(patientData.country);
     }
 
+    // Case start date will be set by admin on case dates page, not automatically
+
     // If plannerId is provided, calculate and set deadline
     if (patientData.plannerId) {
       // Fetch deadline time from database

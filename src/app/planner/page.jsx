@@ -2,7 +2,12 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import MetricCard from "@/components/admin/dashboard/MetricCard";
-import { MdPeople, MdPendingActions, MdApproval, MdEvent } from "react-icons/md";
+import {
+  MdPeople,
+  MdPendingActions,
+  MdApproval,
+  MdEvent,
+} from "react-icons/md";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { setLoading } from "@/store/features/uiSlice";
 import PlannerUpcomingEvents from "@/components/planner/dashboard/PlannerUpcomingEvents";
@@ -60,19 +65,19 @@ export default function PlannerDashboard() {
           title="Total Patients"
           value={stats?.totalPatients ?? "..."}
           icon={<MdPeople className="h-8 w-8" />}
-          colorClass="from-blue-500 to-blue-600"
+          colorClass="bg-[#00b9fc]"
         />
         <MetricCard
           title="Approved Cases"
           value={stats?.approvedCases ?? "..."}
           icon={<MdEvent className="h-8 w-8" />}
-          colorClass="from-green-500 to-green-600"
+          colorClass="bg-[#eab308]"
         />
         <MetricCard
           title="Approval Pending"
           value={stats?.approvalPending ?? "..."}
           icon={<MdApproval className="h-8 w-8" />}
-          colorClass="from-yellow-500 to-yellow-600"
+          colorClass="bg-[#22c55e]"
         />
       </div>
 
