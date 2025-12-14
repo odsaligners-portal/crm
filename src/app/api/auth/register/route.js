@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "../../config/db";
 import User from "../../models/User";
+import Distributer from "../../models/Distributer";
 import OTP from "../../models/OTP";
 import { AppError, handleError } from "../../utils/errorHandler";
 import { sendEmail } from "../../utils/mailer";
@@ -24,6 +25,7 @@ export async function POST(req) {
       alternateAddresses,
       profilePicture,
       distributerName,
+      referralCode,
     } = await req.json();
 
     if (!name || !email || !password) {
@@ -41,6 +43,23 @@ export async function POST(req) {
 
     await OTP.deleteMany({ email });
 
+    // Handle referral code
+    let distributerId = null;
+    let distributerNameFromRef = null;
+
+    if (referralCode) {
+      const distributer = await Distributer.findOne({
+        referralCode: referralCode.toUpperCase(),
+      }).select("_id name");
+
+      if (distributer) {
+        distributerId = distributer._id;
+        distributerNameFromRef = distributer.name;
+      } else {
+        throw new AppError("Invalid referral code", 400);
+      }
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Store user data directly in OTP document
@@ -57,8 +76,12 @@ export async function POST(req) {
       doctorType,
       address,
       alternateAddresses: alternateAddresses || [],
-      ...(distributerName ? { distributerName } : {}),
+      ...(distributerId
+        ? { distributerId, distributerName: distributerNameFromRef }
+        : {}),
+      ...(distributerName && !distributerId ? { distributerName } : {}),
       ...(profilePicture ? { profilePicture } : {}),
+      ...(referralCode ? { referralCode: referralCode.toUpperCase() } : {}),
     };
 
     const otpDoc = new OTP({

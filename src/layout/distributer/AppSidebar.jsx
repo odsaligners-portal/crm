@@ -16,6 +16,7 @@ import {
   MdNotifications,
   MdVideoLibrary,
   MdLocalHospital,
+  MdShare,
 } from "react-icons/md";
 import { useSelector } from "react-redux";
 
@@ -34,6 +35,11 @@ const navItems = [
     icon: <MdLocalHospital />,
     name: "Doctors",
     path: "/distributer/doctors",
+  },
+  {
+    icon: <MdShare />,
+    name: "Referral",
+    path: "/distributer/referral",
   },
   {
     icon: <MdNotifications />,

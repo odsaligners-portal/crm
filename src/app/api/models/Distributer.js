@@ -62,11 +62,55 @@ const distributerSchema = new mongoose.Schema(
       fileKey: { type: String, default: "" },
       uploadedAt: { type: Date, default: null },
     },
+    referralCode: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      uppercase: true,
+    },
   },
   {
     timestamps: true,
   },
 );
+
+// Generate unique referral code before saving (only for new documents)
+distributerSchema.pre("save", async function (next) {
+  // Only generate referral code if it doesn't exist and this is a new document
+  if (!this.referralCode && this.isNew) {
+    let isUnique = false;
+    let referralCode = "";
+    let attempts = 0;
+    const maxAttempts = 10;
+
+    while (!isUnique && attempts < maxAttempts) {
+      // Generate a 8 character alphanumeric code
+      const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+      referralCode = "";
+      for (let i = 0; i < 8; i++) {
+        referralCode += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+
+      // Check if code already exists
+      const DistributerModel = mongoose.models.Distributer || this.constructor;
+      const existing = await DistributerModel.findOne({
+        referralCode: referralCode,
+      });
+      if (!existing) {
+        isUnique = true;
+      }
+      attempts++;
+    }
+
+    if (isUnique) {
+      this.referralCode = referralCode;
+    } else {
+      return next(new Error("Failed to generate unique referral code"));
+    }
+  }
+  next();
+});
 
 // Hash password before saving
 distributerSchema.pre("save", async function (next) {

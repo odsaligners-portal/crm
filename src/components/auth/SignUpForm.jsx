@@ -69,11 +69,21 @@ export default function SignUpForm({
   const [isVerifying, setIsVerifying] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [registrationData, setRegistrationData] = useState(null);
+  const [referralCode, setReferralCode] = useState("");
 
   useEffect(() => {
     // Trigger entrance animation
     const timer = setTimeout(() => setIsVisible(true), 100);
     return () => clearTimeout(timer);
+  }, []);
+
+  // Get referral code from URL params
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      setReferralCode(ref.toUpperCase());
+    }
   }, []);
 
   const countryOptions = useMemo(
@@ -242,6 +252,9 @@ export default function SignUpForm({
           fileKey: photoFileKey,
           uploadedAt: photoUploadedAt,
         };
+      }
+      if (referralCode) {
+        payload.referralCode = referralCode;
       }
       delete payload.confirmPassword;
 
@@ -690,31 +703,53 @@ export default function SignUpForm({
                   />
                 </div>
 
-                {/* Distributer Name */}
-                <div className="group/field space-y-2">
-                  <Label className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover/field:text-blue-600 dark:text-gray-300">
-                    Distributer Name (Temporary)
-                  </Label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-                      <MdWork className="h-5 w-5 text-gray-400 transition-colors duration-200 group-hover/field:text-blue-500" />
+                {/* Referral Code */}
+                {referralCode && (
+                  <div className="group/field space-y-2 rounded-lg border-2 border-blue-200 bg-blue-50 p-4 dark:border-blue-700 dark:bg-blue-900/20">
+                    <Label className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                      Referral Code Applied
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 rounded-lg border border-blue-300 bg-white px-4 py-2 font-mono text-lg font-bold text-blue-600 dark:border-blue-600 dark:bg-gray-800 dark:text-blue-400">
+                        {referralCode}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setReferralCode("")}
+                        className="rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900/30 dark:text-red-400 dark:hover:bg-red-900/50"
+                      >
+                        Remove
+                      </button>
                     </div>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">
+                      You will be associated with the distributor who provided
+                      this referral code.
+                    </p>
+                  </div>
+                )}
+
+                {/* Referral Code Input (if not from URL) */}
+                {!referralCode && (
+                  <div className="group/field space-y-2">
+                    <Label className="text-sm font-medium text-gray-700 transition-colors duration-200 group-hover/field:text-blue-600 dark:text-gray-300">
+                      Referral Code (Optional)
+                    </Label>
                     <Input
                       type="text"
-                      id="distributerName"
-                      name="distributerName"
-                      placeholder="Enter distributer name (optional)"
-                      value={formData.distributerName}
-                      onChange={handleChange}
+                      placeholder="Enter referral code"
+                      value={referralCode}
+                      onChange={(e) =>
+                        setReferralCode(e.target.value.toUpperCase())
+                      }
                       disabled={isLoading}
-                      className="pl-10 transition-all duration-200 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:border-gray-500"
+                      className="font-mono transition-all duration-200 hover:border-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:border-gray-500"
                     />
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      If you have a referral code from a distributor, enter it
+                      here.
+                    </p>
                   </div>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Enter a temporary distributer name. Admin will assign an
-                    official distributer later.
-                  </p>
-                </div>
+                )}
 
                 {/* Address */}
                 <div className="group/field space-y-2">

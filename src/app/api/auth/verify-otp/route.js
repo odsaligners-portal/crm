@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 import connectDB from "../../config/db";
 import User from "../../models/User";
+import Distributer from "../../models/Distributer";
 import OTP from "../../models/OTP";
 import { AppError, handleError } from "../../utils/errorHandler";
 import { sendEmail } from "../../utils/mailer";
@@ -169,85 +170,176 @@ export async function POST(req) {
           subject: `Welcome to Our Platform, Dr. ${user.name}!`,
           html: welcomeEmailHtml,
         });
-
-        // Send notification email to all admins
-        try {
-          const admins = await User.find(
-            { role: "admin" },
-            "email name",
-          ).lean();
-          const adminEmails = admins
-            .map((admin) => admin.email)
-            .filter(Boolean);
-
-          if (adminEmails.length > 0) {
-            const adminNotificationHtml = `
-              <!DOCTYPE html>
-              <html>
-              <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>New Doctor Registration</title>
-                <style>
-                  body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
-                  .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                  .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
-                  .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
-                  .content { margin-bottom: 30px; }
-                  .doctor-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745; }
-                  .doctor-info h3 { margin: 0 0 15px 0; color: #28a745; font-size: 18px; }
-                  .doctor-info p { margin: 5px 0; }
-                  .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
-                  .cta-button { display: inline-block; background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
-                  .cta-button:hover { opacity: 0.9; }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <div class="header">
-                    <h1>👨‍⚕️ New Doctor Registration</h1>
-                  </div>
-                  
-                  <div class="content">
-                    <p>Hello Admin,</p>
-                    
-                    <p>A new doctor has successfully registered on the platform and requires your attention.</p>
-                    
-                    <div class="doctor-info">
-                      <h3>👤 Doctor Information</h3>
-                      <p><strong>Name:</strong> Dr. ${user.name}</p>
-                      <p><strong>Email:</strong> ${user.email}</p>
-                      <p><strong>Specialization:</strong> ${user.doctorType || "Not specified"}</p>
-                      <p><strong>Experience:</strong> ${user.experience || "Not specified"}</p>
-                      <p><strong>Location:</strong> ${user.city ? `${user.city}, ${user.state}` : "Not specified"}</p>
-                      <p><strong>Mobile:</strong> ${user.mobile || "Not provided"}</p>
-                      <p><strong>Registration Date:</strong> ${new Date().toLocaleDateString()}</p>
-                    </div>
-                    
-                    <p>Please review the doctor's profile and take any necessary administrative actions.</p>
-                  </div>
-                  
-                  <div class="footer">
-                    <p>This is an automated notification from the Patient Management System.</p>
-                    <p>Please do not reply to this email.</p>
-                  </div>
-                </div>
-              </body>
-              </html>
-            `;
-
-            await sendEmail({
-              to: adminEmails,
-              subject: `New Doctor Registration: Dr. ${user.name}`,
-              html: adminNotificationHtml,
-            });
-          }
-        } catch {
-          // Don't fail the verification if admin email fails
-        }
       } catch {
         // Don't fail the verification if email fails
       }
+    }
+
+    // Send notification email to distributor if user registered with referral code
+    if (user.distributerId) {
+      try {
+        const distributer = await Distributer.findById(
+          user.distributerId,
+        ).select("name email");
+
+        if (distributer && distributer.email) {
+          const distributerNotificationHtml = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <title>New User Joined via Referral</title>
+              <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
+                .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
+                .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+                .content { margin-bottom: 30px; }
+                .user-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
+                .user-info h3 { margin: 0 0 15px 0; color: #667eea; font-size: 18px; }
+                .user-info p { margin: 5px 0; }
+                .success-box { background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 15px; margin: 20px 0; }
+                .success-box p { margin: 0; color: #155724; }
+                .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>🎉 New User Joined via Your Referral!</h1>
+                </div>
+                
+                <div class="content">
+                  <p>Hello ${distributer.name},</p>
+                  
+                  <p>Great news! A new user has successfully registered using your referral code and is now associated with your account.</p>
+                  
+                  <div class="success-box">
+                    <p><strong>✅ Success:</strong> This user will now appear in your doctors list and you can manage them from your dashboard.</p>
+                  </div>
+                  
+                  <div class="user-info">
+                    <h3>👤 New User Information</h3>
+                    <p><strong>Name:</strong> ${user.name}</p>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Role:</strong> ${user.role}</p>
+                    ${user.doctorType ? `<p><strong>Specialization:</strong> ${user.doctorType}</p>` : ""}
+                    ${user.experience ? `<p><strong>Experience:</strong> ${user.experience}</p>` : ""}
+                    <p><strong>Location:</strong> ${user.city ? `${user.city}, ${user.state || ""}` : "Not specified"}</p>
+                    <p><strong>Mobile:</strong> ${user.mobile || "Not provided"}</p>
+                    <p><strong>Registration Date:</strong> ${new Date().toLocaleDateString()}</p>
+                  </div>
+                  
+                  <p>You can view and manage this user from your dashboard under the "Doctors" section.</p>
+                </div>
+                
+                <div class="footer">
+                  <p>This is an automated notification from the Patient Management System.</p>
+                  <p>Please do not reply to this email.</p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `;
+
+          await sendEmail({
+            to: distributer.email,
+            subject: `New User Joined via Your Referral: ${user.name}`,
+            html: distributerNotificationHtml,
+          });
+        }
+      } catch (error) {
+        console.error("Failed to send email to distributor:", error);
+        // Don't fail the verification if distributor email fails
+      }
+    }
+
+    // Send notification email to all admins (always, for all user registrations)
+    try {
+      const admins = await User.find(
+        { role: { $in: ["admin", "super-admin"] } },
+        "email name",
+      ).lean();
+      const adminEmails = admins.map((admin) => admin.email).filter(Boolean);
+
+      if (adminEmails.length > 0) {
+        const adminNotificationHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>New User Registration</title>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
+              .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
+              .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+              .content { margin-bottom: 30px; }
+              .user-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745; }
+              .user-info h3 { margin: 0 0 15px 0; color: #28a745; font-size: 18px; }
+              .user-info p { margin: 5px 0; }
+              .referral-info { background: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 15px; margin: 20px 0; }
+              .referral-info p { margin: 5px 0; color: #0c5460; }
+              .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>👤 New User Registration</h1>
+              </div>
+              
+              <div class="content">
+                <p>Hello Admin,</p>
+                
+                <p>A new user has successfully registered on the platform and requires your attention.</p>
+                
+                <div class="user-info">
+                  <h3>👤 User Information</h3>
+                  <p><strong>Name:</strong> ${user.name}</p>
+                  <p><strong>Email:</strong> ${user.email}</p>
+                  <p><strong>Role:</strong> ${user.role}</p>
+                  ${user.doctorType ? `<p><strong>Specialization:</strong> ${user.doctorType}</p>` : ""}
+                  ${user.experience ? `<p><strong>Experience:</strong> ${user.experience}</p>` : ""}
+                  <p><strong>Location:</strong> ${user.city ? `${user.city}, ${user.state || ""}` : "Not specified"}</p>
+                  <p><strong>Mobile:</strong> ${user.mobile || "Not provided"}</p>
+                  <p><strong>Registration Date:</strong> ${new Date().toLocaleDateString()}</p>
+                </div>
+                
+                ${
+                  user.distributerId
+                    ? `
+                <div class="referral-info">
+                  <p><strong>📋 Referral Information:</strong></p>
+                  <p>This user registered using a referral code and is associated with a distributor.</p>
+                </div>
+                `
+                    : ""
+                }
+                
+                <p>Please review the user's profile and take any necessary administrative actions.</p>
+              </div>
+              
+              <div class="footer">
+                <p>This is an automated notification from the Patient Management System.</p>
+                <p>Please do not reply to this email.</p>
+              </div>
+            </div>
+          </body>
+          </html>
+        `;
+
+        await sendEmail({
+          to: adminEmails,
+          subject: `New User Registration: ${user.name} (${user.role})`,
+          html: adminNotificationHtml,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to send email to admins:", error);
+      // Don't fail the verification if admin email fails
     }
 
     // Note: OTP document already deleted after user creation (line 74)
