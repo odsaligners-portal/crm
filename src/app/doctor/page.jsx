@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 import {
   MdFolderShared,
   MdHourglassEmpty,
@@ -11,23 +11,23 @@ import {
 import { setLoading } from "@/store/features/uiSlice";
 
 // Dynamically import components that might use browser APIs
-const MetricCard = dynamic(
+const MetricCard = dynamicImport(
   () => import("@/components/admin/dashboard/MetricCard"),
   { ssr: false },
 );
-const UpcomingEvents = dynamic(
+const UpcomingEvents = dynamicImport(
   () => import("@/components/doctor/dashboard/UpcomingEvents"),
   { ssr: false },
 );
-const DoctorQuickLinks = dynamic(
+const DoctorQuickLinks = dynamicImport(
   () => import("@/components/doctor/dashboard/QuickLinks"),
   { ssr: false },
 );
-const AtAGlancePatients = dynamic(
+const AtAGlancePatients = dynamicImport(
   () => import("@/components/doctor/dashboard/AtAGlancePatients"),
   { ssr: false },
 );
-const CaseCountdownTimer = dynamic(
+const CaseCountdownTimer = dynamicImport(
   () => import("@/components/common/CaseCountdownTimer"),
   { ssr: false },
 );

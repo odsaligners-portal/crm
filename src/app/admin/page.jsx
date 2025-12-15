@@ -1,5 +1,5 @@
 "use client";
-import dynamic from "next/dynamic";
+import dynamicImport from "next/dynamic";
 import { setLoading } from "@/store/features/uiSlice";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { useEffect, useMemo, useState } from "react";
@@ -14,29 +14,32 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // Dynamically import components that might use browser APIs
-const CaseCategoryChart = dynamic(
+const CaseCategoryChart = dynamicImport(
   () => import("@/components/admin/dashboard/CaseCategoryChart"),
   { ssr: false },
 );
-const MetricCard = dynamic(
+const MetricCard = dynamicImport(
   () => import("@/components/admin/dashboard/MetricCard"),
   { ssr: false },
 );
-const QuickActions = dynamic(
+const QuickActions = dynamicImport(
   () => import("@/components/admin/dashboard/QuickActions"),
   { ssr: false },
 );
-const RecentActivity = dynamic(
+const RecentActivity = dynamicImport(
   () => import("@/components/admin/dashboard/RecentActivity"),
   { ssr: false },
 );
-const RecentPatients = dynamic(
+const RecentPatients = dynamicImport(
   () => import("@/components/admin/dashboard/RecentPatients"),
   { ssr: false },
 );
-const UserMap = dynamic(() => import("@/components/admin/dashboard/UserMap"), {
-  ssr: false,
-});
+const UserMap = dynamicImport(
+  () => import("@/components/admin/dashboard/UserMap"),
+  {
+    ssr: false,
+  },
+);
 
 export const dynamic = "force-dynamic";
 
