@@ -36,9 +36,7 @@ const RecentPatients = dynamicImport(
 );
 const UserMap = dynamicImport(
   () => import("@/components/admin/dashboard/UserMap"),
-  {
-    ssr: false,
-  },
+  { ssr: false },
 );
 
 export const dynamic = "force-dynamic";
