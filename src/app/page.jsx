@@ -11,7 +11,12 @@ const MainPage = () => {
 
   useEffect(() => {
     dispatch(setLoading(true));
-    if (!token || !role || !user) {
+    // Ensure we're checking primitive values, not objects
+    const hasToken = Boolean(token);
+    const hasRole = Boolean(role);
+    const hasUser = Boolean(user);
+
+    if (!hasToken || !hasRole || !hasUser) {
       router.push("/signin");
     } else if (role === "admin") {
       router.push("/admin");
