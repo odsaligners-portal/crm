@@ -1,5 +1,4 @@
 "use client";
-import dynamicImport from "next/dynamic";
 import { setLoading } from "@/store/features/uiSlice";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { useEffect, useMemo, useState } from "react";
@@ -12,31 +11,18 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-// Dynamically import components that might use browser APIs
-const CaseCategoryChart = dynamicImport(
-  () => import("@/components/admin/dashboard/CaseCategoryChart"),
-  { ssr: false },
-);
-const MetricCard = dynamicImport(
-  () => import("@/components/admin/dashboard/MetricCard"),
-  { ssr: false },
-);
-const QuickActions = dynamicImport(
-  () => import("@/components/admin/dashboard/QuickActions"),
-  { ssr: false },
-);
-const RecentActivity = dynamicImport(
-  () => import("@/components/admin/dashboard/RecentActivity"),
-  { ssr: false },
-);
-const RecentPatients = dynamicImport(
-  () => import("@/components/admin/dashboard/RecentPatients"),
-  { ssr: false },
-);
+import dynamicImport from "next/dynamic";
+import CaseCategoryChart from "@/components/admin/dashboard/CaseCategoryChart";
+import MetricCard from "@/components/admin/dashboard/MetricCard";
+import QuickActions from "@/components/admin/dashboard/QuickActions";
+import RecentActivity from "@/components/admin/dashboard/RecentActivity";
+import RecentPatients from "@/components/admin/dashboard/RecentPatients";
+// UserMap needs dynamic import because it uses @react-jvectormap which has browser-only APIs
 const UserMap = dynamicImport(
   () => import("@/components/admin/dashboard/UserMap"),
-  { ssr: false },
+  {
+    ssr: false,
+  },
 );
 
 export const dynamic = "force-dynamic";

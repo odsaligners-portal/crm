@@ -2,35 +2,17 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import dynamicImport from "next/dynamic";
 import {
   MdFolderShared,
   MdHourglassEmpty,
   MdNotifications,
 } from "react-icons/md";
 import { setLoading } from "@/store/features/uiSlice";
-
-// Dynamically import components that might use browser APIs
-const MetricCard = dynamicImport(
-  () => import("@/components/admin/dashboard/MetricCard"),
-  { ssr: false },
-);
-const UpcomingEvents = dynamicImport(
-  () => import("@/components/doctor/dashboard/UpcomingEvents"),
-  { ssr: false },
-);
-const DoctorQuickLinks = dynamicImport(
-  () => import("@/components/doctor/dashboard/QuickLinks"),
-  { ssr: false },
-);
-const AtAGlancePatients = dynamicImport(
-  () => import("@/components/doctor/dashboard/AtAGlancePatients"),
-  { ssr: false },
-);
-const CaseCountdownTimer = dynamicImport(
-  () => import("@/components/common/CaseCountdownTimer"),
-  { ssr: false },
-);
+import MetricCard from "@/components/admin/dashboard/MetricCard";
+import UpcomingEvents from "@/components/doctor/dashboard/UpcomingEvents";
+import DoctorQuickLinks from "@/components/doctor/dashboard/QuickLinks";
+import AtAGlancePatients from "@/components/doctor/dashboard/AtAGlancePatients";
+import CaseCountdownTimer from "@/components/common/CaseCountdownTimer";
 
 export const dynamic = "force-dynamic";
 
