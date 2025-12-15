@@ -1,5 +1,7 @@
 const nextConfig = {
   reactStrictMode: true,
+  // Explicitly disable Turbopack to use Webpack (required for SVG handling)
+  turbopack: {},
   images: {
     remotePatterns: [
       {
