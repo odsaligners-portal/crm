@@ -11,6 +11,7 @@ import {
   MdComment,
   MdDashboard,
   MdDescription,
+  MdEmail,
   MdEvent,
   MdList,
   MdLockReset,
@@ -300,6 +301,17 @@ const AppSidebar = () => {
         path: "/admin/change-superadmin-password",
       });
     }
+    const notificationsIdx = tempNavItems.findIndex(
+      (item) => item.name === "Notifications",
+    );
+    if (notificationsIdx !== -1) {
+      tempNavItems.splice(notificationsIdx + 1, 0, {
+        icon: <MdEmail />,
+        name: "Manage Email Notifications",
+        path: "/admin/notifications/manage",
+      });
+    }
+
   }
 
   const dynamicNavItems = tempNavItems

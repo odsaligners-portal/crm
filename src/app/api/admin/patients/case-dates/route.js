@@ -5,6 +5,7 @@ import Distributer from "../../../models/Distributer";
 import User from "../../../models/User";
 import { admin } from "../../../middleware/authMiddleware";
 import { sendEmail } from "../../../utils/mailer";
+import { getCaseDetailsEmailTemplate } from "../../../utils/emailTemplates";
 
 // GET - Get all patients with case dates
 export async function GET(req) {
@@ -191,117 +192,99 @@ export async function PUT(req) {
           .lean();
       }
 
-      // Email template for doctor (only send if end date is being set or updated)
-      if (doctor && doctor.email && endDate) {
-        // Determine if this is a new assignment or an update
-        const isNewAssignment = !oldEndDate;
-        const isUpdate =
-          oldEndDate && oldEndDate.getTime() !== endDate.getTime();
+      // Send case details email if both start and end dates are set
+      if (
+        doctor &&
+        doctor.email &&
+        updatedPatient.caseStartDate &&
+        updatedPatient.caseEndDate
+      ) {
+        // Check if this is the first time both dates are set
+        const wasBothDatesSet =
+          patientBeforeUpdate.caseStartDate && patientBeforeUpdate.caseEndDate;
+        const isFirstTimeBothSet = !wasBothDatesSet;
 
-        const emailTitle = isNewAssignment
-          ? "Case End Date Assigned"
-          : isUpdate
-            ? "Case End Date Updated"
-            : "Case End Date Assigned";
+        // Only send case details email if this is the first time both dates are set
+        if (isFirstTimeBothSet) {
+          // Get full patient data for case details email
+          const fullPatient = await Patient.findById(patientId)
+            .populate("userId", "name email")
+            .lean();
 
-        const emailSubject = isNewAssignment
-          ? `Case End Date Assigned: ${updatedPatient.patientName} (${updatedPatient.caseId})`
-          : isUpdate
-            ? `Case End Date Updated: ${updatedPatient.patientName} (${updatedPatient.caseId})`
-            : `Case End Date Assigned: ${updatedPatient.patientName} (${updatedPatient.caseId})`;
+          const caseData = {
+            doctorName: fullPatient.userId?.name || "Doctor",
+            patientName: fullPatient.patientName,
+            caseId: fullPatient.caseId,
+            caseCategory: fullPatient.caseCategory,
+            registeredDate: fullPatient.createdAt,
+            approvalDate: fullPatient.updatedAt, // You may want to track actual approval date
+            startDate: fullPatient.caseStartDate,
+            expiryDate: fullPatient.caseEndDate,
+          };
 
-        const dateChangeSection = isUpdate
-          ? `
-                <div class="date-change-box">
-                  <h3>📅 Date Change Details</h3>
-                  <div style="display: flex; justify-content: space-around; margin: 20px 0;">
-                    <div style="flex: 1; padding: 15px; background: #fff3cd; border-radius: 8px; margin-right: 10px; border: 2px solid #ffc107;">
-                      <p style="margin: 0; font-size: 12px; color: #856404; font-weight: bold;">Previous Expiry</p>
-                      <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: #856404;">${new Date(oldEndDate).toLocaleDateString()}</p>
-                    </div>
-                    <div style="flex: 1; padding: 15px; background: #d4edda; border-radius: 8px; margin-left: 10px; border: 2px solid #28a745;">
-                      <p style="margin: 0; font-size: 12px; color: #155724; font-weight: bold;">New Expiry</p>
-                      <p style="margin: 5px 0 0 0; font-size: 18px; font-weight: bold; color: #155724;">${new Date(endDate).toLocaleDateString()}</p>
+          const emailHtml = getCaseDetailsEmailTemplate(caseData);
+          await sendEmail({
+            to: doctor.email,
+            subject: `Case ${fullPatient.patientName} (${fullPatient.caseId}) Details Confirmed`,
+            html: emailHtml,
+          });
+          console.log("Case details email sent successfully to:", doctor.email);
+        } else {
+          // If dates are being updated, send a simpler notification
+          const isUpdate =
+            oldEndDate && oldEndDate.getTime() !== endDate.getTime();
+
+          if (isUpdate) {
+            const emailSubject = `Case End Date Updated: ${updatedPatient.patientName} (${updatedPatient.caseId})`;
+            const emailHtml = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Case End Date Updated</title>
+                <style>
+                  body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
+                  .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
+                  .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+                  .content { margin-bottom: 30px; }
+                  .info-box { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
+                  .info-box p { margin: 8px 0; }
+                  .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="header">
+                    <h1>📅 Case End Date Updated</h1>
+                  </div>
+                  <div class="content">
+                    <p>Dear Dr. ${doctor.name},</p>
+                    <p>The end date for one of your patient cases has been updated by the admin.</p>
+                    <div class="info-box">
+                      <p><strong>Patient Name:</strong> ${updatedPatient.patientName}</p>
+                      <p><strong>Case ID:</strong> ${updatedPatient.caseId}</p>
+                      <p><strong>Previous Expiry:</strong> ${new Date(oldEndDate).toLocaleDateString()}</p>
+                      <p><strong>New Expiry:</strong> ${new Date(endDate).toLocaleDateString()}</p>
                     </div>
                   </div>
+                  <div class="footer">
+                    <p>This is an automated notification from the Patient Management System.</p>
+                  </div>
                 </div>
-              `
-          : `
-                <div class="date-box">
-                  <h3>⏰ Case End Date</h3>
-                  <div class="date-value">${new Date(endDate).toLocaleDateString()}</div>
-                </div>
-              `;
+              </body>
+              </html>
+            `;
 
-        const emailMessage = isNewAssignment
-          ? `<p>An end date has been assigned to one of your patient cases by the admin.</p>
-             <p><strong>Your new case expiry is: ${new Date(endDate).toLocaleDateString()}</strong></p>`
-          : isUpdate
-            ? `<p>The end date for one of your patient cases has been updated by the admin.</p>
-             <p><strong>Your case expiry has been changed from ${new Date(oldEndDate).toLocaleDateString()} to ${new Date(endDate).toLocaleDateString()}</strong></p>`
-            : `<p>An end date has been assigned to one of your patient cases by the admin.</p>`;
-
-        const doctorEmailHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>${emailTitle}</title>
-            <style>
-              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
-              .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-              .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
-              .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
-              .content { margin-bottom: 30px; }
-              .info-box { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
-              .info-box h3 { margin: 0 0 15px 0; color: #667eea; font-size: 18px; }
-              .info-box p { margin: 5px 0; }
-              .date-box { background: #e9f7ef; padding: 20px; border-radius: 8px; margin: 20px 0; border: 2px solid #28a745; text-align: center; }
-              .date-box h3 { margin: 0 0 10px 0; color: #28a745; font-size: 18px; }
-              .date-value { font-size: 24px; font-weight: bold; color: #28a745; }
-              .date-change-box { margin: 20px 0; }
-              .date-change-box h3 { margin: 0 0 15px 0; color: #667eea; font-size: 18px; }
-              .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
-            </style>
-          </head>
-          <body>
-            <div class="container">
-              <div class="header">
-                <h1>📅 ${emailTitle}</h1>
-              </div>
-              
-              <div class="content">
-                <p>Dear Dr. ${doctor.name},</p>
-                
-                ${emailMessage}
-                
-                <div class="info-box">
-                  <h3>📋 Patient Information</h3>
-                  <p><strong>Patient Name:</strong> ${updatedPatient.patientName}</p>
-                  <p><strong>Case ID:</strong> ${updatedPatient.caseId}</p>
-                </div>
-                
-                ${dateChangeSection}
-                
-                <p>Please ensure all necessary work is completed before the end date. You can track the countdown timer on your dashboard and patient details page.</p>
-              </div>
-              
-              <div class="footer">
-                <p>This is an automated notification from the Patient Management System.</p>
-                <p>Please do not reply to this email.</p>
-              </div>
-            </div>
-          </body>
-          </html>
-        `;
-
-        await sendEmail({
-          to: doctor.email,
-          subject: emailSubject,
-          html: doctorEmailHtml,
-        });
-        console.log("Doctor email sent successfully to:", doctor.email);
+            await sendEmail({
+              to: doctor.email,
+              subject: emailSubject,
+              html: emailHtml,
+            });
+            console.log("Case end date update email sent to:", doctor.email);
+          }
+        }
       }
 
       // Email template for distributor

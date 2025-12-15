@@ -94,7 +94,6 @@ export async function PUT(req) {
 
     const updatedPatient = await patient.save();
 
-
     // Populate the fields after save
     await updatedPatient.populate("plannerId userId");
 
@@ -176,7 +175,7 @@ export async function PUT(req) {
                   <p>Please log in to your dashboard to start working on this case.</p>
                   
                   <div style="text-align: center;">
-                    <a href="${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/planner/patients" class="cta-button">
+                    <a href="${process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/planner/patients" class="cta-button">
                       🔗 Go to Dashboard
                     </a>
                   </div>
