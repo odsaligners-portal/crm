@@ -139,6 +139,28 @@ curl -X POST "http://localhost:3000/api/cron?job=expiry-reminder&daysBefore=0" \
   -H "Authorization: Bearer YOUR_CRON_SECRET_KEY"
 ```
 
+{
+  "crons": [
+    {
+      "path": "/api/cron?job=pending-approval",
+      "schedule": "30 9 * * 1"
+    },
+    {
+      "path": "/api/cron?job=monthly-reminder",
+      "schedule": "30 9 1 * *"
+    },
+    {
+      "path": "/api/cron?job=expiry-reminder&daysBefore=30",
+      "schedule": "30 9 * * *"
+    },
+    {
+      "path": "/api/cron?job=expiry-reminder&daysBefore=0",
+      "schedule": "30 9 * * *"
+    }
+  ]
+}
+
+
 ## Time Zone Notes
 
 - **IST (Indian Standard Time):** UTC+5:30
