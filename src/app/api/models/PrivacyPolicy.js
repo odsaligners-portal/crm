@@ -38,7 +38,7 @@ const PrivacyPolicySchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-PrivacyPolicySchema.index({ distributerId: 1 });
+// Note: distributerId index is automatically created by unique: true, so we don't need to define it again
 PrivacyPolicySchema.index({ active: 1 });
 
 export default mongoose.models.PrivacyPolicy ||

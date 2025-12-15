@@ -2,19 +2,40 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
-import MetricCard from "@/components/admin/dashboard/MetricCard";
+import nextDynamic from "next/dynamic";
 import {
   MdFolderShared,
   MdHourglassEmpty,
   MdNotifications,
 } from "react-icons/md";
-import UpcomingEvents from "@/components/doctor/dashboard/UpcomingEvents";
-import DoctorQuickLinks from "@/components/doctor/dashboard/QuickLinks";
-import AtAGlancePatients from "@/components/doctor/dashboard/AtAGlancePatients";
-import CaseCountdownTimer from "@/components/common/CaseCountdownTimer";
 import { setLoading } from "@/store/features/uiSlice";
 
+// Dynamically import components that might use browser APIs
+const MetricCard = nextDynamic(
+  () => import("@/components/admin/dashboard/MetricCard"),
+  { ssr: false },
+);
+const UpcomingEvents = nextDynamic(
+  () => import("@/components/doctor/dashboard/UpcomingEvents"),
+  { ssr: false },
+);
+const DoctorQuickLinks = nextDynamic(
+  () => import("@/components/doctor/dashboard/QuickLinks"),
+  { ssr: false },
+);
+const AtAGlancePatients = nextDynamic(
+  () => import("@/components/doctor/dashboard/AtAGlancePatients"),
+  { ssr: false },
+);
+const CaseCountdownTimer = nextDynamic(
+  () => import("@/components/common/CaseCountdownTimer"),
+  { ssr: false },
+);
+
+export const dynamic = "force-dynamic";
+
 export default function DoctorDashboard() {
+  const [isMounted, setIsMounted] = useState(false);
   const { token } = useSelector((state) => state.auth);
   const { unreadCount } = useSelector((state) => state.notification);
   const [stats, setStats] = useState(null);
@@ -68,6 +89,10 @@ export default function DoctorDashboard() {
       fetchData();
     }
   }, [token, dispatch]);
+
+  if (!isMounted) {
+    return null;
+  }
 
   if (loading) {
     return (

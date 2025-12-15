@@ -2,6 +2,7 @@
 import React from "react";
 import Chart from "react-apexcharts";
 import Link from "next/link";
+import { safeId } from "@/utils/safeId";
 
 const Sparkline = ({ data }) => {
   const options = {
@@ -52,10 +53,10 @@ const AtAGlancePatients = ({ patients = [] }) => {
       </h3>
       <div className="space-y-2">
         {patients?.length > 0 ? (
-          patients?.map(({ patient, lastActivity, sparklineData }) => (
+          patients?.map(({ patient, lastActivity, sparklineData }, index) => (
             <Link
-              href={`/doctor/patients/view-patient-details?id=${patient._id}`}
-              key={patient._id}
+              href={`/doctor/patients/view-patient-details?id=${safeId(patient._id)}`}
+              key={safeId(patient._id) || index}
             >
               <div className="flex cursor-pointer items-center justify-between rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-gray-700">
                 <div className="min-w-0 flex-1">

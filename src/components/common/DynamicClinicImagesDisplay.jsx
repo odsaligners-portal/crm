@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { MdEdit, MdDelete, MdExpandMore, MdExpandLess } from "react-icons/md";
 import { imageLabels } from "@/constants/data";
+import { safeId, safeKey } from "@/utils/safeId";
 
 const DynamicClinicImagesDisplay = ({
   imageSets = [],
@@ -116,9 +117,9 @@ const DynamicClinicImagesDisplay = ({
           </div>
         ) : (
           <div className="space-y-6">
-            {imageSets.map((set) => (
+            {imageSets.map((set, setIdx) => (
               <div
-                key={set._id}
+                key={safeKey(set._id, setIdx)}
                 className="group relative overflow-hidden rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-white to-gray-50 p-6 shadow-lg transition-all duration-300 hover:border-gray-300 hover:shadow-xl"
               >
                 <div className="mb-6 flex items-start justify-between">
@@ -142,14 +143,14 @@ const DynamicClinicImagesDisplay = ({
                   {!isCaseExpired && (
                     <div className="flex gap-2">
                       <button
-                        onClick={(e) => handleEdit(set._id, e)}
+                        onClick={(e) => handleEdit(safeId(set._id), e)}
                         className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:scale-105 hover:from-blue-600 hover:to-blue-700 hover:shadow-lg"
                       >
                         <MdEdit className="h-4 w-4" />
                         Edit
                       </button>
                       <button
-                        onClick={(e) => handleDelete(set._id, e)}
+                        onClick={(e) => handleDelete(safeId(set._id), e)}
                         className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-red-500 to-red-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:scale-105 hover:from-red-600 hover:to-red-700 hover:shadow-lg"
                       >
                         <MdDelete className="h-4 w-4" />
@@ -170,7 +171,7 @@ const DynamicClinicImagesDisplay = ({
                             : null;
                         return (
                           <div
-                            key={image._id || idx}
+                            key={safeKey(image._id, idx)}
                             className="group/image relative overflow-hidden rounded-2xl border-2 border-gray-200 bg-white shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-gray-300 hover:shadow-2xl"
                           >
                             <div className="relative aspect-square overflow-hidden">

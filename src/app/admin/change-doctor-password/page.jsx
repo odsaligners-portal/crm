@@ -349,7 +349,7 @@ export default function ChangeDoctorPasswordPage() {
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-blue-800 drop-shadow-lg dark:text-white/90">
-            Change Doctor's Password
+            Change Doctor&apos;s Password
           </h1>
           <p className="mt-2 text-base font-medium text-gray-500 dark:text-gray-400">
             Update passwords for doctor accounts

@@ -5,6 +5,8 @@ import User from "../../models/User";
 import jwt from "jsonwebtoken";
 import { verifyAuth } from "../../middleware/authMiddleware";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req) {
   try {
     await connectDB();

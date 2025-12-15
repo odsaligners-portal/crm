@@ -10,6 +10,7 @@ import TeethSelector from "@/components/all/TeethSelector";
 import { imageLabels } from "@/constants/data";
 import DynamicClinicImagesModal from "@/components/common/DynamicClinicImagesModal";
 import DynamicClinicImagesDisplay from "@/components/common/DynamicClinicImagesDisplay";
+import { safeId } from "@/utils/safeId";
 import {
   DocumentTextIcon,
   FolderIcon,
@@ -3689,7 +3690,7 @@ export default function ViewPatientDetails() {
 
       {/* Clinic Images Modal */}
       <DynamicClinicImagesModal
-        key={`${clinicImageType}-${editingImageSetId || "new"}`}
+        key={`${clinicImageType}-${safeId(editingImageSetId) || "new"}`}
         isOpen={isClinicImagesModalOpen}
         onClose={closeClinicImagesModal}
         patientId={searchParams.get("id")}

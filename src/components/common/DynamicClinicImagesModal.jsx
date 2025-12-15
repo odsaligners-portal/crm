@@ -12,6 +12,7 @@ import {
 } from "firebase/storage";
 import { MdDelete, MdEdit, MdAdd, MdClose } from "react-icons/md";
 import { imageLabels } from "@/constants/data";
+import { safeId, safeKey } from "@/utils/safeId";
 
 const DynamicClinicImagesModal = ({
   isOpen,
@@ -525,9 +526,9 @@ const DynamicClinicImagesModal = ({
         </div>
 
         <div className="space-y-6">
-          {imageSets.map((set) => (
+          {imageSets.map((set, setIdx) => (
             <div
-              key={set._id}
+              key={safeKey(set._id, setIdx)}
               className="rounded-2xl border-2 border-gray-200 bg-gradient-to-br from-gray-50 to-white p-6 shadow-lg"
             >
               <div className="mb-4 flex items-start justify-between">
@@ -661,7 +662,7 @@ const DynamicClinicImagesModal = ({
                         return (
                           <ImageUploadComponent
                             key={idx}
-                            setId={set._id}
+                            setId={safeId(set._id)}
                             image={image}
                             idx={idx}
                           />
@@ -706,7 +707,7 @@ const DynamicClinicImagesModal = ({
                         return (
                           <ImageUploadComponent
                             key={idx}
-                            setId={set._id}
+                            setId={safeId(set._id)}
                             image={image}
                             idx={idx}
                           />
@@ -750,7 +751,7 @@ const DynamicClinicImagesModal = ({
                         return (
                           <ImageUploadComponent
                             key={idx}
-                            setId={set._id}
+                            setId={safeId(set._id)}
                             image={image}
                             idx={idx}
                           />
@@ -766,10 +767,10 @@ const DynamicClinicImagesModal = ({
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {set.images
                       .sort((a, b) => (a.idx || 0) - (b.idx || 0))
-                      .map((image) => (
+                      .map((image, imgIdx) => (
                         <ImageUploadComponent
-                          key={image._id}
-                          setId={set._id}
+                          key={safeKey(image._id, imgIdx)}
+                          setId={safeId(set._id)}
                           image={image}
                           idx={image.idx}
                         />

@@ -51,7 +51,7 @@ export default function DeleteDoctorPage() {
                 headers: token ? { Authorization: `Bearer ${token}` } : {},
               },
             );
-              console.log(patientResponse);
+            console.log(patientResponse);
             if (patientResponse.ok) {
               const patientData = await patientResponse.json();
               return { ...doctor, patientCount: patientData.count || 0 };
@@ -332,7 +332,7 @@ export default function DeleteDoctorPage() {
                     ⚠️ Warning: This will permanently delete:
                   </p>
                   <ul className="ml-6 list-disc space-y-1">
-                    <li>The doctor's account and profile</li>
+                    <li>The doctor&apos;s account and profile</li>
                     <li>
                       <span className="font-semibold text-red-700 dark:text-red-400">
                         {selectedDoctor.patientCount || 0} patient record(s)

@@ -1,10 +1,5 @@
 "use client";
-import CaseCategoryChart from "@/components/admin/dashboard/CaseCategoryChart";
-import MetricCard from "@/components/admin/dashboard/MetricCard";
-import QuickActions from "@/components/admin/dashboard/QuickActions";
-import RecentActivity from "@/components/admin/dashboard/RecentActivity";
-import RecentPatients from "@/components/admin/dashboard/RecentPatients";
-import UserMap from "@/components/admin/dashboard/UserMap";
+import nextDynamic from "next/dynamic";
 import { setLoading } from "@/store/features/uiSlice";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { useEffect, useMemo, useState } from "react";
@@ -18,7 +13,38 @@ import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+// Dynamically import components that might use browser APIs
+const CaseCategoryChart = nextDynamic(
+  () => import("@/components/admin/dashboard/CaseCategoryChart"),
+  { ssr: false },
+);
+const MetricCard = nextDynamic(
+  () => import("@/components/admin/dashboard/MetricCard"),
+  { ssr: false },
+);
+const QuickActions = nextDynamic(
+  () => import("@/components/admin/dashboard/QuickActions"),
+  { ssr: false },
+);
+const RecentActivity = nextDynamic(
+  () => import("@/components/admin/dashboard/RecentActivity"),
+  { ssr: false },
+);
+const RecentPatients = nextDynamic(
+  () => import("@/components/admin/dashboard/RecentPatients"),
+  { ssr: false },
+);
+const UserMap = nextDynamic(
+  () => import("@/components/admin/dashboard/UserMap"),
+  {
+    ssr: false,
+  },
+);
+
+export const dynamic = "force-dynamic";
+
 export default function AdminDashboard() {
+  const [isMounted, setIsMounted] = useState(false);
   const { token } = useSelector((state) => state.auth);
   const [stats, setStats] = useState(null);
   const [activities, setActivities] = useState([]);
@@ -27,6 +53,10 @@ export default function AdminDashboard() {
   const [isVisible, setIsVisible] = useState(false);
   const dispatch = useDispatch();
   const pathname = usePathname();
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Trigger entrance animation
   useEffect(() => {

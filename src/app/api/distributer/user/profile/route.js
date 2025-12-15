@@ -4,6 +4,8 @@ import { AppError, handleError } from "@/app/api/utils/errorHandler";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req) {
   try {
     await connectDB();

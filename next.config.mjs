@@ -1,10 +1,12 @@
 const nextConfig = {
   reactStrictMode: true,
   images: {
-    domains: ["firebasestorage.googleapis.com"],
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "firebasestorage.googleapis.com",
+      },
+    ],
   },
   async rewrites() {
     return [
@@ -23,7 +25,6 @@ const nextConfig = {
     });
     return config;
   },
-  turbopack: {},
 };
 
 export default nextConfig;
