@@ -1,10 +1,10 @@
-import dbConnect from "@/app/api/config/db";
+import connectDB from "@/app/api/config/db";
 import { verifyAuth } from "@/app/api/middleware/authMiddleware";
 import Patient from "@/app/api/models/Patient";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
-  await dbConnect();
+  await connectDB();
 
   const authResult = await verifyAuth(req);
   if (!authResult.success) {

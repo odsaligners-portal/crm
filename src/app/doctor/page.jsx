@@ -45,6 +45,11 @@ export default function DoctorDashboard() {
   const [loading, setLocalLoading] = useState(true);
   const dispatch = useDispatch();
 
+  // Set isMounted to true after component mounts
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       dispatch(setLoading(true));

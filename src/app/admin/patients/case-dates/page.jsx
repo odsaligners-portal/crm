@@ -123,10 +123,20 @@ export default function CaseDatesPage() {
 
     // Destroy existing instances
     if (startDateFlatpickrRef.current) {
-      startDateFlatpickrRef.current.destroy();
+      try {
+        startDateFlatpickrRef.current.destroy();
+      } catch (e) {
+        // Ignore destroy errors
+      }
+      startDateFlatpickrRef.current = null;
     }
     if (endDateFlatpickrRef.current) {
-      endDateFlatpickrRef.current.destroy();
+      try {
+        endDateFlatpickrRef.current.destroy();
+      } catch (e) {
+        // Ignore destroy errors
+      }
+      endDateFlatpickrRef.current = null;
     }
 
     // Get minimum dates
@@ -136,43 +146,47 @@ export default function CaseDatesPage() {
     const minStartDate = tomorrow;
 
     // Initialize start date picker
-    startDateFlatpickrRef.current = flatpickr(startDatePickerRef.current, {
-      dateFormat: "Y-m-d",
-      defaultDate: startDate || null,
-      minDate: minStartDate,
-      static: false,
-      clickOpens: true,
-      onChange: (selectedDates) => {
-        if (selectedDates.length > 0) {
-          const date = selectedDates[0];
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, "0");
-          const day = String(date.getDate()).padStart(2, "0");
-          const dateStr = `${year}-${month}-${day}`;
-          setStartDate(dateStr);
+    try {
+      startDateFlatpickrRef.current = flatpickr(startDatePickerRef.current, {
+        dateFormat: "Y-m-d",
+        defaultDate: startDate || null,
+        minDate: minStartDate,
+        static: false,
+        clickOpens: true,
+        onChange: (selectedDates) => {
+          if (selectedDates.length > 0) {
+            const date = selectedDates[0];
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            const dateStr = `${year}-${month}-${day}`;
+            setStartDate(dateStr);
 
-          // Update end date min date
-          if (endDateFlatpickrRef.current) {
-            const minEndDate = new Date(date);
-            minEndDate.setDate(minEndDate.getDate() + 1);
-            minEndDate.setHours(0, 0, 0, 0);
-            endDateFlatpickrRef.current.set("minDate", minEndDate);
+            // Update end date min date
+            if (endDateFlatpickrRef.current) {
+              const minEndDate = new Date(date);
+              minEndDate.setDate(minEndDate.getDate() + 1);
+              minEndDate.setHours(0, 0, 0, 0);
+              endDateFlatpickrRef.current.set("minDate", minEndDate);
 
-            // Clear end date if it's now invalid
-            if (endDate) {
-              const end = new Date(endDate);
-              end.setHours(0, 0, 0, 0);
-              if (end <= date) {
-                setEndDate("");
-                endDateFlatpickrRef.current.clear();
+              // Clear end date if it's now invalid
+              if (endDate) {
+                const end = new Date(endDate);
+                end.setHours(0, 0, 0, 0);
+                if (end <= date) {
+                  setEndDate("");
+                  endDateFlatpickrRef.current.clear();
+                }
               }
             }
+          } else {
+            setStartDate("");
           }
-        } else {
-          setStartDate("");
-        }
-      },
-    });
+        },
+      });
+    } catch (error) {
+      console.error("Error initializing start date picker:", error);
+    }
 
     // Initialize end date picker
     const minEndDate = startDate
@@ -184,24 +198,28 @@ export default function CaseDatesPage() {
         })()
       : minStartDate;
 
-    endDateFlatpickrRef.current = flatpickr(endDatePickerRef.current, {
-      dateFormat: "Y-m-d",
-      defaultDate: endDate || null,
-      minDate: minEndDate,
-      static: false,
-      clickOpens: true,
-      onChange: (selectedDates) => {
-        if (selectedDates.length > 0) {
-          const date = selectedDates[0];
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, "0");
-          const day = String(date.getDate()).padStart(2, "0");
-          setEndDate(`${year}-${month}-${day}`);
-        } else {
-          setEndDate("");
-        }
-      },
-    });
+    try {
+      endDateFlatpickrRef.current = flatpickr(endDatePickerRef.current, {
+        dateFormat: "Y-m-d",
+        defaultDate: endDate || null,
+        minDate: minEndDate,
+        static: false,
+        clickOpens: true,
+        onChange: (selectedDates) => {
+          if (selectedDates.length > 0) {
+            const date = selectedDates[0];
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, "0");
+            const day = String(date.getDate()).padStart(2, "0");
+            setEndDate(`${year}-${month}-${day}`);
+          } else {
+            setEndDate("");
+          }
+        },
+      });
+    } catch (error) {
+      console.error("Error initializing end date picker:", error);
+    }
   };
 
   // Initialize flatpickr when editing starts
@@ -434,13 +452,13 @@ export default function CaseDatesPage() {
                       <td className="px-6 py-4">
                         {editingPatient?._id === patient._id ? (
                           <div className="relative">
-                          <input
+                            <input
                               ref={endDatePickerRef}
                               type="text"
                               placeholder="Select end date"
                               readOnly
                               className="w-full cursor-pointer rounded-lg border-2 border-blue-300 bg-white px-3 py-2 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                          />
+                            />
                             <MdCalendarToday className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-blue-500" />
                           </div>
                         ) : patient.caseEndDate ? (

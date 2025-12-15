@@ -1,9 +1,9 @@
-import { configureStore } from '@reduxjs/toolkit';
-import { useDispatch, useSelector } from 'react-redux';
-import authReducer from './features/auth/authSlice';
-import patientFormReducer from './features/patientFormSlice';
-import notificationReducer from './features/notificationSlice';
-import uiReducer from './features/uiSlice';
+import { configureStore } from "@reduxjs/toolkit";
+import { useDispatch, useSelector } from "react-redux";
+import authReducer from "./features/auth/authSlice";
+import patientFormReducer from "./features/patientFormSlice";
+import notificationReducer from "./features/notificationSlice";
+import uiReducer from "./features/uiSlice";
 
 export const store = configureStore({
   reducer: {
@@ -15,9 +15,11 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,
+      // Disable immutable check to prevent "object is not extensible" errors with refs
+      immutableCheck: false,
     }),
 });
 
 // Use throughout your app instead of plain `useDispatch` and `useSelector`
-export const useAppDispatch = useDispatch; 
-export const useAppSelector = useSelector; 
+export const useAppDispatch = useDispatch;
+export const useAppSelector = useSelector;
