@@ -56,9 +56,11 @@ export default function ViewPatientRecords() {
     state: "",
     startDate: "",
     endDate: "",
+    doctorId: "",
   });
 
   const [caseCategories, setCaseCategories] = useState([]);
+  const [doctors, setDoctors] = useState([]);
 
   const fetchPatients = async () => {
     dispatch(setLoading(true));
@@ -110,6 +112,21 @@ export default function ViewPatientRecords() {
     fetchCaseCategories();
   }, [token]);
 
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      if (!token) return;
+      try {
+        const result = await fetchWithError("/api/distributer/doctors", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        setDoctors(result.doctors || []);
+      } catch (err) {
+        // fetchWithError already toasts
+      }
+    };
+    fetchDoctors();
+  }, [token]);
+
   const handleSearch = (e) => {
     e.preventDefault();
     setCurrentPage(1);
@@ -135,6 +152,7 @@ export default function ViewPatientRecords() {
       state: "",
       startDate: "",
       endDate: "",
+      doctorId: "",
     });
     setCurrentPage(1);
   };
@@ -447,6 +465,7 @@ export default function ViewPatientRecords() {
     if (filters.country) count++;
     if (filters.state) count++;
     if (filters.startDate || filters.endDate) count++;
+    if (filters.doctorId) count++;
     return count;
   };
 
@@ -457,6 +476,7 @@ export default function ViewPatientRecords() {
     state: "State",
     startDate: "Start Date",
     endDate: "End Date",
+    doctorId: "Doctor",
   };
 
   const handleOpenUploadModal = (patient) => {
@@ -626,6 +646,19 @@ export default function ViewPatientRecords() {
               className="w-full"
               disabled={!filters.country}
             />
+            <Select
+              value={filters.doctorId}
+              onChange={(e) => handleFilterChange("doctorId", e.target.value)}
+              options={[
+                { label: "All Doctors", value: "" },
+                ...doctors.map((doctor) => ({
+                  label: doctor.name || "Unknown",
+                  value: doctor._id,
+                })),
+              ]}
+              label="Doctor"
+              className="w-full"
+            />
 
             <div className="col-span-2 flex w-full flex-col gap-1">
               <label className="text-xs font-medium text-gray-600">
@@ -691,7 +724,9 @@ export default function ViewPatientRecords() {
                   {filterLabels[key] || key}:
                 </span>
                 <span className="text-blue-900 dark:text-blue-100">
-                  {value}
+                  {key === "doctorId"
+                    ? doctors.find((d) => d._id === value)?.name || value
+                    : value}
                 </span>
                 <button
                   type="button"

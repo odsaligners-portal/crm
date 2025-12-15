@@ -1,4 +1,4 @@
-import dbConnect from "@/app/api/config/db";
+import connectDB from "@/app/api/config/db";
 import { verifyAuth } from "@/app/api/middleware/authMiddleware";
 import { NextResponse } from "next/server";
 import Patient from "../../models/Patient";
@@ -7,7 +7,7 @@ import mongoose from "mongoose";
 
 export async function GET(req) {
   try {
-    await dbConnect();
+    await connectDB();
     const { searchParams } = new URL(req.url);
 
     // Check if this is a request for a specific patient by ID
@@ -70,6 +70,7 @@ export async function GET(req) {
     const selectedPrice = searchParams.get("selectedPrice") || "";
     const treatmentFor = searchParams.get("treatmentFor") || "";
     const caseStatus = searchParams.get("caseStatus") || "";
+    const doctorId = searchParams.get("doctorId") || "";
     const sort = searchParams.get("sort") || "";
 
     // Get userId from token
@@ -83,7 +84,12 @@ export async function GET(req) {
 
     const doctorIds = alldoctors.map((doctor) => doctor._id);
 
-    const query = { userId: { $in: doctorIds } };
+    // If doctorId filter is provided, filter by that specific doctor
+    // Otherwise, show patients from all doctors
+    const query =
+      doctorId && mongoose.Types.ObjectId.isValid(doctorId)
+        ? { userId: doctorId } // Filter by specific doctor
+        : { userId: { $in: doctorIds } }; // Filter by all distributer's doctors
 
     // Search functionality
     if (search) {
@@ -129,6 +135,19 @@ export async function GET(req) {
 
     if (caseStatus) {
       query.caseStatus = caseStatus;
+    }
+
+    // If doctorId filter is provided, ensure it's one of the distributer's doctors
+    if (doctorId && mongoose.Types.ObjectId.isValid(doctorId)) {
+      if (!doctorIds.some((id) => id.toString() === doctorId)) {
+        return NextResponse.json(
+          {
+            error:
+              "Invalid doctor or doctor not associated with this distributer",
+          },
+          { status: 403 },
+        );
+      }
     }
 
     if (startDate && endDate) {
