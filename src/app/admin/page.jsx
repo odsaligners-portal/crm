@@ -1,4 +1,5 @@
 "use client";
+import dynamicImport from "next/dynamic";
 import { setLoading } from "@/store/features/uiSlice";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { useEffect, useMemo, useState } from "react";
@@ -11,18 +12,19 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import dynamicImport from "next/dynamic";
-import CaseCategoryChart from "@/components/admin/dashboard/CaseCategoryChart";
 import MetricCard from "@/components/admin/dashboard/MetricCard";
 import QuickActions from "@/components/admin/dashboard/QuickActions";
 import RecentActivity from "@/components/admin/dashboard/RecentActivity";
 import RecentPatients from "@/components/admin/dashboard/RecentPatients";
-// UserMap needs dynamic import because it uses @react-jvectormap which has browser-only APIs
+
+// Dynamically import components that use browser-only APIs (like react-apexcharts)
+const CaseCategoryChart = dynamicImport(
+  () => import("@/components/admin/dashboard/CaseCategoryChart"),
+  { ssr: false },
+);
 const UserMap = dynamicImport(
   () => import("@/components/admin/dashboard/UserMap"),
-  {
-    ssr: false,
-  },
+  { ssr: false },
 );
 
 export const dynamic = "force-dynamic";

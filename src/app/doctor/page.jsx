@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
+import dynamicImport from "next/dynamic";
 import {
   MdFolderShared,
   MdHourglassEmpty,
@@ -11,8 +12,15 @@ import { setLoading } from "@/store/features/uiSlice";
 import MetricCard from "@/components/admin/dashboard/MetricCard";
 import UpcomingEvents from "@/components/doctor/dashboard/UpcomingEvents";
 import DoctorQuickLinks from "@/components/doctor/dashboard/QuickLinks";
-import AtAGlancePatients from "@/components/doctor/dashboard/AtAGlancePatients";
-import CaseCountdownTimer from "@/components/common/CaseCountdownTimer";
+// Dynamically import components that use browser-only APIs (like react-apexcharts)
+const AtAGlancePatients = dynamicImport(
+  () => import("@/components/doctor/dashboard/AtAGlancePatients"),
+  { ssr: false },
+);
+const CaseCountdownTimer = dynamicImport(
+  () => import("@/components/common/CaseCountdownTimer"),
+  { ssr: false },
+);
 
 export const dynamic = "force-dynamic";
 
