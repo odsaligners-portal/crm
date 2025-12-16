@@ -48,6 +48,9 @@ export default function ViewPatientRecords() {
   const [viewFilesPatient, setViewFilesPatient] = useState(null);
   const [modificationModalPatient, setModificationModalPatient] =
     useState(null);
+  const [showApprovalRedirectModal, setShowApprovalRedirectModal] =
+    useState(false);
+  const [approvalRedirectPatient, setApprovalRedirectPatient] = useState(null);
   const dispatch = useDispatch();
 
   // Filter state
@@ -532,6 +535,38 @@ export default function ViewPatientRecords() {
       setModificationModalPatient(patient);
       return;
     }
+
+    // If trying to approve, check for pending planner entries
+    if (newStatus === "approved") {
+      try {
+        // Check if there are pending planner entries
+        const filesResponse = await fetch(
+          `/api/patients/files?patientId=${patient._id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        const filesData = await filesResponse.json();
+
+        if (
+          filesData.success &&
+          filesData.entries &&
+          filesData.entries.some((entry) => entry.approvalStatus === "pending")
+        ) {
+          // Show redirect modal
+          setApprovalRedirectPatient(patient);
+          setShowApprovalRedirectModal(true);
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking planner entries:", error);
+        // Continue with normal approval if check fails
+      }
+    }
+
+    // Proceed with normal status change
     try {
       const res = await fetch(`/api/patients/change-status?id=${patient._id}`, {
         method: "PUT",
@@ -1252,6 +1287,128 @@ export default function ViewPatientRecords() {
           patient={modificationModalPatient}
           isModification={true}
         />
+      )}
+
+      {/* Approval Redirect Modal */}
+      {showApprovalRedirectModal && approvalRedirectPatient && (
+        <div
+          className="fixed inset-0 z-[9999999] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowApprovalRedirectModal(false);
+              setApprovalRedirectPatient(null);
+            }
+          }}
+        >
+          <div
+            className="relative mx-4 w-full max-w-md rounded-2xl border border-white/20 bg-gradient-to-br from-white via-blue-50 to-indigo-50 p-8 shadow-2xl dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Decorative elements */}
+            <div className="absolute -top-10 -right-10 h-32 w-32 rounded-full bg-gradient-to-br from-blue-200/30 to-purple-200/30 blur-2xl dark:from-blue-800/20 dark:to-purple-800/20"></div>
+            <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-gradient-to-br from-indigo-200/30 to-pink-200/30 blur-2xl dark:from-indigo-800/20 dark:to-pink-800/20"></div>
+
+            <div className="relative z-10">
+              {/* Icon */}
+              <div className="mb-6 flex justify-center">
+                <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 shadow-lg">
+                  <svg
+                    className="h-10 w-10 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </div>
+              </div>
+
+              {/* Title */}
+              <h2 className="mb-4 text-center text-2xl font-bold text-gray-900 dark:text-white">
+                Approval Required
+              </h2>
+
+              {/* Message */}
+              <div className="mb-6 space-y-3 text-center">
+                <p className="text-gray-700 dark:text-gray-300">
+                  This patient has pending planner setup entries that need to be
+                  reviewed and approved.
+                </p>
+                <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                  Please go to the patient details page to approve or reject the
+                  planner entries.
+                </p>
+                {approvalRedirectPatient && (
+                  <div className="mt-4 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Patient:{" "}
+                      <span className="font-semibold text-blue-700 dark:text-blue-300">
+                        {approvalRedirectPatient.patientName}
+                      </span>
+                    </p>
+                    {approvalRedirectPatient.caseId && (
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-500">
+                        Case ID: {approvalRedirectPatient.caseId}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3">
+                <Button
+                  onClick={() => {
+                    setShowApprovalRedirectModal(false);
+                    setApprovalRedirectPatient(null);
+                  }}
+                  variant="secondary"
+                  className="flex-1 rounded-xl border-2 border-gray-300 bg-white px-6 py-3 font-semibold text-gray-700 shadow-sm transition-all hover:bg-gray-50 hover:shadow-md dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={() => {
+                    router.push(
+                      `/doctor/patients/view-patient-details?id=${approvalRedirectPatient._id}`,
+                    );
+                    setShowApprovalRedirectModal(false);
+                    setApprovalRedirectPatient(null);
+                  }}
+                  className="flex-1 rounded-xl bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-600 px-6 py-3 font-bold text-white shadow-lg transition-all hover:from-blue-600 hover:via-indigo-600 hover:to-purple-700 hover:shadow-xl"
+                >
+                  <div className="flex items-center justify-center gap-2 whitespace-nowrap">
+                    <svg
+                      className="h-5 w-5 flex-shrink-0"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    <span>View Patient Details</span>
+                  </div>
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
