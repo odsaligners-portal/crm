@@ -64,7 +64,8 @@ export async function POST(req) {
         {
           entryId,
           comment: "",
-          files: files?.length > 0 ? files?.map((f) => ({ ...f, entryId })) : [],
+          files:
+            files?.length > 0 ? files?.map((f) => ({ ...f, entryId })) : [],
         },
       ];
     } else {
@@ -240,31 +241,122 @@ export async function POST(req) {
     }
     // Send email
     if (notifyEmail) {
+      // Build entries HTML
+      let entriesHtml = "";
+      if (entriesToProcess && entriesToProcess.length > 0) {
+        entriesHtml = entriesToProcess
+          .map((entry, index) => {
+            const entryNumber = index + 1;
+            let filesHtml = "";
+
+            // Build files list for this entry
+            if (entry.files && entry.files.length > 0) {
+              filesHtml = entry.files
+                .map((file) => {
+                  if (file.fileUrl && file.fileUrl !== "comment-only-entry") {
+                    return `
+                      <div class="file-item">
+                        <div class="file-name">${file.fileName || "File"}</div>
+                        <div class="file-meta">
+                          <span class="file-type">Type: ${file.fileType || "Unknown"}</span>
+                        </div>
+                        <a href="${file.fileUrl}" class="file-url" target="_blank">View File →</a>
+                      </div>
+                    `;
+                  }
+                  return "";
+                })
+                .join("");
+            }
+
+            // Build comment section (strip HTML tags for plain text preview, but keep for display)
+            const commentText = entry.comment
+              ? entry.comment.replace(/<[^>]*>/g, "").trim()
+              : "";
+            const hasComment = commentText.length > 0;
+            const hasFiles = filesHtml.length > 0;
+
+            return `
+              <div class="entry-section">
+                <div class="entry-header">
+                  <span class="entry-number">Entry ${entryNumber}</span>
+                </div>
+                ${
+                  hasComment
+                    ? `
+                  <div class="comment-section">
+                    <h4 class="comment-label">📝 Set-Up Remark/Rx Remarks:</h4>
+                    <div class="comment-content">${entry.comment}</div>
+                  </div>
+                `
+                    : ""
+                }
+                ${
+                  hasFiles
+                    ? `
+                  <div class="files-section">
+                    <h4 class="files-label">📎 Uploaded Files (${entry.files.filter((f) => f.fileUrl && f.fileUrl !== "comment-only-entry").length}):</h4>
+                    ${filesHtml}
+                  </div>
+                `
+                    : ""
+                }
+                ${
+                  !hasComment && !hasFiles
+                    ? `
+                  <div class="empty-entry">
+                    <p>No content provided for this entry.</p>
+                  </div>
+                `
+                    : ""
+                }
+              </div>
+            `;
+          })
+          .join("");
+      } else {
+        entriesHtml = `
+          <div class="entry-section">
+            <p>No entries found.</p>
+          </div>
+        `;
+      }
+
       await sendEmail({
         to: notifyEmail,
-        subject: `New Files Uploaded for Patient: ${updatedPatient.patientName}`,
+        subject: `New Setup Entry/Entries Uploaded - Patient: ${updatedPatient.patientName} (Case ID: ${updatedPatient.caseId})`,
         html: `
           <!DOCTYPE html>
           <html>
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>New Files Uploaded</title>
+            <title>New Setup Entries Uploaded</title>
             <style>
               body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
-              .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+              .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
               .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
               .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
               .content { margin-bottom: 30px; }
               .patient-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
               .patient-info h3 { margin: 0 0 15px 0; color: #667eea; font-size: 18px; }
               .patient-info p { margin: 5px 0; }
-              .file-list { background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 20px 0; }
-              .file-list h3 { margin: 0 0 15px 0; color: #495057; font-size: 16px; }
-              .file-item { background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 6px; border-left: 3px solid #28a745; }
-              .file-name { font-weight: 600; color: #28a745; margin-bottom: 5px; }
-              .file-url { color: #007bff; text-decoration: none; word-break: break-all; }
+              .entries-container { margin: 20px 0; }
+              .entry-section { background: #fff; border: 2px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 15px 0; border-left: 4px solid #667eea; }
+              .entry-header { margin-bottom: 15px; }
+              .entry-number { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 8px 16px; border-radius: 6px; font-weight: 600; font-size: 14px; display: inline-block; }
+              .comment-section { background: #f0f4ff; padding: 15px; border-radius: 6px; margin: 15px 0; border-left: 3px solid #667eea; }
+              .comment-label { margin: 0 0 10px 0; color: #667eea; font-size: 14px; font-weight: 600; }
+              .comment-content { color: #495057; line-height: 1.8; }
+              .files-section { margin: 15px 0; }
+              .files-label { margin: 0 0 12px 0; color: #495057; font-size: 14px; font-weight: 600; }
+              .file-item { background: #f8f9fa; padding: 12px 15px; margin: 8px 0; border-radius: 6px; border-left: 3px solid #28a745; }
+              .file-name { font-weight: 600; color: #28a745; margin-bottom: 5px; font-size: 14px; }
+              .file-meta { font-size: 12px; color: #6c757d; margin-bottom: 8px; }
+              .file-type { background: #e9ecef; padding: 2px 8px; border-radius: 4px; }
+              .file-url { color: #007bff; text-decoration: none; font-size: 13px; font-weight: 500; }
               .file-url:hover { text-decoration: underline; }
+              .empty-entry { color: #6c757d; font-style: italic; padding: 10px; }
               .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
               .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
               .cta-button:hover { opacity: 0.9; }
@@ -273,39 +365,29 @@ export async function POST(req) {
           <body>
             <div class="container">
               <div class="header">
-                <h1>📁 New Files Uploaded</h1>
+                <h1>📁 New Setup Entry/Entries Uploaded</h1>
               </div>
               
               <div class="content">
                 <p>Hello,</p>
                 
-                <p>New files have been uploaded to the patient portal that require your attention.</p>
+                <p>A planner has uploaded new setup entry/entries to the patient portal that require your attention.</p>
                 
                 <div class="patient-info">
                   <h3>👤 Patient Information</h3>
                   <p><strong>Patient Name:</strong> ${updatedPatient.patientName}</p>
                   <p><strong>Case ID:</strong> ${updatedPatient.caseId}</p>
-                  <p><strong>Uploaded By:</strong> ${planner?.name}</p>
-                  <p><strong>Upload Date:</strong> ${new Date().toLocaleDateString()}</p>
-                  <br>
-                  <p><strong>Details:</strong> ${files?.[0]?.fileName || "Files uploaded"}</p>
+                  <p><strong>Uploaded By:</strong> ${planner?.name || "Planner"}</p>
+                  <p><strong>Upload Date:</strong> ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
+                  <p><strong>Total Entries:</strong> ${entriesToProcess?.length || 0}</p>
                 </div>
                 
-                  <div class="file-list">
-                    <h3>📋 Uploaded Files</h3>
-                    ${files && files?.length > 0 && files?.map(
-                        (file) => `
-                          <div class="file-item">
-                            <a href="${file.fileUrl}" class="file-url" target="_blank">View File</a>
-                          </div>
-                        `,
-                      )
-                      .join("")}
-                  </div>
+                <div class="entries-container">
+                  <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">📋 Uploaded Entries</h3>
+                  ${entriesHtml}
+                </div>
                 
-                <p>Please review these files and take appropriate action as required.</p>
-                
-               
+                <p style="margin-top: 20px;">Please review these entries and take appropriate action as required.</p>
               </div>
               
               <div class="footer">
