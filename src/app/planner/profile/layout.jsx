@@ -1,12 +1,10 @@
-
 export const metadata = {
-  title: "Profile | ODS CRM",
-  description:
-    "Profile | ODS CRM",
+  title: "Profile | PORTAL",
+  description: "Profile | PORTAL",
 };
 
 const ProfileLayout = ({ children }) => {
   return <>{children}</>;
 };
 
-export default ProfileLayout; 
+export default ProfileLayout;

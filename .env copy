@@ -8,14 +8,14 @@ NEXT_PUBLIC_TINY_EDITOR_API_KEY=gloitchnimic5d7s4vn2s5652neigu7stuebe2cj6cpv9m14
 # EMAIL_PORT=465
 # EMAIL_USER=shanichaubey384@gmail.com
 # EMAIL_PASS=rgbtpjjvpjihuqlx
-# EMAIL_FROM_NAME="ODS CRM Notification"
+# EMAIL_FROM_NAME="PORTAL Notification"
 # EMAIL_FROM_ADDRESS=shanichaubey384@gmail.com
 EMAIL_HOST=mail.odsaligners.com
 EMAIL_PORT=465
 EMAIL_USER=noreply@odsaligners.com
 EMAIL_PASS=Dev@C10101998
 EMAIL_FROM_ADDRESS=noreply@odsaligners.com
-EMAIL_FROM_NAME="ODS CRM Notification"
+EMAIL_FROM_NAME="PORTAL Notification"
 NEXT_PUBLIC_BASE_URL=http://localhost:3000
 
 

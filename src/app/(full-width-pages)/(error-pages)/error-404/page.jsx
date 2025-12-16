@@ -3,7 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Error 404 | ODS CRM",
+  title: "Error 404 | PORTAL",
   description: "This is Error 404 page",
 };
 
