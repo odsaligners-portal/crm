@@ -191,7 +191,9 @@ export default function ViewPatientDetails() {
   const { token } = useSelector((state) => state.auth);
   const [comments, setComments] = useState([]);
   const [patientFiles, setPatientFiles] = useState([]);
+  const [plannerEntries, setPlannerEntries] = useState([]);
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
+  const [approvingEntryId, setApprovingEntryId] = useState(null);
 
   // Check if case has expired
   const isCaseExpired =
@@ -315,15 +317,65 @@ export default function ViewPatientDetails() {
 
       if (result.success) {
         setPatientFiles(result.files || []);
+        setPlannerEntries(result.entries || []);
       } else {
         const errorMsg = result.message || "Failed to fetch patient files";
         toast.error(errorMsg);
         setPatientFiles([]);
+        setPlannerEntries([]);
       }
     } catch (e) {
       const errorMsg = e.message || "Error fetching patient files";
       toast.error(errorMsg);
       setPatientFiles([]);
+      setPlannerEntries([]);
+    }
+  };
+
+  const handleApproveEntry = async (entryId) => {
+    const patientId = searchParams.get("id");
+    if (!patientId || !entryId) return;
+
+    setApprovingEntryId(entryId);
+    try {
+      const response = await fetch("/api/patients/files", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          patientId,
+          entryId,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "Failed to approve entry");
+      }
+
+      toast.success("Entry approved successfully!");
+      // Refresh files and entries
+      fetchPatientFiles();
+      // Reload patient data to update case status
+      const patientResponse = await fetch(
+        `/api/patients/update-details?id=${encodeURIComponent(patientId).trim()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+      if (patientResponse.ok) {
+        const data = await patientResponse.json();
+        setPatientData(data);
+      }
+    } catch (error) {
+      toast.error(error.message || "Failed to approve entry");
+    } finally {
+      setApprovingEntryId(null);
     }
   };
 
@@ -459,10 +511,37 @@ export default function ViewPatientDetails() {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-        <div className="text-center">
-          <div className="mx-auto h-32 w-32 animate-spin rounded-full border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-lg text-gray-600">Loading patient data...</p>
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-950 dark:to-blue-900">
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="relative mb-8">
+            <div className="h-20 w-20 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600 dark:border-blue-800 dark:border-t-blue-400"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg
+                className="h-10 w-10 text-blue-600 dark:text-blue-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div className="mb-2 text-2xl font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
+            Loading patient data...
+          </div>
+          <div className="mb-4 text-gray-500 dark:text-gray-400">
+            Please wait while we fetch the patient information
+          </div>
+          <div className="flex space-x-1">
+            <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600 [animation-delay:-0.3s]"></div>
+            <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600 [animation-delay:-0.15s]"></div>
+            <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600"></div>
+          </div>
         </div>
       </div>
     );
@@ -529,7 +608,32 @@ export default function ViewPatientDetails() {
                   className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-green-600 to-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:from-green-700 hover:to-emerald-700 hover:shadow-xl disabled:opacity-50"
                 >
                   <MdDownload className="h-4 w-4" />
-                  {isDownloadingPDF ? "Downloading..." : "Download PDF"}
+                  {isDownloadingPDF ? (
+                    <>
+                      <svg
+                        className="mr-2 h-4 w-4 animate-spin"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      It's downloading, please wait...
+                    </>
+                  ) : (
+                    "Download PDF"
+                  )}
                 </button>
               </div>
             </div>
@@ -2807,14 +2911,219 @@ export default function ViewPatientDetails() {
                   </svg>
                 </div>
                 <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent subpixel-antialiased">
-                  Scan Files
+                  Setup Update
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
-                  Patient scan files and documents
+                  Planner setup entries and patient scan files
                 </p>
               </div>
 
-              {patientFiles.length === 0 ? (
+              {/* Planner Entries Section */}
+              {plannerEntries.length > 0 && (
+                <div className="mb-8 space-y-4">
+                  <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+                    Planner Setup Entries
+                  </h2>
+                  {plannerEntries.map((entry, entryIndex) => (
+                    <div
+                      key={entry.entryId}
+                      className={`rounded-2xl border-2 p-6 shadow-lg transition-all ${
+                        entry.approvalStatus === "approved"
+                          ? "border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
+                          : entry.approvalStatus === "rejected"
+                            ? "border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20"
+                            : "border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20"
+                      }`}
+                    >
+                      <div className="mb-4 flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            Entry {entryIndex + 1}
+                          </h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Submitted:{" "}
+                            {new Date(entry.uploadedAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`rounded-full px-3 py-1 text-sm font-medium ${
+                              entry.approvalStatus === "approved"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200"
+                                : entry.approvalStatus === "rejected"
+                                  ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200"
+                                  : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200"
+                            }`}
+                          >
+                            {entry.approvalStatus === "approved"
+                              ? "✓ Approved"
+                              : entry.approvalStatus === "rejected"
+                                ? "✗ Rejected"
+                                : "Pending"}
+                          </span>
+                          {entry.approvalStatus === "pending" && (
+                            <button
+                              onClick={() => handleApproveEntry(entry.entryId)}
+                              disabled={approvingEntryId === entry.entryId}
+                              className="flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                              {approvingEntryId === entry.entryId ? (
+                                <>
+                                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                                  <span>It's approving, please wait...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M5 13l4 4L19 7"
+                                    />
+                                  </svg>
+                                  Approve
+                                </>
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {entry.comment && (
+                        <div className="mb-4 rounded-lg bg-white/60 p-4 dark:bg-gray-800/60">
+                          <h4 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                            Comments:
+                          </h4>
+                          <div
+                            className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300"
+                            dangerouslySetInnerHTML={{
+                              __html: entry.comment.replace(
+                                /<a /g,
+                                '<a target="_blank" rel="noopener noreferrer" ',
+                              ),
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {entry.files && entry.files.length > 0 && (
+                        <div>
+                          {/* Filter out comment-only entries from files display */}
+                          {(() => {
+                            const actualFiles = entry.files.filter(
+                              (file) =>
+                                file.fileUrl !== "comment-only-entry" &&
+                                file.fileUrl &&
+                                file.fileUrl.trim() !== "",
+                            );
+                            if (actualFiles.length === 0) return null;
+                            return (
+                              <>
+                                <h4 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                                  Files ({actualFiles.length}):
+                                </h4>
+                                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                                  {actualFiles.map((file, fileIndex) => (
+                                    <div
+                                      key={file._id || fileIndex}
+                                      className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                                    >
+                                      <div className="flex-shrink-0">
+                                        {file.fileType === "image" ? (
+                                          <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-100">
+                                            <svg
+                                              className="h-6 w-6 text-blue-600"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                              />
+                                            </svg>
+                                          </div>
+                                        ) : file.fileType === "pdf" ? (
+                                          <div className="flex h-10 w-10 items-center justify-center rounded bg-red-100">
+                                            <svg
+                                              className="h-6 w-6 text-red-600"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                              />
+                                            </svg>
+                                          </div>
+                                        ) : (
+                                          <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100">
+                                            <svg
+                                              className="h-6 w-6 text-gray-600"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                              />
+                                            </svg>
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <div
+                                          className="prose prose-sm max-w-none text-sm font-medium text-gray-900 dark:text-gray-100"
+                                          dangerouslySetInnerHTML={{
+                                            __html:
+                                              file.fileName?.replace(
+                                                /<a /g,
+                                                '<a target="_blank" rel="noopener noreferrer" ',
+                                              ) || "File",
+                                          }}
+                                        />
+                                        {file.fileUrl &&
+                                          file.fileUrl !==
+                                            "comment-only-entry" && (
+                                            <a
+                                              href={file.fileUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                                            >
+                                              View File
+                                            </a>
+                                          )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Regular Patient Files Section */}
+              {patientFiles.length === 0 && plannerEntries.length === 0 ? (
                 <div className="py-12 text-center">
                   <svg
                     className="mx-auto mb-4 h-16 w-16 text-gray-400"

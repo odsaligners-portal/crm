@@ -185,6 +185,7 @@ export default function ViewPatientDetails() {
   const { token } = useSelector((state) => state.auth);
   const [comments, setComments] = useState([]);
   const [patientFiles, setPatientFiles] = useState([]);
+  const [plannerEntries, setPlannerEntries] = useState([]);
 
   // Check if case has expired
   const isCaseExpired =
@@ -273,15 +274,18 @@ export default function ViewPatientDetails() {
 
       if (result.success) {
         setPatientFiles(result.files || []);
+        setPlannerEntries(result.entries || []);
       } else {
         const errorMsg = result.message || "Failed to fetch patient files";
         toast.error(errorMsg);
         setPatientFiles([]);
+        setPlannerEntries([]);
       }
     } catch (e) {
       const errorMsg = e.message || "Error fetching patient files";
       toast.error(errorMsg);
       setPatientFiles([]);
+      setPlannerEntries([]);
     }
   };
 
@@ -404,23 +408,23 @@ export default function ViewPatientDetails() {
                 {patientData.patientName}
               </h1>
               <div className="flex items-center gap-3">
-              <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 px-6 py-3 text-white shadow-lg">
-                <svg
-                  className="h-5 w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-                <span className="font-semibold tracking-wide subpixel-antialiased">
-                  Case ID: {patientData.caseId}
-                </span>
+                <div className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 px-6 py-3 text-white shadow-lg">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                    />
+                  </svg>
+                  <span className="font-semibold tracking-wide subpixel-antialiased">
+                    Case ID: {patientData.caseId}
+                  </span>
                 </div>
                 {/* Case Status - Active/Expired */}
                 <div className="inline-flex items-center gap-2 rounded-full px-4 py-2 shadow-lg">
@@ -2618,14 +2622,188 @@ export default function ViewPatientDetails() {
                   </svg>
                 </div>
                 <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent subpixel-antialiased">
-                  Scan Files
+                  Setup Update
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
-                  Patient scan files and documents
+                  Planner setup entries and patient scan files
                 </p>
               </div>
 
-              {patientFiles.length === 0 ? (
+              {/* Planner Entries Section */}
+              {plannerEntries.length > 0 && (
+                <div className="mb-8 space-y-4">
+                  <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+                    Planner Setup Entries
+                  </h2>
+                  {plannerEntries.map((entry, entryIndex) => (
+                    <div
+                      key={entry.entryId}
+                      className={`rounded-2xl border-2 p-6 shadow-lg transition-all ${
+                        entry.approvalStatus === "approved"
+                          ? "border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
+                          : entry.approvalStatus === "rejected"
+                            ? "border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20"
+                            : "border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20"
+                      }`}
+                    >
+                      <div className="mb-4 flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            Entry {entryIndex + 1}
+                          </h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Submitted:{" "}
+                            {new Date(entry.uploadedAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`rounded-full px-3 py-1 text-sm font-medium ${
+                              entry.approvalStatus === "approved"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200"
+                                : entry.approvalStatus === "rejected"
+                                  ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200"
+                                  : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200"
+                            }`}
+                          >
+                            {entry.approvalStatus === "approved"
+                              ? "✓ Approved"
+                              : entry.approvalStatus === "rejected"
+                                ? "✗ Rejected"
+                                : "Pending"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {entry.comment && (
+                        <div className="mb-4 rounded-lg bg-white/60 p-4 dark:bg-gray-800/60">
+                          <h4 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                            Comments:
+                          </h4>
+                          <div
+                            className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300"
+                            dangerouslySetInnerHTML={{
+                              __html: entry.comment.replace(
+                                /<a /g,
+                                '<a target="_blank" rel="noopener noreferrer" ',
+                              ),
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {entry.files && entry.files.length > 0 && (
+                        <div>
+                          {/* Filter out comment-only entries from files display */}
+                          {(() => {
+                            const actualFiles = entry.files.filter(
+                              (file) =>
+                                file.fileUrl !== "comment-only-entry" &&
+                                file.fileUrl &&
+                                file.fileUrl.trim() !== "",
+                            );
+                            if (actualFiles.length === 0) return null;
+                            return (
+                              <>
+                                <h4 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                                  Files ({actualFiles.length}):
+                                </h4>
+                                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                                  {actualFiles.map((file, fileIndex) => (
+                                    <div
+                                      key={file._id || fileIndex}
+                                      className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                                    >
+                                      <div className="flex-shrink-0">
+                                        {file.fileType === "image" ? (
+                                          <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-100">
+                                            <svg
+                                              className="h-6 w-6 text-blue-600"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                              />
+                                            </svg>
+                                          </div>
+                                        ) : file.fileType === "pdf" ? (
+                                          <div className="flex h-10 w-10 items-center justify-center rounded bg-red-100">
+                                            <svg
+                                              className="h-6 w-6 text-red-600"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                              />
+                                            </svg>
+                                          </div>
+                                        ) : (
+                                          <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100">
+                                            <svg
+                                              className="h-6 w-6 text-gray-600"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                              />
+                                            </svg>
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <div
+                                          className="prose prose-sm max-w-none text-sm font-medium text-gray-900 dark:text-gray-100"
+                                          dangerouslySetInnerHTML={{
+                                            __html:
+                                              file.fileName?.replace(
+                                                /<a /g,
+                                                '<a target="_blank" rel="noopener noreferrer" ',
+                                              ) || "File",
+                                          }}
+                                        />
+                                        {file.fileUrl &&
+                                          file.fileUrl !==
+                                            "comment-only-entry" && (
+                                            <a
+                                              href={file.fileUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                                            >
+                                              View File
+                                            </a>
+                                          )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Regular Patient Files Section */}
+              {patientFiles.length === 0 && plannerEntries.length === 0 ? (
                 <div className="py-12 text-center">
                   <svg
                     className="mx-auto mb-4 h-16 w-16 text-gray-400"

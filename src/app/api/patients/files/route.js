@@ -26,7 +26,7 @@ export async function POST(req) {
     const { user } = authResult;
 
     const body = await req.json();
-    const { patientId, files } = body;
+    const { patientId, files, entries } = body;
 
     const verifyPlannerForPatient = await Patient.findOne({
       _id: patientId,
@@ -45,9 +45,38 @@ export async function POST(req) {
       );
     }
 
-    if (!patientId || !Array.isArray(files) || files.length === 0) {
+    // Support both old format (files) and new format (entries)
+    let entriesToProcess = [];
+    if (entries && Array.isArray(entries) && entries.length > 0) {
+      // Ensure each entry has the required structure
+      entriesToProcess = entries?.map((entry) => ({
+        ...entry,
+        entryId:
+          entry.entryId ||
+          `entry_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        comment: entry.comment || "",
+        files: Array.isArray(entry.files) ? entry.files : [],
+      }));
+    } else if (files && Array.isArray(files) && files.length > 0) {
+      // Legacy format: convert to entries format
+      const entryId = `entry_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      entriesToProcess = [
+        {
+          entryId,
+          comment: "",
+          files: files?.length > 0 ? files?.map((f) => ({ ...f, entryId })) : [],
+        },
+      ];
+    } else {
       return NextResponse.json(
-        { success: false, message: "Missing patient ID or files" },
+        { success: false, message: "Missing patient ID, files, or entries" },
+        { status: 400 },
+      );
+    }
+
+    if (!patientId) {
+      return NextResponse.json(
+        { success: false, message: "Missing patient ID" },
         { status: 400 },
       );
     }
@@ -66,21 +95,73 @@ export async function POST(req) {
 
     const planner = await User.findById(user.id);
 
-    // Save all files
-    const savedFiles = await Promise.all(
-      files.map((file) =>
-        new PatientFile({
-          patientId,
-          fileName: file.fileName,
-          fileType: file.fileType,
-          fileUrl: file.fileUrl,
-          fileKey: file.fileKey,
-          uploadedBy: user.id,
-        }).save(),
-      ),
-    );
+    // Save all files from all entries
+    const savedFiles = [];
+    for (const entry of entriesToProcess) {
+      // Ensure entry has an entryId
+      if (!entry.entryId) {
+        entry.entryId = `entry_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      }
 
-    const updatedCount = patientData.fileUploadCount.count + 1;
+      // Handle entries with files
+      if (
+        entry?.files &&
+        Array.isArray(entry?.files) &&
+        entry.files.length > 0
+      ) {
+        for (const file of entry.files) {
+          // Skip comment-only entries that don't have actual files
+          if (file.commentOnly && !file.fileUrl) {
+            // Create a file record for comment-only entries with placeholder values
+            const commentFile = await new PatientFile({
+              patientId,
+              fileName: entry.comment || file.fileName || "Comment",
+              fileType: "text",
+              fileUrl: "comment-only-entry", // Placeholder value for comment-only entries
+              fileKey: `comment-only-${entry.entryId}`, // Placeholder value for comment-only entries
+              uploadedBy: user.id,
+              entryId: entry.entryId,
+              approvalStatus: "pending",
+            }).save();
+            savedFiles.push(commentFile);
+          } else if (file.fileUrl && file.fileUrl !== "comment-only-entry") {
+            const savedFile = await new PatientFile({
+              patientId,
+              fileName: file.fileName,
+              fileType: file.fileType,
+              fileUrl: file.fileUrl,
+              fileKey: file.fileKey,
+              uploadedBy: user.id,
+              entryId: entry.entryId,
+              approvalStatus: "pending",
+            }).save();
+            savedFiles.push(savedFile);
+          }
+        }
+      }
+
+      // Handle entries with only comments (no files)
+      if (
+        entry.comment &&
+        entry.comment.trim() &&
+        (!entry.files || entry.files.length === 0)
+      ) {
+        const commentFile = await new PatientFile({
+          patientId,
+          fileName: entry.comment.trim(),
+          fileType: "text",
+          fileUrl: "comment-only-entry", // Placeholder value for comment-only entries
+          fileKey: `comment-only-${entry.entryId}`, // Placeholder value for comment-only entries
+          uploadedBy: user.id,
+          entryId: entry.entryId,
+          approvalStatus: "pending",
+        }).save();
+        savedFiles.push(commentFile);
+      }
+    }
+
+    const updatedCount =
+      patientData.fileUploadCount.count + entriesToProcess.length;
 
     // Update patient case status
     const updatedPatient = await Patient.findByIdAndUpdate(
@@ -212,8 +293,7 @@ export async function POST(req) {
                 
                   <div class="file-list">
                     <h3>📋 Uploaded Files</h3>
-                    ${files
-                      .map(
+                    ${files && files?.length > 0 && files?.map(
                         (file) => `
                           <div class="file-item">
                             <a href="${file.fileUrl}" class="file-url" target="_blank">View File</a>
@@ -282,9 +362,154 @@ export async function GET(req) {
     const files = await PatientFile.find({ patientId }).sort({
       uploadedAt: -1,
     });
-    return NextResponse.json({ success: true, files });
+
+    // Group files by entryId for setup entries
+    const entriesMap = new Map();
+    const ungroupedFiles = [];
+
+    files.forEach((file) => {
+      if (file.entryId) {
+        if (!entriesMap.has(file.entryId)) {
+          entriesMap.set(file.entryId, {
+            entryId: file.entryId,
+            files: [],
+            comment: "",
+            approvalStatus: file.approvalStatus || "pending",
+            uploadedAt: file.uploadedAt,
+          });
+        }
+        const entry = entriesMap.get(file.entryId);
+        entry.files.push(file);
+        // Get comment from first file if it's a comment-only entry
+        if (
+          file.fileType === "text" &&
+          file.fileUrl === "comment-only-entry" &&
+          file.fileName
+        ) {
+          entry.comment = file.fileName;
+        }
+        // Update approval status if any file has a different status
+        if (file.approvalStatus && file.approvalStatus !== "pending") {
+          entry.approvalStatus = file.approvalStatus;
+        }
+      } else {
+        ungroupedFiles.push(file);
+      }
+    });
+
+    const entries = Array.from(entriesMap.values());
+
+    return NextResponse.json({
+      success: true,
+      files: ungroupedFiles,
+      entries: entries,
+    });
   } catch (error) {
     console.error("Error fetching patient files:", error);
+    return NextResponse.json(
+      { success: false, message: "Server error" },
+      { status: 500 },
+    );
+  }
+}
+
+export async function PUT(req) {
+  try {
+    await dbConnect();
+    const authResult = await verifyAuth(req);
+    if (!authResult.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: authResult.error || "Authentication required",
+        },
+        { status: 401 },
+      );
+    }
+
+    const { user } = authResult;
+
+    // Only doctors can approve entries
+    if (user.role !== "doctor") {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Only doctors can approve planner entries",
+        },
+        { status: 403 },
+      );
+    }
+
+    const body = await req.json();
+    const { patientId, entryId } = body;
+
+    if (!patientId || !entryId) {
+      return NextResponse.json(
+        { success: false, message: "Missing patientId or entryId" },
+        { status: 400 },
+      );
+    }
+
+    // Verify doctor has access to this patient
+    const patient = await Patient.findById(patientId);
+    if (!patient) {
+      return NextResponse.json(
+        { success: false, message: "Patient not found" },
+        { status: 404 },
+      );
+    }
+
+    if (patient.userId?.toString() !== user.id) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "You are not authorized to approve entries for this patient",
+        },
+        { status: 403 },
+      );
+    }
+
+    // Approve the selected entry
+    await PatientFile.updateMany(
+      { patientId, entryId },
+      {
+        $set: {
+          approvalStatus: "approved",
+          approvedBy: user.id,
+          approvedAt: new Date(),
+        },
+      },
+    );
+
+    // Reject all other entries for this patient
+    await PatientFile.updateMany(
+      {
+        patientId,
+        entryId: { $ne: entryId },
+        approvalStatus: "pending",
+      },
+      {
+        $set: {
+          approvalStatus: "rejected",
+          approvedBy: user.id,
+          approvedAt: new Date(),
+        },
+      },
+    );
+
+    // Update patient case status to approved if it was approval pending
+    if (patient.caseStatus === "approval pending") {
+      await Patient.findByIdAndUpdate(patientId, {
+        $set: { caseStatus: "approved" },
+      });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "Entry approved successfully",
+    });
+  } catch (error) {
+    console.error("Error approving entry:", error);
     return NextResponse.json(
       { success: false, message: "Server error" },
       { status: 500 },
