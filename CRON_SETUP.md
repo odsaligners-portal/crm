@@ -71,7 +71,7 @@ Set up the following cron jobs:
 - **Headers:** `Authorization: Bearer YOUR_CRON_SECRET_KEY`
 - **Schedule:** `0 9 * * 1` (UTC) or `0 15 * * 1` (IST)
 
-#### 2. Monthly Reminder (1st of every month)
+#### 2. 22
 
 - **URL:** `https://your-domain.com/api/cron?job=monthly-reminder`
 - **Method:** POST

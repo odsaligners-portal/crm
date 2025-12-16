@@ -37,6 +37,7 @@ export default function ViewPatientRecords() {
   const [totalPatients, setTotalPatients] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [isLoadingPatients, setIsLoadingPatients] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [isViewCommentsModalOpen, setIsViewCommentsModalOpen] = useState(false);
@@ -70,6 +71,7 @@ export default function ViewPatientRecords() {
   ];
 
   const fetchPatients = async () => {
+    setIsLoadingPatients(true);
     dispatch(setLoading(true));
     try {
       const params = new URLSearchParams({
@@ -92,6 +94,7 @@ export default function ViewPatientRecords() {
     } catch (error) {
       // fetchWithError already toasts
     } finally {
+      setIsLoadingPatients(false);
       dispatch(setLoading(false));
     }
   };
@@ -1123,7 +1126,41 @@ export default function ViewPatientRecords() {
         </div>
       )}
 
-      {patients.length === 0 && (
+      {isLoadingPatients && patients.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="relative mb-8">
+            <div className="h-20 w-20 animate-spin rounded-full border-4 border-blue-200 border-t-blue-600"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <svg
+                className="h-10 w-10 text-blue-600"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+            </div>
+          </div>
+          <div className="mb-2 text-2xl font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200">
+            Loading patient records...
+          </div>
+          <div className="mb-4 text-gray-500 dark:text-gray-400">
+            Please wait while we fetch your patient data
+          </div>
+          <div className="flex space-x-1">
+            <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600 [animation-delay:-0.3s]"></div>
+            <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600 [animation-delay:-0.15s]"></div>
+            <div className="h-2 w-2 animate-bounce rounded-full bg-blue-600"></div>
+          </div>
+        </div>
+      )}
+
+      {!isLoadingPatients && patients.length === 0 && (
         <div className="flex flex-col items-center justify-center py-16">
           <svg
             width="120"
