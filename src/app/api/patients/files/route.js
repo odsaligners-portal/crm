@@ -174,7 +174,9 @@ export async function POST(req) {
         },
       },
       { new: true, runValidators: true },
-    ).populate("userId");
+    )
+      .populate("userId")
+      .populate("plannerId");
 
     if (!updatedPatient) {
       return NextResponse.json(
@@ -249,14 +251,42 @@ export async function POST(req) {
             const entryNumber = index + 1;
             let filesHtml = "";
 
+            // Build comment section (strip HTML tags for plain text preview, but keep for display)
+            const commentText = entry.comment
+              ? entry.comment.replace(/<[^>]*>/g, "").trim()
+              : "";
+            const hasComment = commentText.length > 0;
+
             // Build files list for this entry
             if (entry.files && entry.files.length > 0) {
               filesHtml = entry.files
                 .map((file) => {
                   if (file.fileUrl && file.fileUrl !== "comment-only-entry") {
+                    // Check if file name matches the comment to avoid duplication
+                    const fileDisplayName = file.fileName || "File";
+                    const strippedFileName = fileDisplayName
+                      .replace(/<[^>]*>/g, "")
+                      .trim();
+                    // If file name matches comment, try to extract original name from fileKey or use generic name
+                    let displayFileName = fileDisplayName;
+                    if (hasComment && strippedFileName === commentText) {
+                      // Try to extract original file name from fileKey
+                      if (file.fileKey) {
+                        const keyParts = file.fileKey.split("/");
+                        const originalName = keyParts[keyParts.length - 1];
+                        if (originalName && originalName !== fileDisplayName) {
+                          displayFileName = originalName;
+                        } else {
+                          // Use generic name based on file type
+                          displayFileName = `Uploaded ${file.fileType || "File"}`;
+                          console.log(displayFileName);
+                        }
+                      } 
+                    }
+
                     return `
                       <div class="file-item">
-                        <div class="file-name">${file.fileName || "File"}</div>
+                      
                         <div class="file-meta">
                           <span class="file-type">Type: ${file.fileType || "Unknown"}</span>
                         </div>
@@ -269,27 +299,27 @@ export async function POST(req) {
                 .join("");
             }
 
-            // Build comment section (strip HTML tags for plain text preview, but keep for display)
-            const commentText = entry.comment
-              ? entry.comment.replace(/<[^>]*>/g, "").trim()
-              : "";
-            const hasComment = commentText.length > 0;
             const hasFiles = filesHtml.length > 0;
 
             return `
               <div class="entry-section">
                 <div class="entry-header">
-                  <span class="entry-number">Entry ${entryNumber}</span>
+                  <span class="entry-number">Setup ${entryNumber}</span>
                 </div>
                 ${
                   hasComment
                     ? `
                   <div class="comment-section">
-                    <h4 class="comment-label">📝 Set-Up Remark/Rx Remarks:</h4>
+                    <h4 class="comment-label">📝 Description / Set-Up Remark / Rx Remarks:</h4>
                     <div class="comment-content">${entry.comment}</div>
                   </div>
                 `
-                    : ""
+                    : `
+                  <div class="comment-section">
+                    <h4 class="comment-label">📝 Description / Set-Up Remark / Rx Remarks:</h4>
+                    <div class="comment-content" style="color: #6c757d; font-style: italic;">No description provided</div>
+                  </div>
+                `
                 }
                 ${
                   hasFiles
@@ -299,16 +329,12 @@ export async function POST(req) {
                     ${filesHtml}
                   </div>
                 `
-                    : ""
-                }
-                ${
-                  !hasComment && !hasFiles
-                    ? `
-                  <div class="empty-entry">
-                    <p>No content provided for this entry.</p>
+                    : `
+                  <div class="files-section">
+                    <h4 class="files-label">📎 Uploaded Files:</h4>
+                    <div style="color: #6c757d; font-style: italic; padding: 10px;">No files uploaded for this setup</div>
                   </div>
                 `
-                    : ""
                 }
               </div>
             `;
@@ -338,9 +364,15 @@ export async function POST(req) {
               .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
               .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
               .content { margin-bottom: 30px; }
-              .patient-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
-              .patient-info h3 { margin: 0 0 15px 0; color: #667eea; font-size: 18px; }
-              .patient-info p { margin: 5px 0; }
+              .patient-info { background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
+              .patient-info h3 { margin: 0 0 20px 0; color: #667eea; font-size: 18px; font-weight: 600; }
+              .patient-details-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px 25px; }
+              .detail-row { display: flex; flex-direction: column; }
+              .detail-label { font-weight: 600; color: #495057; font-size: 14px; margin-bottom: 5px; }
+              .detail-value { color: #212529; font-size: 15px; }
+              @media (max-width: 600px) {
+                .patient-details-grid { grid-template-columns: 1fr; }
+              }
               .entries-container { margin: 20px 0; }
               .entry-section { background: #fff; border: 2px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 15px 0; border-left: 4px solid #667eea; }
               .entry-header { margin-bottom: 15px; }
@@ -375,19 +407,32 @@ export async function POST(req) {
                 
                 <div class="patient-info">
                   <h3>👤 Patient Information</h3>
-                  <p><strong>Patient Name:</strong> ${updatedPatient.patientName}</p>
-                  <p><strong>Case ID:</strong> ${updatedPatient.caseId}</p>
-                  <p><strong>Uploaded By:</strong> ${planner?.name || "Planner"}</p>
-                  <p><strong>Upload Date:</strong> ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
-                  <p><strong>Total Entries:</strong> ${entriesToProcess?.length || 0}</p>
+                  <div class="patient-details-grid">
+                    <div class="detail-row">
+                      <span class="detail-label">Patient Name:</span>
+                      <span class="detail-value">${updatedPatient.patientName || "N/A"}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Case ID:</span>
+                      <span class="detail-value">${updatedPatient.caseId || "N/A"}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Upload Date:</span>
+                      <span class="detail-value">${new Date().toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">Total Setups:</span>
+                      <span class="detail-value">${entriesToProcess?.length || 0}</span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div class="entries-container">
-                  <h3 style="color: #667eea; font-size: 18px; margin-bottom: 15px;">📋 Uploaded Entries</h3>
+                  <h3 style="color: #667eea; font-size: 20px; margin-bottom: 20px; font-weight: 600;">📋 Setup Details</h3>
                   ${entriesHtml}
                 </div>
                 
-                <p style="margin-top: 20px;">Please review these entries and take appropriate action as required.</p>
+                <p style="margin-top: 20px;">Please review these setups and take appropriate action as required.</p>
               </div>
               
               <div class="footer">

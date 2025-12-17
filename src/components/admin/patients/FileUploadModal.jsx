@@ -172,7 +172,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
       delete newKeys[entryId];
       setEditorKeys(newKeys);
     } else {
-      toast.warning("At least one entry is required");
+      toast.warning("At least one setup is required");
     }
   };
 
@@ -201,9 +201,8 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
     setLoading(true);
     try {
       const { storage } = await import("@/utils/firebase");
-      const { ref, uploadBytesResumable, getDownloadURL } = await import(
-        "firebase/storage"
-      );
+      const { ref, uploadBytesResumable, getDownloadURL } =
+        await import("firebase/storage");
 
       const allEntriesData = [];
 
@@ -281,11 +280,11 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        toast.error("Failed to submit entry/entries");
+        toast.error("Failed to submit setup/setups");
         throw new Error(result.message || "Submission failed");
       }
 
-      toast.success("Entry/entries submitted successfully!");
+      toast.success("Setup/setups submitted successfully!");
       onClose();
       if (onSuccess) {
         onSuccess();
@@ -388,10 +387,10 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
                     <div className="mb-5 flex items-center justify-between">
                       <div>
                         <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                          Entry {entryIndex + 1}
+                          Setup {entryIndex + 1}
                         </h3>
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          Add comments and/or files for this entry
+                          Add comments and/or files for this setup
                         </p>
                       </div>
                       {entries.length > 1 && (
@@ -413,7 +412,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
                               d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                             />
                           </svg>
-                          Remove Entry
+                          Remove Setup
                         </button>
                       )}
                     </div>
@@ -551,7 +550,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
                       d="M12 4v16m8-8H4"
                     />
                   </svg>
-                  Add Another Entry
+                  Add Another Setup
                 </Button>
               </div>
             </form>

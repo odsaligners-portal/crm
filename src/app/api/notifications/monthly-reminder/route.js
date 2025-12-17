@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import connectDB from "@/app/api/config/db";
 import { verifyAuth } from "@/app/api/middleware/authMiddleware";
 import Patient from "@/app/api/models/Patient";
+import User from "@/app/api/models/User";
 import { sendEmail } from "@/app/api/utils/mailer";
 import { getMonthlyReminderEmailTemplate } from "@/app/api/utils/emailTemplates";
 
@@ -41,30 +42,97 @@ export async function POST(req) {
       });
     }
 
+    // Group cases by doctor
+    const casesByDoctor = {};
+    const doctorCasesMap = {};
+
+    activeCases.forEach((patient) => {
+      if (patient.userId) {
+        const doctorId = patient.userId._id.toString();
+        const doctorName = patient.userId.name || "Unknown Doctor";
+
+        // For admin emails - group by doctor
+        if (!casesByDoctor[doctorName]) {
+          casesByDoctor[doctorName] = {
+            doctorName: doctorName,
+            cases: [],
+          };
+        }
+        casesByDoctor[doctorName].cases.push({
+          patientName: patient.patientName,
+          caseId: patient.caseId,
+        });
+
+        // For doctor emails - group by doctor
+        if (!doctorCasesMap[doctorId]) {
+          doctorCasesMap[doctorId] = {
+            doctor: patient.userId,
+            cases: [],
+          };
+        }
+        doctorCasesMap[doctorId].cases.push({
+          patientName: patient.patientName,
+          caseId: patient.caseId,
+        });
+      }
+    });
+
+    // Sort doctors by name for admin emails
+    const sortedDoctors = Object.keys(casesByDoctor).sort();
+    sortedDoctors.forEach((doctorName) => {
+      // Sort patients by name within each doctor's cases
+      casesByDoctor[doctorName].cases.sort((a, b) =>
+        a.patientName.localeCompare(b.patientName),
+      );
+    });
+
     let emailsSent = 0;
 
-    // Send reminder email to each doctor for their cases
-    for (const patient of activeCases) {
-      if (patient.userId?.email) {
+    // Send reminder emails to doctors (all their cases in one email, sorted by patient name)
+    for (const [doctorId, data] of Object.entries(doctorCasesMap)) {
+      if (data.doctor?.email) {
         try {
-          const caseData = {
-            patientName: patient.patientName,
-            caseId: patient.caseId,
-          };
-
-          const emailHtml = getMonthlyReminderEmailTemplate(caseData);
+          // Sort patients by name for doctor emails
+          const sortedCases = [...data.cases].sort((a, b) =>
+            a.patientName.localeCompare(b.patientName),
+          );
+          const emailHtml = getMonthlyReminderEmailTemplate(
+            sortedCases,
+            false, // isAdmin = false
+          );
           await sendEmail({
-            to: patient.userId.email,
-            subject: `Reminder: Case ${patient.patientName} (${patient.caseId}) Follow-Up Required`,
+            to: data.doctor.email,
+            subject: `Monthly Follow-Up Reminder - ${sortedCases.length} case(s)`,
             html: emailHtml,
           });
           emailsSent++;
         } catch (error) {
           console.error(
-            `Error sending monthly reminder to ${patient.userId.email}:`,
+            `Error sending monthly reminder to ${data.doctor.email}:`,
             error,
           );
         }
+      }
+    }
+
+    // Send emails to admins (grouped by doctor, sorted by doctor name)
+    const admins = await User.find({ role: "admin" }).select("email name");
+    for (const admin of admins) {
+      try {
+        const totalCases = activeCases.length;
+        const emailHtml = getMonthlyReminderEmailTemplate(
+          null, // cases array not needed, we'll pass casesByDoctor
+          true, // isAdmin = true
+          casesByDoctor, // pass grouped cases
+        );
+        await sendEmail({
+          to: admin.email,
+          subject: `Monthly Follow-Up Reminder - ${totalCases} case(s)`,
+          html: emailHtml,
+        });
+        emailsSent++;
+      } catch (error) {
+        console.error(`Error sending email to admin ${admin.email}:`, error);
       }
     }
 

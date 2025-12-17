@@ -27,6 +27,7 @@ export async function GET(req) {
   const treatmentFor = searchParams.get("treatmentFor") || "";
   const sort = searchParams.get("sort") || "";
   const caseStatus = searchParams.get("caseStatus") || "";
+  const doctorId = searchParams.get("doctorId") || "";
 
   // Get userId from token
   const authResult = await admin(req);
@@ -86,6 +87,9 @@ export async function GET(req) {
     if (caseStatusArray.length > 0) {
       query.caseStatus = { $in: caseStatusArray };
     }
+  }
+  if (doctorId) {
+    query.userId = doctorId;
   }
   if (startDate && endDate) {
     query.createdAt = {

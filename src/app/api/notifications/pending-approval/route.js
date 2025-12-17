@@ -41,30 +41,51 @@ export async function POST(req) {
       });
     }
 
-    // Group cases by doctor
+    // Group cases by doctor for admin emails
     const casesByDoctor = {};
-    const allCases = [];
+    // For doctor emails - group by doctor but sort patients by name
+    const doctorCasesMap = {};
 
     pendingCases.forEach((patient) => {
       if (patient.userId) {
         const doctorId = patient.userId._id.toString();
-        if (!casesByDoctor[doctorId]) {
-          casesByDoctor[doctorId] = {
+        const doctorName = patient.userId.name || "Unknown Doctor";
+
+        // For admin emails - group by doctor
+        if (!casesByDoctor[doctorName]) {
+          casesByDoctor[doctorName] = {
+            doctorName: doctorName,
+            cases: [],
+          };
+        }
+        casesByDoctor[doctorName].cases.push({
+          patientName: patient.patientName,
+          caseId: patient.caseId,
+          createdAt: patient.createdAt,
+        });
+
+        // For doctor emails - group by doctor
+        if (!doctorCasesMap[doctorId]) {
+          doctorCasesMap[doctorId] = {
             doctor: patient.userId,
             cases: [],
           };
         }
-        casesByDoctor[doctorId].cases.push({
+        doctorCasesMap[doctorId].cases.push({
           patientName: patient.patientName,
           caseId: patient.caseId,
           createdAt: patient.createdAt,
         });
       }
-      allCases.push({
-        patientName: patient.patientName,
-        caseId: patient.caseId,
-        createdAt: patient.createdAt,
-      });
+    });
+
+    // Sort doctors by name for admin emails
+    const sortedDoctors = Object.keys(casesByDoctor).sort();
+    sortedDoctors.forEach((doctorName) => {
+      // Sort patients by name within each doctor's cases
+      casesByDoctor[doctorName].cases.sort((a, b) =>
+        a.patientName.localeCompare(b.patientName),
+      );
     });
 
     // Get all admins
@@ -85,16 +106,21 @@ export async function POST(req) {
 
     let emailsSent = 0;
 
-    // Send emails to doctors (only their cases)
-    for (const [doctorId, data] of Object.entries(casesByDoctor)) {
+    // Send emails to doctors (only their cases, sorted by patient name)
+    for (const [, data] of Object.entries(doctorCasesMap)) {
       try {
+        // Sort patients by name for doctor emails
+        const sortedCases = [...data.cases].sort((a, b) =>
+          a.patientName.localeCompare(b.patientName),
+        );
         const emailHtml = getPendingApprovalEmailTemplate(
-          data.cases.length,
-          data.cases,
+          sortedCases.length,
+          sortedCases,
+          false, // isAdmin = false
         );
         await sendEmail({
           to: data.doctor.email,
-          subject: `Pending Approval Cases - ${data.cases.length} case(s) awaiting approval`,
+          subject: `Pending Approval Cases - ${sortedCases.length} case(s) awaiting approval`,
           html: emailHtml,
         });
         emailsSent++;
@@ -106,16 +132,19 @@ export async function POST(req) {
       }
     }
 
-    // Send emails to admins (all pending cases)
+    // Send emails to admins (grouped by doctor, sorted by doctor name)
     for (const admin of admins) {
       try {
+        const totalCases = pendingCases.length;
         const emailHtml = getPendingApprovalEmailTemplate(
-          allCases.length,
-          allCases,
+          totalCases,
+          null, // cases array not needed, we'll pass casesByDoctor
+          true, // isAdmin = true
+          casesByDoctor, // pass grouped cases
         );
         await sendEmail({
           to: admin.email,
-          subject: `Pending Approval Cases - ${allCases.length} case(s) awaiting approval`,
+          subject: `Pending Approval Cases - ${totalCases} case(s) awaiting approval`,
           html: emailHtml,
         });
         emailsSent++;
@@ -124,16 +153,19 @@ export async function POST(req) {
       }
     }
 
-    // Send emails to distributers (all pending cases)
+    // Send emails to distributers (grouped by doctor, sorted by doctor name - same as admin)
     for (const distributer of distributers) {
       try {
+        const totalCases = pendingCases.length;
         const emailHtml = getPendingApprovalEmailTemplate(
-          allCases.length,
-          allCases,
+          totalCases,
+          null, // cases array not needed, we'll pass casesByDoctor
+          true, // isAdmin = true
+          casesByDoctor, // pass grouped cases
         );
         await sendEmail({
           to: distributer.email,
-          subject: `Pending Approval Cases - ${allCases.length} case(s) awaiting approval`,
+          subject: `Pending Approval Cases - ${totalCases} case(s) awaiting approval`,
           html: emailHtml,
         });
         emailsSent++;

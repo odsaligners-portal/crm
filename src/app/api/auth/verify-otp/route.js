@@ -176,11 +176,23 @@ export async function POST(req) {
     }
 
     // Send notification email to distributor if user registered with referral code
-    if (user.distributerId) {
+    if (user.distributerId || user.referralCode) {
       try {
-        const distributer = await Distributer.findById(
-          user.distributerId,
-        ).select("name email");
+        let distributer = null;
+
+        // First try to find by distributerId
+        if (user.distributerId) {
+          distributer = await Distributer.findById(user.distributerId).select(
+            "name email referralCode",
+          );
+        }
+
+        // If not found by ID but referralCode exists, try to find by referral code
+        if (!distributer && user.referralCode) {
+          distributer = await Distributer.findOne({
+            referralCode: user.referralCode.toUpperCase(),
+          }).select("name email referralCode");
+        }
 
         if (distributer && distributer.email) {
           const distributerNotificationHtml = `
