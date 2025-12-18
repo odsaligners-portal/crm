@@ -16,7 +16,7 @@ import { caseTypes, genders, treatmentForOptions } from "@/constants/data";
 import { EyeIcon, PencilIcon, PlusIcon, TrashBinIcon } from "@/icons";
 import { countriesData } from "@/utils/countries";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
@@ -27,6 +27,7 @@ import ConfirmationModal from "@/components/common/ConfirmationModal";
 import STLFileDetailsModal from "@/components/admin/STLFileDetailsModal";
 import { setLoading } from "@/store/features/uiSlice";
 import { fetchWithError } from "@/utils/apiErrorHandler";
+import useDebounce from "@/hooks/useDebounce";
 
 const countries = Object.keys(countriesData);
 
@@ -39,6 +40,7 @@ export default function ViewPatientRecords() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalPatients, setTotalPatients] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [showFilters, setShowFilters] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
@@ -94,15 +96,26 @@ export default function ViewPatientRecords() {
   });
 
   const [caseCategories, setCaseCategories] = useState([]);
+  const abortControllerRef = useRef(null);
 
-  const fetchPatients = async () => {
-    dispatch(setLoading(true));
+  const fetchPatients = async (searchValue = null) => {
+    // Cancel previous request if it exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
+      const searchToUse =
+        searchValue !== null ? searchValue : debouncedSearchTerm;
       const params = new URLSearchParams({
         page: currentPage.toString(),
         limit: "100",
         sort: "latest",
-        search: searchTerm,
+        search: searchToUse,
         ...filters,
         // Handle caseStatus array for multi-select
         ...(filters.caseStatus.length > 0 && {
@@ -119,21 +132,27 @@ export default function ViewPatientRecords() {
         headers: {
           Authorization: `Bearer ${token}`,
         },
+        signal: abortController.signal,
       });
 
-      setPatients(data.patients);
-      setTotalPages(data.pagination.totalPages);
-      setTotalPatients(data.pagination.totalPatients);
+      // Only update state if request wasn't aborted
+      if (!abortController.signal.aborted) {
+        setPatients(data.patients);
+        setTotalPages(data.pagination.totalPages);
+        setTotalPatients(data.pagination.totalPatients);
+      }
     } catch (error) {
-      // fetchWithError handles toast
-    } finally {
-      dispatch(setLoading(false));
+      // Ignore abort errors
+      if (error.name === "AbortError" || error.message?.includes("aborted")) {
+        return;
+      }
+      // fetchWithError handles toast and loading
     }
   };
 
   useEffect(() => {
     fetchPatients();
-  }, [currentPage, searchTerm, filters]);
+  }, [currentPage, debouncedSearchTerm, filters]);
 
   useEffect(() => {
     const fetchPlanners = async () => {
@@ -213,6 +232,8 @@ export default function ViewPatientRecords() {
   const handleSearch = (e) => {
     e.preventDefault();
     setCurrentPage(1);
+    // Force immediate search by using current searchTerm value
+    fetchPatients();
   };
 
   const handlePageChange = (page) => {
@@ -705,9 +726,11 @@ export default function ViewPatientRecords() {
           <Button
             type="button"
             className="h-10 rounded-lg bg-gradient-to-r from-blue-400 to-blue-600 px-4 font-semibold text-white subpixel-antialiased shadow-md transition-transform hover:scale-105"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault();
               setCurrentPage(1);
-              fetchPatients();
+              // Use current searchTerm for immediate search (bypass debounce)
+              fetchPatients(searchTerm);
             }}
           >
             Search
