@@ -133,6 +133,7 @@ export default function ViewPatientRecords() {
           Authorization: `Bearer ${token}`,
         },
         signal: abortController.signal,
+        suppressToast: false, // Will be handled below
       });
 
       // Only update state if request wasn't aborted
@@ -142,11 +143,11 @@ export default function ViewPatientRecords() {
         setTotalPatients(data.pagination.totalPatients);
       }
     } catch (error) {
-      // Ignore abort errors
+      // Ignore abort errors - don't show toast for canceled requests
       if (error.name === "AbortError" || error.message?.includes("aborted")) {
         return;
       }
-      // fetchWithError handles toast and loading
+      // For other errors, fetchWithError already handles toast
     }
   };
 

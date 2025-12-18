@@ -44,6 +44,11 @@ export const fetchWithError = async (url, options = {}) => {
     const response = await fetch(url, fetchOptions);
     return await handleApiError(response);
   } catch (error) {
+    // Don't show toast for aborted requests (they're intentional cancellations)
+    if (error.name === "AbortError") {
+      // Re-throw without showing toast
+      throw error;
+    }
     const errorMessage = handleFetchError(error);
     if (!suppressToast) {
       toast.error(errorMessage);
