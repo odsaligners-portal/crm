@@ -185,6 +185,7 @@ export default function ViewPatientDetails() {
   const { token } = useSelector((state) => state.auth);
   const [comments, setComments] = useState([]);
   const [patientFiles, setPatientFiles] = useState([]);
+  const [plannerEntries, setPlannerEntries] = useState([]);
 
   // Clinic Images Modal States
   const [isClinicImagesModalOpen, setIsClinicImagesModalOpen] = useState(false);
@@ -264,20 +265,24 @@ export default function ViewPatientDetails() {
       if (result.error && result.error.includes("permission")) {
         toast.error("You don't have permission to view this patient's files");
         setPatientFiles([]);
+        setPlannerEntries([]);
         return;
       }
 
       if (result.success) {
         setPatientFiles(result.files || []);
+        setPlannerEntries(result.entries || []);
       } else {
         const errorMsg = result.message || "Failed to fetch patient files";
         toast.error(errorMsg);
         setPatientFiles([]);
+        setPlannerEntries([]);
       }
     } catch (e) {
       const errorMsg = e.message || "Error fetching patient files";
       toast.error(errorMsg);
       setPatientFiles([]);
+      setPlannerEntries([]);
     }
   };
 
@@ -2600,14 +2605,368 @@ export default function ViewPatientDetails() {
                   </svg>
                 </div>
                 <h1 className="bg-gradient-to-r from-gray-800 via-purple-800 to-pink-800 bg-clip-text text-4xl font-semibold text-transparent subpixel-antialiased">
-                  Scan Files
+                  Setup Update
                 </h1>
                 <p className="mt-2 text-lg text-gray-600">
-                  Patient scan files and documents
+                  Planner setup entries and patient scan files
                 </p>
               </div>
 
-              {patientFiles.length === 0 ? (
+              {/* Planner Entries Section */}
+              {plannerEntries.length > 0 && (
+                <div className="mb-8 space-y-4">
+                  <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200">
+                    Planner Setup Entries
+                  </h2>
+                  {plannerEntries.map((entry, entryIndex) => (
+                    <div
+                      key={entry.entryId}
+                      className={`rounded-2xl border-2 p-6 shadow-lg transition-all ${
+                        entry.approvalStatus === "approved"
+                          ? "border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
+                          : entry.approvalStatus === "rejected"
+                            ? "border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20"
+                            : "border-blue-300 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20"
+                      }`}
+                    >
+                      <div className="mb-4 flex items-center justify-between">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                            Setup {entryIndex + 1}
+                          </h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Submitted:{" "}
+                            {new Date(entry.uploadedAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span
+                            className={`rounded-full px-3 py-1 text-sm font-medium ${
+                              entry.approvalStatus === "approved"
+                                ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200"
+                                : entry.approvalStatus === "rejected"
+                                  ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-200"
+                                  : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200"
+                            }`}
+                          >
+                            {entry.approvalStatus === "approved"
+                              ? "✓ Approved"
+                              : entry.approvalStatus === "rejected"
+                                ? "✗ Rejected"
+                                : "Pending"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {entry.comment && (
+                        <div className="mb-4 rounded-lg bg-white/60 p-4 dark:bg-gray-800/60">
+                          <h4 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                            Comments:
+                          </h4>
+                          <div
+                            className="prose prose-sm max-w-none text-gray-700 dark:text-gray-300"
+                            dangerouslySetInnerHTML={{
+                              __html: entry.comment.replace(
+                                /<a /g,
+                                '<a target="_blank" rel="noopener noreferrer" ',
+                              ),
+                            }}
+                          />
+                        </div>
+                      )}
+
+                      {entry.files && entry.files.length > 0 && (
+                        <div>
+                          {/* Filter out comment-only entries from files display */}
+                          {(() => {
+                            const actualFiles = entry.files.filter(
+                              (file) =>
+                                file.fileUrl !== "comment-only-entry" &&
+                                file.fileUrl &&
+                                file.fileUrl.trim() !== "",
+                            );
+                            if (actualFiles.length === 0) return null;
+                            return (
+                              <>
+                                <h4 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
+                                  Files ({actualFiles.length}):
+                                </h4>
+                                <div className="space-y-3">
+                                  {actualFiles.map((file, fileIndex) => (
+                                    <div
+                                      key={file._id || fileIndex}
+                                      className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white p-3 dark:border-gray-700 dark:bg-gray-800"
+                                    >
+                                      <div className="flex-shrink-0">
+                                        {file.fileType === "image" ? (
+                                          <div className="flex h-10 w-10 items-center justify-center rounded bg-blue-100">
+                                            <svg
+                                              className="h-6 w-6 text-blue-600"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                              />
+                                            </svg>
+                                          </div>
+                                        ) : file.fileType === "pdf" ? (
+                                          <div className="flex h-10 w-10 items-center justify-center rounded bg-red-100">
+                                            <svg
+                                              className="h-6 w-6 text-red-600"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                              />
+                                            </svg>
+                                          </div>
+                                        ) : (
+                                          <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100">
+                                            <svg
+                                              className="h-6 w-6 text-gray-600"
+                                              fill="none"
+                                              stroke="currentColor"
+                                              viewBox="0 0 24 24"
+                                            >
+                                              <path
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                strokeWidth={2}
+                                                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                              />
+                                            </svg>
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <div
+                                          className="prose prose-sm max-w-none text-sm font-medium text-gray-900 dark:text-gray-100"
+                                          dangerouslySetInnerHTML={{
+                                            __html:
+                                              file.fileName?.replace(
+                                                /<a /g,
+                                                '<a target="_blank" rel="noopener noreferrer" ',
+                                              ) || "File",
+                                          }}
+                                        />
+                                        {file.fileUrl &&
+                                          file.fileUrl !==
+                                            "comment-only-entry" && (
+                                            <a
+                                              href={file.fileUrl}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-xs text-blue-600 hover:underline dark:text-blue-400"
+                                            >
+                                              View File
+                                            </a>
+                                          )}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Regular Patient Files Section */}
+              {patientFiles.length > 0 && (
+                <div className="mb-8">
+                  <h2 className="mb-4 text-2xl font-semibold text-gray-800 dark:text-gray-200">
+                    Patient Files
+                  </h2>
+                  <div className="space-y-4">
+                    {patientFiles.map((file, index) => {
+                      const displayFileName =
+                        file.fileName || `Scan File ${index + 1}`;
+
+                      const isImage = file.fileType === "image";
+                      const isPdf = file.fileType === "pdf";
+                      const isDocument = ["doc", "docx", "txt"].includes(
+                        file.fileType,
+                      );
+                      const canPreview = isImage || isPdf || isDocument;
+
+                      return (
+                        <div
+                          key={`${file.category}-${file.categoryIndex}-${index}`}
+                          className="rounded-2xl border border-gray-200 bg-white p-6 shadow-lg transition-all hover:border-blue-300 hover:shadow-xl"
+                        >
+                          {/* File Selection Checkbox */}
+
+                          <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                              {isImage ? (
+                                <img
+                                  src={file.fileUrl}
+                                  alt={displayFileName}
+                                  className="h-20 w-20 rounded-lg border object-cover shadow-sm"
+                                />
+                              ) : isPdf ? (
+                                <div className="flex h-20 w-20 items-center justify-center rounded-lg border bg-red-50">
+                                  <svg
+                                    className="h-12 w-12 text-red-600"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                </div>
+                              ) : isDocument ? (
+                                <div className="flex h-20 w-20 items-center justify-center rounded-lg border bg-blue-50">
+                                  <svg
+                                    className="h-12 w-12 text-blue-600"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                    />
+                                  </svg>
+                                </div>
+                              ) : (
+                                <div className="flex h-20 w-20 items-center justify-center rounded-lg border bg-gray-50">
+                                  <svg
+                                    className="h-8 w-8 text-gray-600"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                                    />
+                                  </svg>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="min-w-0 flex-1">
+                              <div className="mb-2 flex items-start justify-between gap-6 text-justify">
+                                <div>
+                                  <h4
+                                    className="text-lg font-semibold break-words text-gray-900 subpixel-antialiased"
+                                    dangerouslySetInnerHTML={{
+                                      __html: displayFileName,
+                                    }}
+                                  />
+                                </div>
+                                <div className="py-1 text-right text-sm whitespace-nowrap text-gray-500">
+                                  <div>
+                                    {file.uploadedAt
+                                      ? new Date(
+                                          file.uploadedAt,
+                                        ).toLocaleDateString()
+                                      : "Unknown Date"}
+                                  </div>
+                                  <div>
+                                    {file.uploadedAt
+                                      ? new Date(
+                                          file.uploadedAt,
+                                        ).toLocaleTimeString()
+                                      : ""}
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="mt-3 flex items-center gap-3">
+                                <button
+                                  onClick={() => {
+                                    if (!file.fileUrl) {
+                                      toast.error(
+                                        "File URL not found. Cannot open this file.",
+                                      );
+                                      return;
+                                    }
+
+                                    // Open file in new tab
+                                    window.open(
+                                      file.fileUrl,
+                                      "_blank",
+                                      "noopener,noreferrer",
+                                    );
+                                  }}
+                                  className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                                >
+                                  <svg
+                                    className="h-4 w-4"
+                                    fill="none"
+                                    viewBox="0 0 24 24"
+                                    stroke="currentColor"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                    />
+                                  </svg>
+                                  Download
+                                </button>
+
+                                {canPreview && (
+                                  <a
+                                    href={file.fileUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
+                                  >
+                                    <svg
+                                      className="h-4 w-4"
+                                      fill="none"
+                                      viewBox="0 0 24 24"
+                                      stroke="currentColor"
+                                    >
+                                      <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        strokeWidth={2}
+                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                      />
+                                    </svg>
+                                    Preview
+                                  </a>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Show empty state only if both are empty */}
+              {patientFiles.length === 0 && plannerEntries.length === 0 ? (
                 <div className="py-12 text-center">
                   <svg
                     className="mx-auto mb-4 h-16 w-16 text-gray-400"
@@ -2806,43 +3165,48 @@ export default function ViewPatientDetails() {
               )}
 
               {/* Scan Files Summary */}
-              <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50 p-6">
-                <h4 className="mb-3 text-lg font-semibold text-blue-800 subpixel-antialiased">
-                  Scan Files Summary
-                </h4>
-                <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-semibold text-blue-600 subpixel-antialiased">
-                      {patientFiles.length}
+              {(patientFiles.length > 0 || plannerEntries.length > 0) && (
+                <div className="mt-8 rounded-2xl border border-blue-200 bg-blue-50 p-6">
+                  <h4 className="mb-3 text-lg font-semibold text-blue-800 subpixel-antialiased">
+                    Scan Files Summary
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm md:grid-cols-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-semibold text-blue-600 subpixel-antialiased">
+                        {patientFiles.length}
+                      </div>
+                      <div className="text-blue-700">Total Files</div>
                     </div>
-                    <div className="text-blue-700">Total Files</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-semibold text-green-600 subpixel-antialiased">
-                      {
-                        patientFiles.filter((f) => f.fileType === "image")
-                          .length
-                      }
+                    <div className="text-center">
+                      <div className="text-2xl font-semibold text-green-600 subpixel-antialiased">
+                        {
+                          patientFiles.filter((f) => f.fileType === "image")
+                            .length
+                        }
+                      </div>
+                      <div className="text-green-700">Images</div>
                     </div>
-                    <div className="text-green-700">Images</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-semibold text-purple-600 subpixel-antialiased">
-                      {
-                        patientFiles.filter((f) => f.fileType === "video")
-                          .length
-                      }
+                    <div className="text-center">
+                      <div className="text-2xl font-semibold text-purple-600 subpixel-antialiased">
+                        {
+                          patientFiles.filter((f) => f.fileType === "video")
+                            .length
+                        }
+                      </div>
+                      <div className="text-purple-600">Videos</div>
                     </div>
-                    <div className="text-purple-600">Videos</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-semibold text-orange-600 subpixel-antialiased">
-                      {patientFiles.filter((f) => f.fileType === "pdf").length}
+                    <div className="text-center">
+                      <div className="text-2xl font-semibold text-orange-600 subpixel-antialiased">
+                        {
+                          patientFiles.filter((f) => f.fileType === "pdf")
+                            .length
+                        }
+                      </div>
+                      <div className="text-orange-700">PDFs</div>
                     </div>
-                    <div className="text-orange-700">PDFs</div>
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           )}
         </div>

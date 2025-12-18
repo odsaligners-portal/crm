@@ -350,14 +350,14 @@ export async function POST(req) {
 
       await sendEmail({
         to: notifyEmail,
-        subject: `New Setup Entry/Entries Uploaded - Patient: ${updatedPatient.patientName} (Case ID: ${updatedPatient.caseId})`,
+        subject: `New Setups Uploaded - Patient: ${updatedPatient.patientName} (Case ID: ${updatedPatient.caseId})`,
         html: `
           <!DOCTYPE html>
           <html>
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>New Setup Entries Uploaded</title>
+            <title>New Setups Uploaded</title>
             <style>
               body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
               .container { max-width: 700px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -397,7 +397,7 @@ export async function POST(req) {
           <body>
             <div class="container">
               <div class="header">
-                <h1>📁 New Setup Entry/Entries Uploaded</h1>
+                <h1>📁 New Setups Uploaded</h1>
               </div>
               
               <div class="content">

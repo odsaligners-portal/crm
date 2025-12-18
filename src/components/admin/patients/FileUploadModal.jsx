@@ -625,8 +625,28 @@ export const ViewFilesModal = ({ isOpen, onClose, patient, token }) => {
       })
         .then((res) => res.json())
         .then((data) => {
-          if (data.success) setFiles(data.files);
-          else {
+          if (data.success) {
+            // Combine files from both ungrouped files and entries
+            const allFiles = [...(data.files || [])];
+
+            // Add files from entries (setup entries)
+            if (data.entries && Array.isArray(data.entries)) {
+              data.entries.forEach((entry) => {
+                if (entry.files && Array.isArray(entry.files)) {
+                  // Filter out comment-only entries
+                  const actualFiles = entry.files.filter(
+                    (file) =>
+                      file.fileUrl !== "comment-only-entry" &&
+                      file.fileUrl &&
+                      file.fileUrl.trim() !== "",
+                  );
+                  allFiles.push(...actualFiles);
+                }
+              });
+            }
+
+            setFiles(allFiles);
+          } else {
             setError(data.message || "Failed to fetch files");
             toast.error(data.message || "Failed to fetch files");
           }

@@ -3028,7 +3028,7 @@ export default function ViewPatientDetails() {
                                 <h4 className="mb-2 font-semibold text-gray-700 dark:text-gray-300">
                                   Files ({actualFiles.length}):
                                 </h4>
-                                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
+                                <div className="space-y-3">
                                   {actualFiles.map((file, fileIndex) => (
                                     <div
                                       key={file._id || fileIndex}
