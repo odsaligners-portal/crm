@@ -21,10 +21,10 @@ const transporter = nodemailer.createTransport({
     user: emailUser,
     pass: emailPass,
   },
-  // Add connection timeout
-  connectionTimeout: 10000, // 10 seconds
-  // Add greeting timeout
-  greetingTimeout: 10000, // 10 seconds
+  // Increase timeout values to handle slow connections
+  connectionTimeout: 30000, // 30 seconds (increased from 10)
+  greetingTimeout: 30000, // 30 seconds (increased from 10)
+  socketTimeout: 30000, // 30 seconds for socket operations
   // Disable certificate validation if needed (not recommended for production)
   // tls: {
   //   rejectUnauthorized: false
@@ -47,8 +47,9 @@ export const sendEmail = async ({ to, cc, subject, html }) => {
       );
     }
 
-    // Verify connection before sending
-    await transporter.verify();
+    // Skip verify() to avoid extra connection attempt that can timeout
+    // The sendMail() call will verify the connection anyway
+    // await transporter.verify();
 
     const recipients = Array.isArray(to) ? to.join(",") : to;
     const ccRecipients = cc
@@ -68,6 +69,7 @@ export const sendEmail = async ({ to, cc, subject, html }) => {
       html,
     };
 
+    // Send email (timeouts are handled by transporter configuration)
     const info = await transporter.sendMail(mailOptions);
     console.log("Email sent successfully:", info.messageId);
     return { success: true, messageId: info.messageId };
@@ -84,12 +86,22 @@ export const sendEmail = async ({ to, cc, subject, html }) => {
         "\n4. Ensure EMAIL_USER is the full email address",
         "\n5. Check if your email provider allows SMTP access from your IP",
       );
-    } else if (error.code === "ECONNECTION") {
+    } else if (error.code === "ECONNECTION" || error.code === "ETIMEDOUT") {
       console.error(
-        "Connection failed. Please check:",
+        "Connection timeout or failed. Please check:",
         "\n1. EMAIL_HOST is correct",
         "\n2. EMAIL_PORT is correct (587 for STARTTLS, 465 for SSL)",
         "\n3. Firewall/network allows SMTP connections",
+        "\n4. Email server is accessible from your network",
+        "\n5. Try increasing timeout values if connection is slow",
+      );
+    } else if (error.message?.includes("timeout")) {
+      console.error(
+        "Email send operation timed out. This may be due to:",
+        "\n1. Slow network connection",
+        "\n2. Email server is overloaded",
+        "\n3. Network firewall blocking SMTP traffic",
+        "\n4. Consider using a different email service or increasing timeout values",
       );
     }
 
