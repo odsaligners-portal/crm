@@ -647,105 +647,136 @@ export async function PUT(req) {
       caseWasApproved = true;
     }
 
-    // Send notifications to admins and distributors when case is approved
-    if (caseWasApproved) {
-      try {
-        // Fetch updated patient with populated fields
-        const updatedPatient = await Patient.findById(patientId)
-          .populate("userId")
-          .populate("plannerId");
+    // Get approved entry details for email
+    const approvedEntryFiles = await PatientFile.find({
+      patientId,
+      entryId,
+      approvalStatus: "approved",
+    }).limit(1);
 
-        if (updatedPatient) {
-          const recipients = [];
+    const approvedEntry = approvedEntryFiles[0];
+    const entryHeading = approvedEntry?.heading || null;
 
-          // Get all admins
-          const admins = await User.find({ role: "admin" }, "email").lean();
-          admins.forEach((admin) => {
-            if (admin.email) recipients.push(admin.email);
-          });
+    // Send notifications to admins and distributors when setup is approved
+    try {
+      // Fetch updated patient with populated fields
+      const updatedPatient = await Patient.findById(patientId)
+        .populate("userId")
+        .populate("plannerId");
 
-          // Get distributor email
-          if (updatedPatient.userId?.distributerId) {
-            const distributer = await Distributer.findById(
-              updatedPatient.userId.distributerId,
-            ).select("email");
-            if (distributer?.email) {
-              recipients.push(distributer.email);
-            }
-          }
+      if (updatedPatient) {
+        const recipients = [];
 
-          // Send email notification (deduplicate recipients)
-          const uniqueRecipients = [...new Set(recipients.filter(Boolean))];
-          if (uniqueRecipients.length > 0) {
-            await sendEmail({
-              to: uniqueRecipients,
-              subject: `Case Approved - Patient: ${updatedPatient.patientName} (Case ID: ${updatedPatient.caseId})`,
-              html: `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                  <meta charset="utf-8">
-                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                  <title>Case Approved</title>
-                  <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
-                    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-                    .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
-                    .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
-                    .content { margin-bottom: 30px; }
-                    .patient-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745; }
-                    .patient-info h3 { margin: 0 0 15px 0; color: #28a745; font-size: 18px; }
-                    .detail-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #e0e0e0; }
-                    .detail-label { font-weight: 600; color: #495057; }
-                    .detail-value { color: #6c757d; text-align: right; }
-                    .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
-                  </style>
-                </head>
-                <body>
-                  <div class="container">
-                    <div class="header">
-                      <h1>✅ Case Approved</h1>
-                    </div>
-                    
-                    <div class="content">
-                      <p>Hello,</p>
-                      
-                      <p>A doctor has approved a case that requires your attention.</p>
-                      
-                      <div class="patient-info">
-                        <h3>👤 Patient Information</h3>
-                        <div class="detail-row">
-                          <span class="detail-label">Patient Name:</span>
-                          <span class="detail-value">${updatedPatient.patientName || "N/A"}</span>
-                        </div>
-                        <div class="detail-row">
-                          <span class="detail-label">Case ID:</span>
-                          <span class="detail-value">${updatedPatient.caseId || "N/A"}</span>
-                        </div>
-                        <div class="detail-row">
-                          <span class="detail-label">Status:</span>
-                          <span class="detail-value" style="color: #28a745; font-weight: 600;">Approved</span>
-                        </div>
-                      </div>
-                      
-                      <p style="margin-top: 20px;">The case has been approved and is now ready for the next steps in the workflow.</p>
-                    </div>
-                    
-                    <div class="footer">
-                      <p>This is an automated notification from the Patient Management System.</p>
-                      <p>Please do not reply to this email.</p>
-                    </div>
-                  </div>
-                </body>
-                </html>
-              `,
-            });
+        // Get all admins
+        const admins = await User.find({ role: "admin" }, "email").lean();
+        admins.forEach((admin) => {
+          if (admin.email) recipients.push(admin.email);
+        });
+
+        // Get distributor email
+        if (updatedPatient.userId?.distributerId) {
+          const distributer = await Distributer.findById(
+            updatedPatient.userId.distributerId,
+          ).select("email");
+          if (distributer?.email) {
+            recipients.push(distributer.email);
           }
         }
-      } catch (error) {
-        console.error("Error sending approval notifications:", error);
-        // Don't fail the approval if email fails
+
+        // Send email notification (deduplicate recipients)
+        const uniqueRecipients = [...new Set(recipients.filter(Boolean))];
+        if (uniqueRecipients.length > 0) {
+          const emailSubject = caseWasApproved
+            ? `Case Approved - Patient: ${updatedPatient.patientName} (Case ID: ${updatedPatient.caseId})`
+            : `Setup Approved - Patient: ${updatedPatient.patientName} (Case ID: ${updatedPatient.caseId})`;
+
+          await sendEmail({
+            to: uniqueRecipients,
+            subject: emailSubject,
+            html: `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${caseWasApproved ? "Case Approved" : "Setup Approved"}</title>
+                <style>
+                  body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
+                  .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
+                  .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+                  .content { margin-bottom: 30px; }
+                  .patient-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745; }
+                  .patient-info h3 { margin: 0 0 15px 0; color: #28a745; font-size: 18px; }
+                  .detail-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #e0e0e0; }
+                  .detail-label { font-weight: 600; color: #495057; }
+                  .detail-value { color: #6c757d; text-align: right; }
+                  .setup-info { background: #e8f5e9; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #28a745; }
+                  .setup-info h4 { margin: 0 0 10px 0; color: #2e7d32; font-size: 16px; }
+                  .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+                </style>
+              </head>
+              <body>
+                <div class="container">
+                  <div class="header">
+                    <h1>✅ ${caseWasApproved ? "Case Approved" : "Setup Approved"}</h1>
+                  </div>
+                  
+                  <div class="content">
+                    <p>Hello,</p>
+                    
+                    <p>A doctor has approved ${caseWasApproved ? "a case" : "a setup entry"} that requires your attention.</p>
+                    
+                    <div class="patient-info">
+                      <h3>👤 Patient Information</h3>
+                      <div class="detail-row">
+                        <span class="detail-label">Patient Name:</span>
+                        <span class="detail-value">${updatedPatient.patientName || "N/A"}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">Case ID:</span>
+                        <span class="detail-value">${updatedPatient.caseId || "N/A"}</span>
+                      </div>
+                      ${
+                        caseWasApproved
+                          ? `
+                      <div class="detail-row">
+                        <span class="detail-label">Status:</span>
+                        <span class="detail-value" style="color: #28a745; font-weight: 600;">Approved</span>
+                      </div>
+                      `
+                          : ""
+                      }
+                    </div>
+                    
+                    ${
+                      entryHeading
+                        ? `
+                    <div class="setup-info">
+                      <h4>📋 Approved Setup</h4>
+                      <p style="margin: 0; color: #2e7d32; font-weight: 600;">${entryHeading}</p>
+                    </div>
+                    `
+                        : ""
+                    }
+                    
+                    <p style="margin-top: 20px;">${caseWasApproved ? "The case has been approved and is now ready for the next steps in the workflow." : "The setup entry has been approved by the doctor."}</p>
+                  </div>
+                  
+                  <div class="footer">
+                    <p>This is an automated notification from the Patient Management System.</p>
+                    <p>Please do not reply to this email.</p>
+                  </div>
+                </div>
+              </body>
+              </html>
+            `,
+          });
+        }
       }
+    } catch (error) {
+      console.error("Error sending approval notifications:", error);
+      // Don't fail the approval if email fails
     }
 
     return NextResponse.json({
