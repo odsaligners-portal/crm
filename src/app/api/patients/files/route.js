@@ -54,6 +54,7 @@ export async function POST(req) {
         entryId:
           entry.entryId ||
           `entry_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        heading: entry.heading || "",
         comment: entry.comment || "",
         files: Array.isArray(entry.files) ? entry.files : [],
       }));
@@ -122,6 +123,7 @@ export async function POST(req) {
               fileKey: `comment-only-${entry.entryId}`, // Placeholder value for comment-only entries
               uploadedBy: user.id,
               entryId: entry.entryId,
+              heading: entry.heading || null,
               approvalStatus: "pending",
             }).save();
             savedFiles.push(commentFile);
@@ -134,6 +136,7 @@ export async function POST(req) {
               fileKey: file.fileKey,
               uploadedBy: user.id,
               entryId: entry.entryId,
+              heading: entry.heading || null,
               approvalStatus: "pending",
             }).save();
             savedFiles.push(savedFile);
@@ -155,6 +158,7 @@ export async function POST(req) {
           fileKey: `comment-only-${entry.entryId}`, // Placeholder value for comment-only entries
           uploadedBy: user.id,
           entryId: entry.entryId,
+          heading: entry.heading || null,
           approvalStatus: "pending",
         }).save();
         savedFiles.push(commentFile);
@@ -249,6 +253,8 @@ export async function POST(req) {
         entriesHtml = entriesToProcess
           .map((entry, index) => {
             const entryNumber = index + 1;
+            const entryHeading =
+              entry.heading?.trim() || `Setup ${entryNumber}`;
             let filesHtml = "";
 
             // Build comment section (strip HTML tags for plain text preview, but keep for display)
@@ -281,7 +287,7 @@ export async function POST(req) {
                           displayFileName = `Uploaded ${file.fileType || "File"}`;
                           console.log(displayFileName);
                         }
-                      } 
+                      }
                     }
 
                     return `
@@ -304,7 +310,7 @@ export async function POST(req) {
             return `
               <div class="entry-section">
                 <div class="entry-header">
-                  <span class="entry-number">Setup ${entryNumber}</span>
+                  <span class="entry-number">${entryHeading}</span>
                 </div>
                 ${
                   hasComment
@@ -499,6 +505,7 @@ export async function GET(req) {
         if (!entriesMap.has(file.entryId)) {
           entriesMap.set(file.entryId, {
             entryId: file.entryId,
+            heading: file.heading || null,
             files: [],
             comment: "",
             approvalStatus: file.approvalStatus || "pending",
@@ -507,6 +514,10 @@ export async function GET(req) {
         }
         const entry = entriesMap.get(file.entryId);
         entry.files.push(file);
+        // Get heading from first file if available
+        if (file.heading && !entry.heading) {
+          entry.heading = file.heading;
+        }
         // Get comment from first file if it's a comment-only entry
         if (
           file.fileType === "text" &&
@@ -625,10 +636,116 @@ export async function PUT(req) {
     );
 
     // Update patient case status to approved if it was approval pending
+    let caseWasApproved = false;
     if (patient.caseStatus === "approval pending") {
       await Patient.findByIdAndUpdate(patientId, {
-        $set: { caseStatus: "approved" },
+        $set: {
+          caseStatus: "approved",
+          "stlFile.canUpload": true,
+        },
       });
+      caseWasApproved = true;
+    }
+
+    // Send notifications to admins and distributors when case is approved
+    if (caseWasApproved) {
+      try {
+        // Fetch updated patient with populated fields
+        const updatedPatient = await Patient.findById(patientId)
+          .populate("userId")
+          .populate("plannerId");
+
+        if (updatedPatient) {
+          const recipients = [];
+
+          // Get all admins
+          const admins = await User.find({ role: "admin" }, "email").lean();
+          admins.forEach((admin) => {
+            if (admin.email) recipients.push(admin.email);
+          });
+
+          // Get distributor email
+          if (updatedPatient.userId?.distributerId) {
+            const distributer = await Distributer.findById(
+              updatedPatient.userId.distributerId,
+            ).select("email");
+            if (distributer?.email) {
+              recipients.push(distributer.email);
+            }
+          }
+
+          // Send email notification (deduplicate recipients)
+          const uniqueRecipients = [...new Set(recipients.filter(Boolean))];
+          if (uniqueRecipients.length > 0) {
+            await sendEmail({
+              to: uniqueRecipients,
+              subject: `Case Approved - Patient: ${updatedPatient.patientName} (Case ID: ${updatedPatient.caseId})`,
+              html: `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                  <meta charset="utf-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>Case Approved</title>
+                  <style>
+                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
+                    .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                    .header { background: linear-gradient(135deg, #28a745 0%, #20c997 100%); color: white; padding: 20px; margin: -30px -30px 30px -30px; border-radius: 10px 10px 0 0; text-align: center; }
+                    .header h1 { margin: 0; font-size: 24px; font-weight: 600; }
+                    .content { margin-bottom: 30px; }
+                    .patient-info { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #28a745; }
+                    .patient-info h3 { margin: 0 0 15px 0; color: #28a745; font-size: 18px; }
+                    .detail-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #e0e0e0; }
+                    .detail-label { font-weight: 600; color: #495057; }
+                    .detail-value { color: #6c757d; text-align: right; }
+                    .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
+                  </style>
+                </head>
+                <body>
+                  <div class="container">
+                    <div class="header">
+                      <h1>✅ Case Approved</h1>
+                    </div>
+                    
+                    <div class="content">
+                      <p>Hello,</p>
+                      
+                      <p>A doctor has approved a case that requires your attention.</p>
+                      
+                      <div class="patient-info">
+                        <h3>👤 Patient Information</h3>
+                        <div class="detail-row">
+                          <span class="detail-label">Patient Name:</span>
+                          <span class="detail-value">${updatedPatient.patientName || "N/A"}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="detail-label">Case ID:</span>
+                          <span class="detail-value">${updatedPatient.caseId || "N/A"}</span>
+                        </div>
+                        <div class="detail-row">
+                          <span class="detail-label">Status:</span>
+                          <span class="detail-value" style="color: #28a745; font-weight: 600;">Approved</span>
+                        </div>
+                      </div>
+                      
+                      <p style="margin-top: 20px;">The case has been approved and is now ready for the next steps in the workflow.</p>
+                    </div>
+                    
+                    <div class="footer">
+                      <p>This is an automated notification from the Patient Management System.</p>
+                      <p>Please do not reply to this email.</p>
+                    </div>
+                  </div>
+                </body>
+                </html>
+              `,
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Error sending approval notifications:", error);
+        // Don't fail the approval if email fails
+      }
     }
 
     return NextResponse.json({

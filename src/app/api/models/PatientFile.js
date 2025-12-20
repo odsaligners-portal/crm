@@ -37,6 +37,10 @@ const patientFileSchema = new mongoose.Schema({
     type: String, // Unique ID for the setup entry this file belongs to
     default: null,
   },
+  heading: {
+    type: String, // Heading/title for the setup entry
+    default: null,
+  },
   approvalStatus: {
     type: String,
     enum: ["pending", "approved", "rejected"],

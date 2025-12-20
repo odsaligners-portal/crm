@@ -147,21 +147,26 @@ const EntryFileDropzone = ({ entryId, files, onFilesChange }) => {
 
 const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
   const [entries, setEntries] = useState([
-    { id: Date.now().toString(), comment: "", files: [] },
+    { id: Date.now().toString(), heading: "", comment: "", files: [] },
   ]);
   const [loading, setLoading] = useState(false);
   const [editorKeys, setEditorKeys] = useState({});
 
   useEffect(() => {
     if (isOpen) {
-      setEntries([{ id: Date.now().toString(), comment: "", files: [] }]);
+      setEntries([
+        { id: Date.now().toString(), heading: "", comment: "", files: [] },
+      ]);
       setEditorKeys({});
     }
   }, [isOpen, patient]);
 
   const addNewEntry = () => {
     const newId = Date.now().toString();
-    setEntries([...entries, { id: newId, comment: "", files: [] }]);
+    setEntries([
+      ...entries,
+      { id: newId, heading: "", comment: "", files: [] },
+    ]);
     setEditorKeys((prev) => ({ ...prev, [newId]: Date.now() }));
   };
 
@@ -174,6 +179,10 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
     } else {
       toast.warning("At least one setup is required");
     }
+  };
+
+  const updateEntryHeading = (entryId, heading) => {
+    setEntries(entries.map((e) => (e.id === entryId ? { ...e, heading } : e)));
   };
 
   const updateEntryComment = (entryId, comment) => {
@@ -222,7 +231,19 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
           const uploadTask = uploadBytesResumable(storageRef, file);
 
           await new Promise((resolve, reject) => {
-            uploadTask.on("state_changed", null, reject, resolve);
+            uploadTask.on(
+              "state_changed",
+              null,
+              (error) => {
+                console.error("File upload error:", error);
+                reject(
+                  new Error(
+                    `Failed to upload file "${file.name}": ${error.message || "Upload failed"}`,
+                  ),
+                );
+              },
+              resolve,
+            );
           });
 
           const fileUrl = await getDownloadURL(uploadTask.snapshot.ref);
@@ -260,6 +281,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
 
         allEntriesData.push({
           entryId,
+          heading: entry.heading?.trim() || "",
           comment: entry.comment.trim(),
           files: uploadedFiles,
         });
@@ -277,7 +299,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
         }),
       });
 
-      const result = await response.json();
+      const result = await response.json(); // Handle non-JSON responses
 
       if (!response.ok || !result.success) {
         toast.error("Failed to submit setup/setups");
@@ -290,8 +312,20 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
         onSuccess();
       }
     } catch (error) {
-      toast.error("Submission failed");
-      console.error(error);
+      // Show specific error message if available, otherwise show generic message
+      let errorMessage =
+        "An error occurred while submitting. Please try again.";
+
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error.toString && error.toString() !== "[object Object]") {
+        errorMessage = error.toString();
+      }
+
+      toast.error(errorMessage);
+      console.error("Error submitting setups:", error);
     } finally {
       setLoading(false);
     }
@@ -300,11 +334,28 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={loading ? undefined : onClose}
       className="w-full max-w-4xl p-1"
       showCloseButton={false}
     >
       <div className="relative flex max-h-[90vh] flex-col overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 shadow-2xl backdrop-blur-lg dark:from-gray-900 dark:via-gray-800 dark:to-blue-900/30">
+        {/* Loading Overlay */}
+        {loading && (
+          <div className="absolute inset-0 z-50 flex items-center justify-center rounded-3xl bg-black/50 backdrop-blur-sm">
+            <div className="flex flex-col items-center gap-4 rounded-2xl bg-white/95 p-8 shadow-2xl dark:bg-gray-800/95">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+              <div className="text-center">
+                <p className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Submitting Setup{entries.length > 1 ? "s" : ""}...
+                </p>
+                <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  Please wait while we upload your files and process your
+                  submission.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Decorative background elements */}
         <div className="absolute -top-20 -right-20 h-64 w-64 rounded-full bg-gradient-to-br from-blue-200/30 to-purple-200/30 blur-3xl dark:from-blue-800/20 dark:to-purple-800/20"></div>
         <div className="absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-gradient-to-br from-indigo-200/30 to-pink-200/30 blur-3xl dark:from-indigo-800/20 dark:to-pink-800/20"></div>
@@ -390,7 +441,7 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
                           Setup {entryIndex + 1}
                         </h3>
                         <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                          Add comments and/or files for this setup
+                          Add heading, comments and/or files for this setup
                         </p>
                       </div>
                       {entries.length > 1 && (
@@ -418,6 +469,40 @@ const FileUploadModal = ({ isOpen, onClose, patient, token, onSuccess }) => {
                     </div>
 
                     <div className="space-y-5">
+                      {/* Heading Section */}
+                      <div className="rounded-xl bg-white/60 p-4 dark:bg-gray-800/60">
+                        <label className="mb-2 block text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          <span className="flex items-center gap-2">
+                            <svg
+                              className="h-5 w-5 text-blue-600 dark:text-blue-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"
+                              />
+                            </svg>
+                            Setup Heading
+                            <span className="ml-1 text-xs font-normal text-gray-500">
+                              (Optional - will be shown instead of "Setup{" "}
+                              {entryIndex + 1}")
+                            </span>
+                          </span>
+                        </label>
+                        <input
+                          type="text"
+                          value={entry.heading || ""}
+                          onChange={(e) =>
+                            updateEntryHeading(entry.id, e.target.value)
+                          }
+                          placeholder={`e.g., Initial Setup, Refinement, Final Review`}
+                          className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-500 dark:focus:border-blue-400"
+                        />
+                      </div>
                       {/* Comments Section */}
                       <div className="rounded-xl bg-white/60 p-4 dark:bg-gray-800/60">
                         <label className="mb-3 flex items-center gap-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
