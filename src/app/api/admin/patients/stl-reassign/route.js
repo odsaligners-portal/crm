@@ -56,7 +56,6 @@ export async function POST(req) {
       plannerId,
       plannerAssignedAt: now,
       plannerDeadline: deadlineDate,
-      caseStatus: "setup pending",
       "fileUploadCount.remianing": 1,
       // reset STL subtree and allow planner to upload fresh
       stlFile: {
