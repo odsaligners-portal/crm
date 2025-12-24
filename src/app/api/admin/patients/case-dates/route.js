@@ -355,7 +355,7 @@ export async function PUT(req) {
           }
         }
       }
- 
+  
       // Email template for distributor
       if (distributor && distributor.email) {
         const distributorEmailHtml = `
