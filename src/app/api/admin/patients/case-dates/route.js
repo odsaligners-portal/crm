@@ -192,19 +192,17 @@ export async function PUT(req) {
           .lean();
       }
 
-      // Send case details email if both start and end dates are set
-      if (
-        doctor &&
-        doctor.email &&
-        updatedPatient.caseStartDate &&
-        updatedPatient.caseEndDate
-      ) {
+      // Send email to doctor whenever dates are updated
+      if (doctor && doctor.email && (startDate !== null || endDate !== null)) {
         // Check if this is the first time both dates are set
         const wasBothDatesSet =
           patientBeforeUpdate.caseStartDate && patientBeforeUpdate.caseEndDate;
-        const isFirstTimeBothSet = !wasBothDatesSet;
+        const isFirstTimeBothSet =
+          !wasBothDatesSet &&
+          updatedPatient.caseStartDate &&
+          updatedPatient.caseEndDate;
 
-        // Only send case details email if this is the first time both dates are set
+        // If both dates are set for the first time, send case details email
         if (isFirstTimeBothSet) {
           // Get full patient data for case details email
           const fullPatient = await Patient.findById(patientId)
@@ -217,7 +215,7 @@ export async function PUT(req) {
             caseId: fullPatient.caseId,
             caseCategory: fullPatient.caseCategory,
             registeredDate: fullPatient.createdAt,
-            approvalDate: fullPatient.updatedAt, // You may want to track actual approval date
+            approvalDate: fullPatient.updatedAt,
             startDate: fullPatient.caseStartDate,
             expiryDate: fullPatient.caseEndDate,
           };
@@ -230,19 +228,47 @@ export async function PUT(req) {
           });
           console.log("Case details email sent successfully to:", doctor.email);
         } else {
-          // If dates are being updated, send a simpler notification
-          const isUpdate =
-            oldEndDate && oldEndDate.getTime() !== endDate.getTime();
+          // Send notification email for date updates
+          const oldStartDate = patientBeforeUpdate.caseStartDate;
+          const startDateChanged =
+            startDate !== null &&
+            (!oldStartDate ||
+              new Date(oldStartDate).getTime() !==
+                new Date(startDate).getTime());
+          const endDateChanged =
+            endDate !== null &&
+            (!oldEndDate ||
+              new Date(oldEndDate).getTime() !== new Date(endDate).getTime());
 
-          if (isUpdate) {
-            const emailSubject = `Case End Date Updated: ${updatedPatient.patientName} (${updatedPatient.caseId})`;
+          if (startDateChanged || endDateChanged) {
+            let emailSubject = "";
+            let emailTitle = "";
+            let emailMessage = "";
+
+            if (startDateChanged && endDateChanged) {
+              emailSubject = `Case Dates Updated: ${updatedPatient.patientName} (${updatedPatient.caseId})`;
+              emailTitle = "📅 Case Dates Updated";
+              emailMessage =
+                "The start and end dates for one of your patient cases have been updated by the admin.";
+            } else if (startDateChanged) {
+              emailSubject = `Case Start Date ${oldStartDate ? "Updated" : "Assigned"}: ${updatedPatient.patientName} (${updatedPatient.caseId})`;
+              emailTitle =
+                "📅 Case Start Date " + (oldStartDate ? "Updated" : "Assigned");
+              emailMessage = `The start date for one of your patient cases has been ${oldStartDate ? "updated" : "assigned"} by the admin.`;
+            } else if (endDateChanged) {
+              emailSubject = `Case End Date ${oldEndDate ? "Updated" : "Assigned"}: ${updatedPatient.patientName} (${updatedPatient.caseId})`;
+              emailTitle =
+                "📅 Case End Date " + (oldEndDate ? "Updated" : "Assigned");
+              emailMessage = `The end date for one of your patient cases has been ${oldEndDate ? "updated" : "assigned"} by the admin.`;
+            }
+
             const emailHtml = `
               <!DOCTYPE html>
               <html>
               <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Case End Date Updated</title>
+                <title>Case Dates Updated</title>
                 <style>
                   body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f8f9fa; }
                   .container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
@@ -251,22 +277,65 @@ export async function PUT(req) {
                   .content { margin-bottom: 30px; }
                   .info-box { background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #667eea; }
                   .info-box p { margin: 8px 0; }
+                  .date-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e0e0e0; }
+                  .date-label { font-weight: 600; color: #495057; }
+                  .date-value { color: #6c757d; }
                   .footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e9ecef; color: #6c757d; font-size: 14px; }
                 </style>
               </head>
               <body>
                 <div class="container">
                   <div class="header">
-                    <h1>📅 Case End Date Updated</h1>
+                    <h1>${emailTitle}</h1>
                   </div>
                   <div class="content">
                     <p>Dear Dr. ${doctor.name},</p>
-                    <p>The end date for one of your patient cases has been updated by the admin.</p>
+                    <p>${emailMessage}</p>
                     <div class="info-box">
                       <p><strong>Patient Name:</strong> ${updatedPatient.patientName}</p>
                       <p><strong>Case ID:</strong> ${updatedPatient.caseId}</p>
-                      <p><strong>Previous Expiry:</strong> ${new Date(oldEndDate).toLocaleDateString()}</p>
-                      <p><strong>New Expiry:</strong> ${new Date(endDate).toLocaleDateString()}</p>
+                      ${
+                        startDateChanged
+                          ? `
+                        <div class="date-row">
+                          <span class="date-label">${oldStartDate ? "Previous Start Date:" : "Start Date:"}</span>
+                          <span class="date-value">${oldStartDate ? new Date(oldStartDate).toLocaleDateString() : "Not set"}</span>
+                        </div>
+                        <div class="date-row">
+                          <span class="date-label">New Start Date:</span>
+                          <span class="date-value">${new Date(startDate).toLocaleDateString()}</span>
+                        </div>
+                      `
+                          : updatedPatient.caseStartDate
+                            ? `
+                        <div class="date-row">
+                          <span class="date-label">Start Date:</span>
+                          <span class="date-value">${new Date(updatedPatient.caseStartDate).toLocaleDateString()}</span>
+                        </div>
+                      `
+                            : ""
+                      }
+                      ${
+                        endDateChanged
+                          ? `
+                        <div class="date-row">
+                          <span class="date-label">${oldEndDate ? "Previous End Date:" : "End Date:"}</span>
+                          <span class="date-value">${oldEndDate ? new Date(oldEndDate).toLocaleDateString() : "Not set"}</span>
+                        </div>
+                        <div class="date-row">
+                          <span class="date-label">New End Date:</span>
+                          <span class="date-value">${new Date(endDate).toLocaleDateString()}</span>
+                        </div>
+                      `
+                          : updatedPatient.caseEndDate
+                            ? `
+                        <div class="date-row">
+                          <span class="date-label">End Date:</span>
+                          <span class="date-value">${new Date(updatedPatient.caseEndDate).toLocaleDateString()}</span>
+                        </div>
+                      `
+                            : ""
+                      }
                     </div>
                   </div>
                   <div class="footer">
@@ -282,7 +351,7 @@ export async function PUT(req) {
               subject: emailSubject,
               html: emailHtml,
             });
-            console.log("Case end date update email sent to:", doctor.email);
+            console.log("Case dates update email sent to:", doctor.email);
           }
         }
       }

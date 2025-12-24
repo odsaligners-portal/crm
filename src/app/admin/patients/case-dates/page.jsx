@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { setLoading } from "@/store/features/uiSlice";
 import { toast } from "react-toastify";
+import useDebounce from "@/hooks/useDebounce";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.css";
 import {
@@ -29,8 +30,8 @@ export default function CaseDatesPage() {
   const { token } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [patients, setPatients] = useState([]);
-  const [filteredPatients, setFilteredPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
   const [filter, setFilter] = useState("all"); // 'all', 'withEndDate', 'withoutEndDate'
   const [editingPatient, setEditingPatient] = useState(null);
   const [startDate, setStartDate] = useState("");
@@ -43,23 +44,14 @@ export default function CaseDatesPage() {
   const startDateFlatpickrRef = useRef(null);
   const endDateFlatpickrRef = useRef(null);
 
+  // Reset to page 1 when search or filter changes
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearchTerm, filter]);
+
   useEffect(() => {
     fetchPatients();
-  }, [token, page, filter]);
-
-  useEffect(() => {
-    let filtered = patients;
-
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (p) =>
-          p.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          p.caseId?.toLowerCase().includes(searchTerm.toLowerCase()),
-      );
-    }
-
-    setFilteredPatients(filtered);
-  }, [searchTerm, patients]);
+  }, [token, page, filter, debouncedSearchTerm]);
 
   const fetchPatients = async () => {
     if (!token) return;
@@ -75,6 +67,11 @@ export default function CaseDatesPage() {
         params.append("hasEndDate", "true");
       } else if (filter === "withoutEndDate") {
         params.append("hasEndDate", "false");
+      }
+
+      // Add search parameter if search term exists
+      if (debouncedSearchTerm) {
+        params.append("search", debouncedSearchTerm);
       }
 
       const data = await fetchWithError(
@@ -402,7 +399,7 @@ export default function CaseDatesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                {filteredPatients.length === 0 ? (
+                {patients.length === 0 ? (
                   <tr>
                     <td
                       colSpan="6"
@@ -412,7 +409,7 @@ export default function CaseDatesPage() {
                     </td>
                   </tr>
                 ) : (
-                  filteredPatients.map((patient) => (
+                  patients.map((patient) => (
                     <tr
                       key={patient._id}
                       className="transition-colors duration-200 hover:bg-blue-50/50 dark:hover:bg-gray-700/50"
