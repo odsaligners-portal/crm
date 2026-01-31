@@ -1,11 +1,19 @@
 const nextConfig = {
   reactStrictMode: true,
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
+      },
+    },
+  },
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "firebasestorage.googleapis.com",
-  },
+      },
     ],
   },
   async rewrites() {

@@ -15,7 +15,7 @@ export async function GET(req) {
   }
 
   try {
-    const limit = 12;
+    const limit = 15;
     let activities = [];
 
     // New Patients

@@ -32,7 +32,7 @@ export default function RecentPatients() {
       dispatch(setLoading(true));
       try {
         const response = await fetch(
-          `/api/admin/patients?page=1&limit=5&sort=latest`,
+          `/api/admin/patients?page=1&limit=10&sort=latest`,
           {
             headers: { Authorization: `Bearer ${token}` },
           },
