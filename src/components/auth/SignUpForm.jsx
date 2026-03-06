@@ -989,6 +989,7 @@ export default function SignUpForm({
         onResend={handleResendOTP}
         email={pendingEmail}
         isLoading={isVerifying}
+        hasDistributerReferral={!!referralCode}
       />
 
       {/* Registration Success Modal */}

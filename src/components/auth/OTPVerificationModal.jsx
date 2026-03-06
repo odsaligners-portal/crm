@@ -10,6 +10,7 @@ const OTPVerificationModal = ({
   email,
   onResend,
   isLoading = false,
+  hasDistributerReferral = false,
 }) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isResending, setIsResending] = useState(false);
@@ -226,6 +227,17 @@ const OTPVerificationModal = ({
               </p>
             </div>
           </div>
+
+          {/* Distributor default OTP hint */}
+          {hasDistributerReferral && (
+            <div className="mt-4 rounded-lg bg-amber-50 p-3 dark:bg-amber-900/20">
+              <p className="text-xs text-amber-800 dark:text-amber-200">
+                You can enter the <strong>OTP from your email</strong>, or the{" "}
+                <strong>default OTP</strong> provided by your distributor (if
+                they shared one with you).
+              </p>
+            </div>
+          )}
 
           {/* Security Note */}
           <div className="mt-6 rounded-lg bg-blue-50 p-3 dark:bg-blue-900/20">

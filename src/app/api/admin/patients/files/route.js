@@ -66,9 +66,16 @@ export async function DELETE(req) {
       );
     }
 
-    // Check if user is superadmin
-    const superadminId = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID;
-    if (!superadminId || authResult.user.id !== superadminId) {
+    // Check if user is superadmin (compare as strings; support both env vars)
+    const superadminId =
+      process.env.SUPER_ADMIN_ID ||
+      process.env.NEXT_PUBLIC_SUPER_ADMIN_ID ||
+      "";
+    const userId = authResult.user?.id ?? authResult.user?._id ?? "";
+    if (
+      !superadminId ||
+      String(userId).trim() !== String(superadminId).trim()
+    ) {
       return NextResponse.json(
         { success: false, message: "Only superadmin can delete setup updates" },
         { status: 403 },

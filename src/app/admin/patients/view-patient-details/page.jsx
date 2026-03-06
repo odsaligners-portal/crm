@@ -10,6 +10,7 @@ import TeethSelector from "@/components/all/TeethSelector";
 import { imageLabels } from "@/constants/data";
 import DynamicClinicImagesModal from "@/components/common/DynamicClinicImagesModal";
 import DynamicClinicImagesDisplay from "@/components/common/DynamicClinicImagesDisplay";
+import ConfirmationModal from "@/components/common/ConfirmationModal";
 import { safeId } from "@/utils/safeId";
 import {
   DocumentTextIcon,
@@ -195,6 +196,8 @@ export default function ViewPatientDetails() {
   const [specialComments, setSpecialComments] = useState([]);
   const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [showDeleteSetupModal, setShowDeleteSetupModal] = useState(false);
+  const [deleteSetupFileId, setDeleteSetupFileId] = useState(null);
 
   // Check if case has expired
   const isCaseExpired =
@@ -208,7 +211,7 @@ export default function ViewPatientDetails() {
   // Clinic Images Section States
   const [expandedSection, setExpandedSection] = useState(null);
 
-  // Check if user is superadmin
+  // Check if user is superadmin (API + fallback via profile so delete option is visible)
   useEffect(() => {
     const checkSuperAdmin = async () => {
       try {
@@ -219,8 +222,28 @@ export default function ViewPatientDetails() {
         });
         if (response.ok) {
           const data = await response.json();
-          setIsSuperAdmin(data.isSuperAdmin || false);
+          if (data.isSuperAdmin) {
+            setIsSuperAdmin(true);
+            return;
+          }
         }
+        // Fallback: compare current user id with Super Admin id from env
+        const profileRes = await fetch("/api/user/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (profileRes.ok) {
+          const profile = await profileRes.json();
+          const superAdminId = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID;
+          if (
+            superAdminId &&
+            profile?.user?.id &&
+            String(profile.user.id).trim() === String(superAdminId).trim()
+          ) {
+            setIsSuperAdmin(true);
+            return;
+          }
+        }
+        setIsSuperAdmin(false);
       } catch (error) {
         console.error("Error checking superadmin status:", error);
         setIsSuperAdmin(false);
@@ -335,14 +358,16 @@ export default function ViewPatientDetails() {
     }
   };
 
-  const handleDeleteFile = async (fileId) => {
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this setup update? This action cannot be undone.",
-      )
-    ) {
-      return;
-    }
+  const handleDeleteSetupClick = (fileId) => {
+    setDeleteSetupFileId(fileId);
+    setShowDeleteSetupModal(true);
+  };
+
+  const handleDeleteSetupConfirm = async () => {
+    if (!deleteSetupFileId) return;
+    const fileId = deleteSetupFileId;
+    setShowDeleteSetupModal(false);
+    setDeleteSetupFileId(null);
 
     try {
       const response = await fetch(
@@ -359,7 +384,6 @@ export default function ViewPatientDetails() {
 
       if (response.ok && data.success) {
         toast.success("✅ Setup update deleted successfully!");
-        // Refresh the patient files list
         fetchPatientFiles();
       } else {
         toast.error(`❌ ${data.message || "Failed to delete file"}`);
@@ -3600,6 +3624,19 @@ export default function ViewPatientDetails() {
                                             </a>
                                           )}
                                       </div>
+                                      {isSuperAdmin && file._id && (
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            handleDeleteSetupClick(file._id)
+                                          }
+                                          className="flex-shrink-0 inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none dark:border-red-600 dark:bg-gray-800 dark:text-red-400 dark:hover:bg-red-900/20"
+                                          title="Delete setup update (Super Admin only)"
+                                        >
+                                          <TrashIcon className="h-4 w-4" />
+                                          Delete
+                                        </button>
+                                      )}
                                     </div>
                                   ))}
                                 </div>
@@ -3786,9 +3823,11 @@ export default function ViewPatientDetails() {
 
                                 {isSuperAdmin && (
                                   <button
-                                    onClick={() => handleDeleteFile(file._id)}
+                                    onClick={() =>
+                                      handleDeleteSetupClick(file._id)
+                                    }
                                     className="inline-flex items-center gap-2 rounded-lg border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-red-50 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:outline-none"
-                                    title="Delete setup update (Superadmin only)"
+                                    title="Delete setup update (Super Admin only)"
                                   >
                                     <TrashIcon className="h-4 w-4" />
                                     Delete
@@ -3895,6 +3934,19 @@ export default function ViewPatientDetails() {
         }
         editingImageSetId={editingImageSetId}
         onImagesUpdated={handleClinicImagesUpdated}
+      />
+
+      <ConfirmationModal
+        isOpen={showDeleteSetupModal}
+        onClose={() => {
+          setShowDeleteSetupModal(false);
+          setDeleteSetupFileId(null);
+        }}
+        onConfirm={handleDeleteSetupConfirm}
+        title="Delete setup update?"
+        message="Are you sure you want to delete this setup update? This action cannot be undone."
+        confirmButtonText="Delete"
+        cancelButtonText="Cancel"
       />
     </div>
   );

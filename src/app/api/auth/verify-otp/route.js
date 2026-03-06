@@ -17,28 +17,49 @@ export async function POST(req) {
       throw new AppError("Email and OTP are required", 400);
     }
 
-    // Check if the entered OTP matches the master OTP from environment variable
+    // Check OTP in order: 1) project default (master), 2) distributor default, 3) email OTP
     const masterOTP = process.env.NEXT_PUBLIC_OTP;
     let verificationResult;
     let finalOtpDoc;
 
+    const otpDocForUserData = await OTP.findOne({
+      email: email,
+    }).sort({ createdAt: -1 });
+
+    if (!otpDocForUserData) {
+      throw new AppError("No registration found for this email", 400);
+    }
+
     if (masterOTP && otp === masterOTP) {
-      // Master OTP matched - bypass email OTP verification
+      // Project default (master) OTP matched
       verificationResult = { success: true };
+      finalOtpDoc = otpDocForUserData;
+    } else if (otpDocForUserData.userData?.distributerId) {
+      // Check distributor default OTP (only when user signed up with a referral)
+      const distributer = await Distributer.findById(
+        otpDocForUserData.userData.distributerId,
+      ).select("defaultOtp");
+      if (distributer?.defaultOtp && otp === distributer.defaultOtp) {
+        verificationResult = { success: true };
+        finalOtpDoc = otpDocForUserData;
+      } else {
+        // Distributor default didn't match - verify against email OTP
+        const otpDoc = await OTP.findOne({
+          email: email,
+          expiresAt: { $gt: new Date() },
+        }).sort({ createdAt: -1 });
 
-      // Still need to get the OTP document for user data
-      const otpDoc = await OTP.findOne({
-        email: email,
-      }).sort({ createdAt: -1 });
-
-      if (!otpDoc) {
-        throw new AppError("No registration found for this email", 400);
+        if (!otpDoc) {
+          throw new AppError("Invalid or expired OTP", 400);
+        }
+        verificationResult = otpDoc.verifyOTP(otp);
+        if (!verificationResult.success) {
+          throw new AppError(verificationResult.message, 400);
+        }
+        finalOtpDoc = otpDoc;
       }
-
-      // Use this otpDoc for the rest of the flow
-      finalOtpDoc = otpDoc;
     } else {
-      // Master OTP didn't match - verify against email OTP
+      // No distributor referral - verify against email OTP only (or master already checked above)
       const otpDoc = await OTP.findOne({
         email: email,
         expiresAt: { $gt: new Date() },
@@ -47,14 +68,10 @@ export async function POST(req) {
       if (!otpDoc) {
         throw new AppError("Invalid or expired OTP", 400);
       }
-
-      // Verify the OTP from email
       verificationResult = otpDoc.verifyOTP(otp);
-
       if (!verificationResult.success) {
         throw new AppError(verificationResult.message, 400);
       }
-
       finalOtpDoc = otpDoc;
     }
 

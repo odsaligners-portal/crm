@@ -12,12 +12,14 @@ import {
   MdQrCode,
 } from "react-icons/md";
 import { FaUserFriends, FaCheckCircle } from "react-icons/fa";
+import ConfirmationModal from "@/components/common/ConfirmationModal";
 
 export default function DistributerReferralPage() {
   const { token } = useSelector((state) => state.auth);
   const [referralData, setReferralData] = useState(null);
   const [copied, setCopied] = useState(false);
   const [isRegenerating, setIsRegenerating] = useState(false);
+  const [showRegenerateModal, setShowRegenerateModal] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -64,15 +66,12 @@ export default function DistributerReferralPage() {
     }
   };
 
-  const handleRegenerate = async () => {
-    if (
-      !confirm(
-        "Are you sure you want to regenerate your referral code? The old code will no longer work.",
-      )
-    ) {
-      return;
-    }
+  const handleRegenerateClick = () => {
+    setShowRegenerateModal(true);
+  };
 
+  const handleRegenerateConfirm = async () => {
+    setShowRegenerateModal(false);
     setIsRegenerating(true);
     try {
       const data = await fetchWithError("/api/distributer/referral", {
@@ -139,7 +138,7 @@ export default function DistributerReferralPage() {
                     </p>
                   </div>
                   <button
-                    onClick={handleRegenerate}
+                    onClick={handleRegenerateClick}
                     disabled={isRegenerating}
                     className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all duration-200 hover:scale-105 hover:shadow-xl disabled:opacity-50"
                   >
@@ -166,6 +165,45 @@ export default function DistributerReferralPage() {
                       <MdContentCopy className="h-5 w-5" />
                     </button>
                   </div>
+                </div>
+
+                {/* Default OTP for doctor signup */}
+                <div className="mb-6 rounded-2xl border-2 border-dashed border-amber-300 bg-gradient-to-br from-amber-50 to-orange-50 p-6 dark:border-amber-700 dark:from-amber-900/20 dark:to-orange-900/20">
+                  <div className="mb-2 text-sm font-semibold text-gray-600 dark:text-gray-400">
+                    Default OTP for Doctor Signup
+                  </div>
+                  <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+                    Doctors who sign up with your referral code can use this OTP
+                    instead of the email code. Share it only with trusted
+                    doctors.
+                  </p>
+                  {referralData.defaultOtp ? (
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-2xl font-bold text-amber-700 dark:text-amber-400">
+                        {referralData.defaultOtp}
+                      </span>
+                      <button
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(
+                              referralData.defaultOtp,
+                            );
+                            toast.success("Default OTP copied!");
+                          } catch {
+                            toast.error("Failed to copy");
+                          }
+                        }}
+                        className="rounded-lg bg-amber-100 px-3 py-2 text-sm font-medium text-amber-800 transition-colors hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50"
+                      >
+                        <MdContentCopy className="inline h-4 w-4" /> Copy
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-sm italic text-amber-700 dark:text-amber-400">
+                      Not set. Ask Super Admin to generate a default OTP for
+                      your account.
+                    </p>
+                  )}
                 </div>
 
                 {/* Referral Link */}
@@ -262,6 +300,16 @@ export default function DistributerReferralPage() {
           </div>
         )}
       </div>
+
+      <ConfirmationModal
+        isOpen={showRegenerateModal}
+        onClose={() => setShowRegenerateModal(false)}
+        onConfirm={handleRegenerateConfirm}
+        title="Regenerate referral code?"
+        message="Are you sure you want to regenerate your referral code? The old code will no longer work."
+        confirmButtonText="Regenerate"
+        cancelButtonText="Cancel"
+      />
     </div>
   );
 }

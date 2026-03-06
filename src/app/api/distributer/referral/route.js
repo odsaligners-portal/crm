@@ -16,9 +16,9 @@ export async function GET(req) {
 
     const distributerId = authResult.user.id;
 
-    // Find distributer
+    // Find distributer (include defaultOtp so distributor can see and share with doctors)
     const distributer = await Distributer.findById(distributerId).select(
-      "referralCode name email",
+      "referralCode name email defaultOtp",
     );
 
     if (!distributer) {
@@ -67,6 +67,7 @@ export async function GET(req) {
       referralCode: distributer.referralCode,
       referralLink: referralLink,
       distributerName: distributer.name,
+      defaultOtp: distributer.defaultOtp || null,
     });
   } catch (error) {
     console.error("Referral code error:", error);

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { toast } from "react-toastify";
 import { FaTrash } from "react-icons/fa";
+import { MdContentCopy } from "react-icons/md";
 import Pagination from "@/components/tables/Pagination";
 import ConfirmationModal from "@/components/common/ConfirmationModal";
 import Input from "@/components/form/input/InputField";
@@ -27,11 +28,14 @@ export default function DistributersList() {
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [generatingOtpForId, setGeneratingOtpForId] = useState(null);
 
   useEffect(() => {
     const fetchAccess = async () => {
       if (!token) {
         setHasDistributerAccess(false);
+        setIsSuperAdmin(false);
         return;
       }
       try {
@@ -40,8 +44,13 @@ export default function DistributersList() {
         });
 
         setHasDistributerAccess(data.user?.distributerAccess);
+        const superAdminId = process.env.NEXT_PUBLIC_SUPER_ADMIN_ID;
+        setIsSuperAdmin(
+          !!(superAdminId && data.user?.id && data.user.id === superAdminId),
+        );
       } catch (err) {
         setHasDistributerAccess(false);
+        setIsSuperAdmin(false);
       }
     };
     fetchAccess();
@@ -133,6 +142,28 @@ export default function DistributersList() {
     }
   };
 
+  const handleGenerateDefaultOtp = async (id) => {
+    setGeneratingOtpForId(id);
+    try {
+      await fetchWithError("/api/admin/distributers/generate-default-otp", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id }),
+      });
+      toast.success(
+        "Default OTP generated. The distributor can see it in their dashboard.",
+      );
+      fetchDistributers();
+    } catch (err) {
+      toast.error(err.message || "Failed to generate default OTP");
+    } finally {
+      setGeneratingOtpForId(null);
+    }
+  };
+
   if (hasDistributerAccess === false) {
     return (
       <div className="flex h-screen flex-col items-center justify-center bg-gray-50 dark:bg-gray-900">
@@ -217,6 +248,14 @@ export default function DistributersList() {
               >
                 Access
               </TableCell>
+              {isSuperAdmin && (
+                <TableCell
+                  isHeader
+                  className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
+                >
+                  Default OTP
+                </TableCell>
+              )}
               <TableCell
                 isHeader
                 className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
@@ -228,13 +267,19 @@ export default function DistributersList() {
           <TableBody>
             {loading ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-8 text-center">
+                <TableCell
+                  colSpan={isSuperAdmin ? 10 : 9}
+                  className="py-8 text-center"
+                >
                   Loading...
                 </TableCell>
               </TableRow>
             ) : distributers.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-8 text-center">
+                <TableCell
+                  colSpan={isSuperAdmin ? 10 : 9}
+                  className="py-8 text-center"
+                >
                   No distributers found.
                 </TableCell>
               </TableRow>
@@ -281,6 +326,55 @@ export default function DistributersList() {
                       <option value="full">Full</option>
                     </select>
                   </TableCell>
+                  {isSuperAdmin && (
+                    <TableCell className="px-2 py-1 text-center">
+                      {d.defaultOtp ? (
+                        <div className="flex items-center justify-center gap-1">
+                          <span className="font-mono text-sm font-semibold text-amber-800 dark:text-amber-200">
+                            {d.defaultOtp}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(
+                                  d.defaultOtp,
+                                );
+                                toast.success("Default OTP copied");
+                              } catch {
+                                toast.error("Failed to copy");
+                              }
+                            }}
+                            className="rounded p-1 text-amber-600 transition-colors hover:bg-amber-100 hover:text-amber-800 dark:text-amber-400 dark:hover:bg-amber-900/50"
+                            title="Copy default OTP"
+                          >
+                            <MdContentCopy className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleGenerateDefaultOtp(d._id)}
+                            disabled={loading || generatingOtpForId === d._id}
+                            className="rounded bg-amber-100 px-2 py-1 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-200 disabled:opacity-50 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50"
+                            title="Regenerate default OTP"
+                          >
+                            {generatingOtpForId === d._id
+                              ? "..."
+                              : "Regenerate"}
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleGenerateDefaultOtp(d._id)}
+                          disabled={loading || generatingOtpForId === d._id}
+                          className="rounded bg-amber-100 px-2 py-1 text-sm font-medium text-amber-800 transition-colors hover:bg-amber-200 disabled:opacity-50 dark:bg-amber-900/30 dark:text-amber-200 dark:hover:bg-amber-900/50"
+                          title="Generate default OTP for this distributor (doctors can use it when signing up with their referral code)"
+                        >
+                          {generatingOtpForId === d._id
+                            ? "..."
+                            : "Generate OTP"}
+                        </button>
+                      )}
+                    </TableCell>
+                  )}
                   <TableCell className="px-2 py-1 text-center">
                     <button
                       onClick={() => {
