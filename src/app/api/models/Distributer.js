@@ -75,6 +75,10 @@ const distributerSchema = new mongoose.Schema(
       default: null,
       trim: true,
     },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   {
     timestamps: true,

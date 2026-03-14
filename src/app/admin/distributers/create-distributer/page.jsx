@@ -31,6 +31,7 @@ export default function CreateDistributer() {
     country: "",
     password: "",
     access: "view",
+    isActive: true,
   });
   const [loading, setLoading] = useState(false);
   const [logoUrl, setLogoUrl] = useState("");
@@ -165,6 +166,7 @@ export default function CreateDistributer() {
         country: "",
         password: "",
         access: "view",
+        isActive: true,
       });
       setLogoUrl("");
       setLogoFileKey("");
@@ -376,6 +378,21 @@ export default function CreateDistributer() {
               <option value="full">Full Access</option>
             </select>
           </div>
+          {/* <div>
+            <Label>Account Status</Label>
+            <select
+              name="isActive"
+              value={form.isActive === true || form.isActive === "true" ? "true" : "false"}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, isActive: e.target.value === "true" }))
+              }
+              required
+              className="w-full appearance-none rounded-lg border border-blue-200 bg-white px-4 py-2 pr-8 text-gray-800 shadow-sm focus:ring-2 focus:ring-blue-400 focus:outline-none"
+            >
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
+            </select>
+          </div> */}
         </div>
         <Button type="submit" className="w-full" disabled={loading}>
           {loading ? "Creating..." : "Create Distributer"}

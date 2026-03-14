@@ -142,6 +142,34 @@ export default function DistributersList() {
     }
   };
 
+  const handleStatusChange = async (id, newIsActive) => {
+    try {
+      const res = await fetch(`/api/admin/distributers`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ id, isActive: newIsActive }),
+      });
+      const data = await res.json();
+      if (!res.ok)
+        throw new Error(
+          data.error || data.message || "Failed to update status",
+        );
+
+      setDistributers((prev) =>
+        prev.map((d) => (d._id === id ? { ...d, isActive: newIsActive } : d)),
+      );
+
+      toast.success(
+        `Account ${newIsActive ? "activated" : "deactivated"} successfully`,
+      );
+    } catch (err) {
+      toast.error(err.message || "Failed to update status");
+    }
+  };
+
   const handleGenerateDefaultOtp = async (id) => {
     setGeneratingOtpForId(id);
     try {
@@ -248,6 +276,12 @@ export default function DistributersList() {
               >
                 Access
               </TableCell>
+              <TableCell
+                isHeader
+                className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
+              >
+                Status
+              </TableCell>
               {isSuperAdmin && (
                 <TableCell
                   isHeader
@@ -268,7 +302,7 @@ export default function DistributersList() {
             {loading ? (
               <TableRow>
                 <TableCell
-                  colSpan={isSuperAdmin ? 10 : 9}
+                  colSpan={isSuperAdmin ? 11 : 10}
                   className="py-8 text-center"
                 >
                   Loading...
@@ -277,7 +311,7 @@ export default function DistributersList() {
             ) : distributers.length === 0 ? (
               <TableRow>
                 <TableCell
-                  colSpan={isSuperAdmin ? 10 : 9}
+                  colSpan={isSuperAdmin ? 11 : 10}
                   className="py-8 text-center"
                 >
                   No distributers found.
@@ -324,6 +358,22 @@ export default function DistributersList() {
                     >
                       <option value="view">View</option>
                       <option value="full">Full</option>
+                    </select>
+                  </TableCell>
+                  <TableCell className="px-2 py-1 text-center">
+                    <select
+                      value={d.isActive === false ? "false" : "true"}
+                      onChange={(e) =>
+                        handleStatusChange(d._id, e.target.value === "true")
+                      }
+                      className={`rounded border px-2 py-1 text-sm font-medium focus:outline-none ${
+                        d.isActive === false
+                          ? "border-red-300 bg-red-50 text-red-700 dark:border-red-700 dark:bg-red-900/20 dark:text-red-300"
+                          : "border-green-300 bg-green-50 text-green-700 dark:border-green-700 dark:bg-green-900/20 dark:text-green-300"
+                      }`}
+                    >
+                      <option value="true">Active</option>
+                      <option value="false">Inactive</option>
                     </select>
                   </TableCell>
                   {isSuperAdmin && (

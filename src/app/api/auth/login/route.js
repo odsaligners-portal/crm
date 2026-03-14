@@ -35,12 +35,24 @@ export async function POST(req) {
       throw new AppError("Invalid credentials", 401);
     }
 
-    // Check if account is suspended (only for doctors, not admins or distributors)
+    // Check if account is suspended (only for doctors)
     if (!distributer && user.role === "doctor" && user.isSuspended) {
       return NextResponse.json(
         {
           error:
             "Your account has been suspended. Please contact the administrator for assistance.",
+          isSuspended: true,
+        },
+        { status: 403 },
+      );
+    }
+
+    // Check if distributor account is inactive
+    if (distributer && user.isActive === false) {
+      return NextResponse.json(
+        {
+          error:
+            "Your account is currently inactive. Please contact the administrator to reactivate your account.",
           isSuspended: true,
         },
         { status: 403 },
