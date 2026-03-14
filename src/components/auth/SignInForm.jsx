@@ -27,6 +27,8 @@ export default function SignInForm() {
   const [isVisible, setIsVisible] = useState(false);
   const [isSuspended, setIsSuspended] = useState(false);
   const [suspensionMessage, setSuspensionMessage] = useState("");
+  const [isUnderMaintenance, setIsUnderMaintenance] = useState(false);
+  const [maintenanceMessage, setMaintenanceMessage] = useState("");
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showPasswordReset, setShowPasswordReset] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
@@ -66,6 +68,15 @@ export default function SignInForm() {
       const data = await response.json();
 
       if (!response.ok) {
+        // Check if portal is under maintenance (takes priority over suspended)
+        if (data.isUnderMaintenance) {
+          setIsUnderMaintenance(true);
+          setMaintenanceMessage(
+            data.error ||
+              "The portal is currently under maintenance. Please try again later.",
+          );
+          return;
+        }
         // Check if account is suspended
         if (data.isSuspended) {
           setIsSuspended(true);
@@ -338,6 +349,115 @@ export default function SignInForm() {
           </div>
         </div>
       </div>
+
+      {/* Uncloseable Maintenance Modal */}
+      {isUnderMaintenance && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+          <div className="mx-4 w-full max-w-md overflow-hidden rounded-2xl border-2 border-amber-500 bg-white shadow-2xl dark:bg-gray-900">
+            {/* Modal Header */}
+            <div className="border-b border-amber-200 bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-5 dark:border-amber-800">
+              <div className="flex items-center gap-4">
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm">
+                  <svg
+                    className="h-10 w-10 animate-pulse text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white subpixel-antialiased">
+                    Under Maintenance
+                  </h3>
+                  <p className="text-amber-100">Portal Temporarily Unavailable</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 py-8">
+              <div className="mb-6 rounded-lg border-2 border-amber-200 bg-amber-50 p-6 dark:border-amber-800 dark:bg-amber-900/20">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 flex-shrink-0">
+                    <svg
+                      className="h-6 w-6 text-amber-600 dark:text-amber-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-base leading-relaxed font-semibold text-amber-900 dark:text-amber-100">
+                      {maintenanceMessage}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3 text-sm text-gray-700 dark:text-gray-300">
+                <p className="font-medium">
+                  We are performing scheduled maintenance on your account portal.
+                </p>
+                <p>
+                  Service will be restored shortly. Please contact your
+                  administrator for an estimated time of completion.
+                </p>
+              </div>
+
+              <div className="mt-6 rounded-lg bg-gray-50 p-4 dark:bg-gray-800">
+                <p className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300">
+                  Need Help?
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Contact your system administrator for the latest status update.
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+              <div className="flex items-center justify-center">
+                <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span className="font-medium">Maintenance In Progress</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Uncloseable Suspension Modal */}
       {isSuspended && (

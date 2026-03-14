@@ -9,6 +9,7 @@ import {
   FaEnvelope,
   FaPhone,
   FaMapMarkerAlt,
+  FaTools,
 } from "react-icons/fa";
 import { toast } from "react-toastify";
 
@@ -85,6 +86,43 @@ export default function SuspendAccountPage() {
       toast.error(`❌ ${err.message || "An error occurred"}`);
     } finally {
       setActionLoading((prev) => ({ ...prev, [doctorId]: false }));
+    }
+  };
+
+  const handleToggleMaintenance = async (doctorId, currentStatus) => {
+    setActionLoading((prev) => ({ ...prev, [`maint_${doctorId}`]: true }));
+
+    try {
+      const action = currentStatus ? "unset-maintenance" : "set-maintenance";
+      const response = await fetch(
+        `/api/admin/doctors/suspend?doctorId=${doctorId}&action=${action}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (response.ok) {
+        toast.success(
+          `✅ Maintenance mode ${action === "set-maintenance" ? "enabled" : "disabled"} for doctor.`,
+        );
+        setDoctors(
+          doctors.map((doc) =>
+            doc._id === doctorId
+              ? { ...doc, underMaintenance: action === "set-maintenance" }
+              : doc,
+          ),
+        );
+      } else {
+        const errorData = await response.json();
+        toast.error(`❌ ${errorData.message || "Failed to update maintenance status"}`);
+      }
+    } catch (err) {
+      toast.error(`❌ ${err.message || "An error occurred"}`);
+    } finally {
+      setActionLoading((prev) => ({ ...prev, [`maint_${doctorId}`]: false }));
     }
   };
 
@@ -224,6 +262,9 @@ export default function SuspendAccountPage() {
                       Status
                     </th>
                     <th className="px-6 py-4 text-center text-xs font-semibold tracking-wider text-gray-700 uppercase subpixel-antialiased dark:text-gray-300">
+                      Maintenance
+                    </th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold tracking-wider text-gray-700 uppercase subpixel-antialiased dark:text-gray-300">
                       Action
                     </th>
                   </tr>
@@ -300,6 +341,72 @@ export default function SuspendAccountPage() {
                             Active
                           </span>
                         )}
+                      </td>
+
+                      {/* Maintenance Toggle */}
+                      <td className="px-6 py-4 text-center">
+                        <div className="flex flex-col items-center gap-2">
+                          {doctor.underMaintenance ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700 dark:bg-amber-900 dark:text-amber-300">
+                              <FaTools className="h-3 w-3" />
+                              On
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                              <FaTools className="h-3 w-3" />
+                              Off
+                            </span>
+                          )}
+                          <button
+                            onClick={() =>
+                              handleToggleMaintenance(
+                                doctor._id,
+                                doctor.underMaintenance,
+                              )
+                            }
+                            disabled={
+                              !doctor.isSuspended ||
+                              actionLoading[`maint_${doctor._id}`]
+                            }
+                            title={
+                              !doctor.isSuspended
+                                ? "Account must be suspended first"
+                                : doctor.underMaintenance
+                                  ? "Disable maintenance mode"
+                                  : "Enable maintenance mode"
+                            }
+                            className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white shadow transition-all duration-200 hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100 ${
+                              doctor.underMaintenance
+                                ? "bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700"
+                                : "bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600"
+                            }`}
+                          >
+                            {actionLoading[`maint_${doctor._id}`] ? (
+                              <svg
+                                className="h-3 w-3 animate-spin"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                              >
+                                <circle
+                                  className="opacity-25"
+                                  cx="12"
+                                  cy="12"
+                                  r="10"
+                                  stroke="currentColor"
+                                  strokeWidth="4"
+                                />
+                                <path
+                                  className="opacity-75"
+                                  fill="currentColor"
+                                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                />
+                              </svg>
+                            ) : (
+                              <FaTools className="h-3 w-3" />
+                            )}
+                            {doctor.underMaintenance ? "Disable" : "Enable"}
+                          </button>
+                        </div>
                       </td>
 
                       {/* Action */}

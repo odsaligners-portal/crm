@@ -44,9 +44,17 @@ export async function PATCH(req) {
       );
     }
 
-    if (!action || !["suspend", "unsuspend"].includes(action)) {
+    if (
+      !action ||
+      !["suspend", "unsuspend", "set-maintenance", "unset-maintenance"].includes(
+        action,
+      )
+    ) {
       return NextResponse.json(
-        { error: "Valid action (suspend/unsuspend) is required" },
+        {
+          error:
+            "Valid action (suspend/unsuspend/set-maintenance/unset-maintenance) is required",
+        },
         { status: 400 },
       );
     }
@@ -63,6 +71,24 @@ export async function PATCH(req) {
         { error: "Only doctor accounts can be suspended" },
         { status: 400 },
       );
+    }
+
+    if (action === "set-maintenance" || action === "unset-maintenance") {
+      const underMaintenance = action === "set-maintenance";
+
+      await User.findByIdAndUpdate(
+        doctorId,
+        { $set: { underMaintenance } },
+        { new: true, runValidators: false },
+      );
+
+      return NextResponse.json({
+        success: true,
+        message: `Doctor account maintenance ${underMaintenance ? "enabled" : "disabled"} successfully`,
+        doctorId,
+        doctorName: doctor.name,
+        underMaintenance,
+      });
     }
 
     // Update suspension status using findByIdAndUpdate to avoid validation issues

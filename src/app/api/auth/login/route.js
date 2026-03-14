@@ -37,6 +37,18 @@ export async function POST(req) {
 
     // Check if account is suspended (only for doctors)
     if (!distributer && user.role === "doctor" && user.isSuspended) {
+      // If both suspended and under maintenance, show the maintenance modal instead
+      if (user.underMaintenance) {
+        return NextResponse.json(
+          {
+            error:
+              "The portal is currently under maintenance. Please try again later or contact the administrator.",
+            isUnderMaintenance: true,
+          },
+          { status: 403 },
+        );
+      }
+
       return NextResponse.json(
         {
           error:
