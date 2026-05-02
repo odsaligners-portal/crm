@@ -20,6 +20,7 @@ import {
   MdMenuBook,
   MdNotifications,
   MdPerson,
+  MdQrCode,
   MdTableChart,
   MdVideoLibrary,
 } from "react-icons/md";
@@ -106,6 +107,12 @@ const baseNavItems = [
         requirePasswordAccess: true,
       },
       {
+        name: "Maintenance Mode",
+        path: "/admin/doctors/maintenance",
+        pro: false,
+        requirePasswordAccess: true,
+      },
+      {
         name: "Delete Doctor",
         path: "/admin/doctors/delete-doctor",
         pro: false,
@@ -170,6 +177,11 @@ const baseNavItems = [
       {
         name: "View All Distributers",
         path: "/admin/distributers",
+        pro: false,
+      },
+      {
+        name: "Manage Status",
+        path: "/admin/distributers/manage-status",
         pro: false,
       },
       {
@@ -311,6 +323,11 @@ const AppSidebar = () => {
         path: "/admin/notifications/manage",
       });
     }
+    tempNavItems.splice(2, 0, {
+      icon: <MdQrCode />,
+      name: "Generate QR",
+      path: "/admin/generate-qr",
+    });
 
   }
 

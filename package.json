@@ -21,6 +21,7 @@
     "@react-jvectormap/core": "^1.0.4",
     "@react-jvectormap/world": "^1.1.2",
     "@reduxjs/toolkit": "^2.8.2",
+    "@svgr/webpack": "^8.1.0",
     "@tailwindcss/forms": "^0.5.9",
     "@tailwindcss/postcss": "^4.0.9",
     "@tinymce/tinymce-react": "^6.2.1",
@@ -47,6 +48,7 @@
     "next": "^16.0.0",
     "nodemailer": "^7.0.3",
     "nookies": "^2.5.2",
+    "qrcode": "^1.5.4",
     "react": "^18.2.0",
     "react-apexcharts": "^1.7.0",
     "react-countup": "^6.5.3",
@@ -64,8 +66,7 @@
     "tailwind-merge": "^2.6.0",
     "uuid": "^11.1.0",
     "xlsx": "^0.18.5",
-    "zod": "^3.25.67",
-    "@svgr/webpack": "^8.1.0"
+    "zod": "^3.25.67"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

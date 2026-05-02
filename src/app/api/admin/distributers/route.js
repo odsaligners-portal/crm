@@ -312,5 +312,13 @@ export async function PUT(req) {
 
   await Distributer.findByIdAndUpdate(body.id, body, { new: true });
 
+  // When isActive changes, cascade suspension status to all linked doctors
+  if (typeof body.isActive === "boolean") {
+    await User.updateMany(
+      { distributerId: body.id, role: "doctor" },
+      { $set: { isSuspended: !body.isActive } },
+    );
+  }
+
   return NextResponse.json({ message: "Distributer updated successfully" });
 }
