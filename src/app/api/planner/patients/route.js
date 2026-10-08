@@ -123,6 +123,7 @@ export async function GET(req) {
     const skip = (page - 1) * limit;
     const patients = await Patient.find(query)
       .populate("userId", "name email")
+      .populate("plannerId", "name")
       .sort(sortOption)
       .skip(skip)
       .limit(limit);

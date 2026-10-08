@@ -10,25 +10,36 @@ import Input from "@/components/form/input/InputField";
 import Select from "@/components/form/select/SelectField";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import PatientsSummaryTable from "@/components/shared/patients/PatientsSummaryTable";
+import PatientSummaryModal, {
+  PatientSummaryActionGroup,
+} from "@/components/shared/patients/PatientSummaryModal";
 import { caseTypes, genders, treatmentForOptions } from "@/constants/data";
 import { EyeIcon, PlusIcon } from "@/icons";
 import { setLoading } from "@/store/features/uiSlice";
 import { fetchWithError } from "@/utils/apiErrorHandler";
 import { countriesData } from "@/utils/countries";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import * as XLSX from "xlsx";
 import { toast } from "react-toastify";
 
 const countries = Object.keys(countriesData);
+
+const getPlannerRowClassName = (patient, idx) => {
+  const isDeadlineBreached =
+    patient.plannerDeadline && new Date(patient.plannerDeadline) < new Date();
+  if (isDeadlineBreached) {
+    return "border-l-4 border-red-500 bg-red-50/80 dark:border-red-500 dark:bg-red-900/30";
+  }
+  if (patient.modification?.commentSubmitted) {
+    return "border-l-4 border-yellow-400 bg-yellow-50/80 dark:border-yellow-500 dark:bg-yellow-900/20";
+  }
+  return idx % 2 === 1
+    ? "bg-blue-50/50 dark:bg-gray-900/30"
+    : "bg-white/70 dark:bg-gray-900/50";
+};
 
 export default function PlannerPatientRecords() {
   const router = useRouter();
@@ -51,7 +62,16 @@ export default function PlannerPatientRecords() {
     useState(null);
   const [showSTLUploadModal, setShowSTLUploadModal] = useState(false);
   const [stlUploadPatient, setStlUploadPatient] = useState(null);
+  const [summaryPatientId, setSummaryPatientId] = useState(null);
+  const summaryPatient =
+    patients.find((p) => p._id === summaryPatientId) ?? null;
   const dispatch = useDispatch();
+
+  const handleOpenSummary = useCallback(
+    (patient) => setSummaryPatientId(patient._id),
+    [],
+  );
+  const handleCloseSummary = useCallback(() => setSummaryPatientId(null), []);
 
   // Filter state - Planner sees Setup Pending and Approved cases (STL not uploaded)
   const [filters, setFilters] = useState({
@@ -712,244 +732,13 @@ export default function PlannerPatientRecords() {
           </defs>
           <rect width="100%" height="100%" fill="url(#dots)" />
         </svg>
-        <Table className="relative z-10 mx-auto min-w-full font-sans text-[10px]">
-          {patients.length > 0 && (
-            <>
-              <TableHeader>
-                <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
-                  <TableCell
-                    isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                  >
-                    Case ID
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                  >
-                    Patient Name
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                  >
-                    Doctor Name
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                  >
-                    Location
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                  >
-                    Deadline
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                  >
-                    Case Status
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                  >
-                    Comments
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                  >
-                    Files
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                  >
-                    STL Upload
-                  </TableCell>
-                  <TableCell
-                    isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                  >
-                    Case Details
-                  </TableCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {patients.map((patient, idx) => {
-                  // Check if deadline is breached
-                  const isDeadlineBreached =
-                    patient.plannerDeadline &&
-                    new Date(patient.plannerDeadline) < new Date();
-
-                  return (
-                    <TableRow
-                      key={patient._id}
-                      className={`group transition-all duration-300 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${
-                        isDeadlineBreached
-                          ? "border-l-4 border-red-500 bg-red-50/80 dark:border-red-500 dark:bg-red-900/30"
-                          : patient.modification?.commentSubmitted
-                            ? "border-l-4 border-yellow-400 bg-yellow-50/80 dark:border-yellow-500 dark:bg-yellow-900/20"
-                            : idx % 2 === 1
-                              ? "bg-blue-50/50 dark:bg-gray-900/30"
-                              : "bg-white/70 dark:bg-gray-900/50"
-                      } animate-fadeInUp h-10 items-center`}
-                      style={{
-                        animationDelay: `${idx * 30}ms`,
-                      }}
-                    >
-                      <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
-                        {patient.caseId}
-                      </TableCell>
-                      <TableCell className="flex h-10 items-center justify-center gap-2 px-2 py-1 text-center font-medium">
-                        <span className="flex items-center gap-2">
-                          {patient.patientName}
-                          {patient.modification?.commentSubmitted && (
-                            <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">
-                              Modified
-                            </span>
-                          )}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center">
-                        <div className="text-[10px] leading-tight font-medium text-gray-900 dark:text-gray-100">
-                          {patient.userId?.name
-                            ? `Dr. ${patient.userId.name}`
-                            : "Not Assigned"}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center">
-                        <div className="text-[10px] leading-tight">
-                          <div>{patient.city}</div>
-                          <div className="text-[9px] text-gray-500">
-                            {patient.country}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center">
-                        <DeadlineCountdown
-                          deadline={patient.plannerDeadline}
-                          assignedAt={patient.plannerAssignedAt}
-                        />
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                            patient.caseStatus === "setup pending"
-                              ? "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200"
-                              : patient.caseStatus === "approval pending"
-                                ? "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200"
-                                : patient.caseStatus === "approved"
-                                  ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-200"
-                                  : patient.caseStatus === "rejected"
-                                    ? "bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200"
-                                    : "bg-slate-100 text-slate-800 dark:bg-slate-900/40 dark:text-slate-200"
-                          }`}
-                        >
-                          {patient.caseStatus}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center">
-                        <div className="flex justify-center gap-1">
-                          {/* <Button
-                          onClick={() => handleOpenUploadModal(patient)}
-                          size="xs"
-                          variant="outline"
-                          className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40 flex items-center gap-1 hover:scale-105 transition-transform shadow-sm p-1"
-                        >
-                          Upload
-                        </Button> */}
-                          <Button
-                            onClick={() => handleOpenViewCommentsModal(patient)}
-                            size="xs"
-                            variant="outline"
-                            className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
-                          >
-                            View Comments
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center">
-                        <div className="flex justify-center gap-1">
-                          {patient?.fileUploadCount?.remianing !== 0 && (
-                            <Button
-                              onClick={() => {
-                                setFileUploadPatient(patient);
-                                setShowFileUploadModal(true);
-                              }}
-                              size="xs"
-                              variant="outline"
-                              className="flex items-center gap-1 border-purple-400 p-1 text-purple-600 shadow-sm transition-transform hover:scale-105 hover:bg-purple-100/60 dark:hover:bg-purple-900/40"
-                            >
-                              upload
-                            </Button>
-                          )}
-                          <Button
-                            onClick={() => {
-                              setViewFilesPatient(patient);
-                              setShowViewFilesModal(true);
-                            }}
-                            size="xs"
-                            variant="outline"
-                            className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
-                          >
-                            See Files
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center">
-                        <div className="flex justify-center gap-1">
-                          {patient.stlFile?.canUpload &&
-                          !patient.stlFile?.uploaded ? (
-                            <Button
-                              onClick={() => {
-                                setStlUploadPatient(patient);
-                                setShowSTLUploadModal(true);
-                              }}
-                              size="xs"
-                              variant="outline"
-                              className="flex items-center gap-1 border-green-400 p-1 text-green-600 shadow-sm transition-transform hover:scale-105 hover:bg-green-100/60 dark:hover:bg-green-900/40"
-                            >
-                              Upload STL
-                            </Button>
-                          ) : patient.stlFile?.uploaded ? (
-                            <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-200">
-                              STL Uploaded
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
-                              Not Available
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center">
-                        <div className="flex justify-center gap-1">
-                          <Button
-                            onClick={() =>
-                              router.push(
-                                `/planner/patients/view-patient-details?id=${patient._id}`,
-                              )
-                            }
-                            size="xs"
-                            variant="outline"
-                            className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
-                          >
-                            <EyeIcon className="h-3 w-3" /> View
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </>
-          )}
-        </Table>
+        {patients.length > 0 && (
+          <PatientsSummaryTable
+            patients={patients}
+            onView={handleOpenSummary}
+            getRowClassName={getPlannerRowClassName}
+          />
+        )}
       </div>
 
       {/* Pagination */}
@@ -1028,6 +817,106 @@ export default function PlannerPatientRecords() {
           </Button>
         </div>
       )}
+
+      <PatientSummaryModal
+        patient={summaryPatient}
+        onClose={handleCloseSummary}
+        onViewAllComments={() => handleOpenViewCommentsModal(summaryPatient)}
+        extraDetails={
+          summaryPatient
+            ? [
+                {
+                  label: "Planner Deadline",
+                  value: (
+                    <DeadlineCountdown
+                      deadline={summaryPatient.plannerDeadline}
+                      assignedAt={summaryPatient.plannerAssignedAt}
+                    />
+                  ),
+                },
+              ]
+            : []
+        }
+      >
+        {summaryPatient && (
+          <>
+            <PatientSummaryActionGroup label="Case Details">
+              <Button
+                onClick={() =>
+                  router.push(
+                    `/planner/patients/view-patient-details?id=${summaryPatient._id}`,
+                  )
+                }
+                size="sm"
+                variant="outline"
+                className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
+              >
+                <EyeIcon className="h-5 w-5" /> View
+              </Button>
+            </PatientSummaryActionGroup>
+            <PatientSummaryActionGroup label="Comments">
+              <Button
+                onClick={() => handleOpenViewCommentsModal(summaryPatient)}
+                size="sm"
+                variant="outline"
+                className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
+              >
+                View Comments
+              </Button>
+            </PatientSummaryActionGroup>
+            <PatientSummaryActionGroup label="Files">
+              {summaryPatient?.fileUploadCount?.remianing !== 0 && (
+                <Button
+                  onClick={() => {
+                    setFileUploadPatient(summaryPatient);
+                    setShowFileUploadModal(true);
+                  }}
+                  size="sm"
+                  variant="outline"
+                  className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40"
+                >
+                  Upload
+                </Button>
+              )}
+              <Button
+                onClick={() => {
+                  setViewFilesPatient(summaryPatient);
+                  setShowViewFilesModal(true);
+                }}
+                size="sm"
+                variant="outline"
+                className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
+              >
+                See Files
+              </Button>
+            </PatientSummaryActionGroup>
+            <PatientSummaryActionGroup label="STL Upload">
+              {summaryPatient.stlFile?.canUpload &&
+              !summaryPatient.stlFile?.uploaded ? (
+                <Button
+                  onClick={() => {
+                    setStlUploadPatient(summaryPatient);
+                    setShowSTLUploadModal(true);
+                  }}
+                  size="sm"
+                  variant="outline"
+                  className="border-green-400 text-green-600 hover:bg-green-100/60 dark:hover:bg-green-900/40"
+                >
+                  Upload STL
+                </Button>
+              ) : summaryPatient.stlFile?.uploaded ? (
+                <span className="inline-flex items-center rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-200">
+                  STL Uploaded
+                </span>
+              ) : (
+                <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">
+                  Not Available
+                </span>
+              )}
+            </PatientSummaryActionGroup>
+          </>
+        )}
+      </PatientSummaryModal>
 
       {/* Modals */}
       {isUploadModalOpen && selectedPatient && (

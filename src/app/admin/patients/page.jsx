@@ -5,18 +5,15 @@ import Input from "@/components/form/input/InputField";
 import Select from "@/components/form/select/SelectField";
 import Badge from "@/components/ui/badge/Badge";
 import Button from "@/components/ui/button/Button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import PatientsSummaryTable from "@/components/shared/patients/PatientsSummaryTable";
+import PatientSummaryModal, {
+  PatientSummaryActionGroup,
+} from "@/components/shared/patients/PatientSummaryModal";
 import { caseTypes, genders, treatmentForOptions } from "@/constants/data";
 import { EyeIcon, PencilIcon, PlusIcon, TrashBinIcon } from "@/icons";
 import { countriesData } from "@/utils/countries";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useRef } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import * as XLSX from "xlsx";
@@ -58,6 +55,15 @@ export default function ViewPatientRecords() {
   const [hasPlannerAccess, setHasPlannerAccess] = useState(false);
   const [planners, setPlanners] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [summaryPatientId, setSummaryPatientId] = useState(null);
+  const summaryPatient =
+    patients.find((p) => p._id === summaryPatientId) ?? null;
+
+  const handleOpenSummary = useCallback(
+    (patient) => setSummaryPatientId(patient._id),
+    [],
+  );
+  const handleCloseSummary = useCallback(() => setSummaryPatientId(null), []);
 
   const handleOpenUploadModal = (patient) => {
     setSelectedPatient(patient);
@@ -997,277 +1003,10 @@ export default function ViewPatientRecords() {
             </defs>
             <rect width="100%" height="100%" fill="url(#dots)" />
           </svg>
-          <Table
-            className="relative z-10 min-w-full font-sans text-[10px]"
-            style={{ minWidth: "1200px" }}
-          >
-            {patients.length > 0 && (
-              <>
-                <TableHeader>
-                  <TableRow className="sticky top-0 z-20 rounded-t-xl border-b-2 border-blue-200 bg-gradient-to-r from-blue-100/90 via-white/90 to-blue-200/90 shadow-lg backdrop-blur-sm dark:border-blue-900 dark:from-blue-900/90 dark:via-gray-900/90 dark:to-blue-800/90">
-                    <TableCell
-                      isHeader
-                      className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                    >
-                      S.N.
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                    >
-                      Case ID
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                    >
-                      Patient Name
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                    >
-                      Doctor Name
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                    >
-                      Case Date
-                    </TableCell>
-                    {/* <TableCell
-                    isHeader
-                    className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                  >
-                    Location
-                  </TableCell> */}
-                    <TableCell
-                      isHeader
-                      className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                    >
-                      Case Status
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                    >
-                      Status
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                    >
-                      Comments
-                    </TableCell>
-                    <TableCell
-                      isHeader
-                      className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                    >
-                      STL Upload
-                    </TableCell>
-                    {hasPlannerAccess && (
-                      <TableCell
-                        isHeader
-                        className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                      >
-                        Planner
-                      </TableCell>
-                    )}
-                    <TableCell
-                      isHeader
-                      className="px-2 py-1 font-semibold text-blue-700 subpixel-antialiased dark:text-blue-200"
-                    >
-                      Case Details
-                    </TableCell>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {patients.map((patient, idx) => (
-                    <TableRow
-                      key={patient._id}
-                      className={`group transition-all duration-300 hover:bg-blue-100/70 dark:hover:bg-blue-900/40 ${
-                        patient.modification?.commentSubmitted
-                          ? "border-l-4 border-yellow-400 bg-yellow-50/80 dark:border-yellow-500 dark:bg-yellow-900/20"
-                          : idx % 2 === 1
-                            ? "bg-blue-50/50 dark:bg-gray-900/30"
-                            : "bg-white/70 dark:bg-gray-900/50"
-                      } animate-fadeInUp h-10 items-center`}
-                      style={{
-                        fontFamily: "Inter, sans-serif",
-                        animationDelay: `${idx * 30}ms`,
-                      }}
-                    >
-                      <TableCell className="px-2 py-1 text-center font-semibold text-gray-700 subpixel-antialiased dark:text-gray-300">
-                        {(currentPage - 1) * 100 + idx + 1}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center font-semibold text-blue-600 subpixel-antialiased dark:text-blue-300">
-                        {patient.caseId}
-                      </TableCell>
-                      <TableCell className="flex h-10 items-center justify-center gap-2 px-2 py-1 text-center font-medium">
-                        <span className="flex items-center gap-2 whitespace-nowrap">
-                          {patient.patientName}
-                          {patient.modification?.commentSubmitted && (
-                            <span className="inline-flex items-center rounded-full bg-yellow-100 px-2 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">
-                              Modified
-                            </span>
-                          )}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center font-medium whitespace-nowrap">
-                        {patient.userId ? patient.userId.name : "N/A"}
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center font-medium">
-                        {formatDateToIST(patient.createdAt)}
-                      </TableCell>
-                      {/* <TableCell className="px-2 py-1 text-center">
-                      <div className="text-[10px] leading-tight">
-                        <div>{patient.city}</div>
-                        <div className="text-[9px] whitespace-nowrap text-gray-500">
-                          {patient.country}
-                        </div>
-                      </div>
-                    </TableCell> */}
-                      <TableCell className="px-1 py-1 text-center">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-medium whitespace-nowrap ${
-                            patient.caseStatus === "approved"
-                              ? "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-300"
-                              : patient.caseStatus === "rejected"
-                                ? "border border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800 dark:bg-rose-900/20 dark:text-rose-300"
-                                : patient.caseStatus === "approval pending"
-                                  ? "border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-900/20 dark:text-amber-300"
-                                  : patient.caseStatus === "setup pending"
-                                    ? "border border-sky-200 bg-sky-50 text-sky-700 dark:border-sky-800 dark:bg-sky-900/20 dark:text-sky-300"
-                                    : "border border-slate-200 bg-slate-50 text-slate-600 dark:border-slate-700 dark:bg-slate-900/20 dark:text-slate-400"
-                          }`}
-                        >
-                          {patient.caseStatus || "Not specified"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-2 py-1.5 text-center">
-                        <div className="mx-auto flex justify-center">
-                          {(() => {
-                            const isExpired =
-                              patient.caseEndDate &&
-                              new Date(patient.caseEndDate) < new Date();
-                            return (
-                              <span
-                                className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                                  isExpired
-                                    ? "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
-                                    : "bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300"
-                                }`}
-                              >
-                                {isExpired ? "Expired" : "Active"}
-                              </span>
-                            );
-                          })()}
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center">
-                        <div className="flex justify-center gap-1">
-                          <Button
-                            onClick={() => handleOpenUploadModal(patient)}
-                            size="xs"
-                            variant="outline"
-                            className="flex items-center gap-1 border-purple-400 p-1 text-purple-600 shadow-sm transition-transform hover:scale-105 hover:bg-purple-100/60 dark:hover:bg-purple-900/40"
-                          >
-                            Add
-                          </Button>
-                          <Button
-                            onClick={() => handleOpenViewCommentsModal(patient)}
-                            size="xs"
-                            variant="outline"
-                            className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
-                          >
-                            See
-                          </Button>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-2 py-1 text-center">
-                        <div className="flex justify-center">
-                          {patient.stlFile?.uploaded ? (
-                            <Button
-                              onClick={() => handleOpenSTLDetailsModal(patient)}
-                              size="xs"
-                              variant="outline"
-                              className="flex items-center gap-1 border-green-400 p-1 whitespace-nowrap text-green-600 shadow-sm transition-transform hover:scale-105 hover:bg-green-100/60 dark:hover:bg-green-900/40"
-                            >
-                              ✓ View STL
-                            </Button>
-                          ) : (
-                            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                              Pending
-                            </span>
-                          )}
-                        </div>
-                      </TableCell>
-                      {hasPlannerAccess && (
-                        <TableCell className="px-2 py-0 text-center">
-                          <Select
-                            value={patient.plannerId?._id || ""}
-                            onChange={(e) =>
-                              handleAssignPlanner(patient._id, e.target.value)
-                            }
-                            options={[
-                              ...planners.map((planner) => ({
-                                label: planner.name,
-                                value: planner._id,
-                              })),
-                            ]}
-                            className="h-5 !w-28 !px-0 !py-0 text-[9px]"
-                          />
-                        </TableCell>
-                      )}
-                      <TableCell className="px-2 py-1 text-center">
-                        <div className="flex justify-center gap-1">
-                          <Button
-                            onClick={() =>
-                              router.push(
-                                `/admin/patients/view-patient-details?id=${patient._id}`,
-                              )
-                            }
-                            size="xs"
-                            variant="outline"
-                            className="flex items-center gap-1 border-blue-400 p-1 text-blue-600 shadow-sm transition-transform hover:scale-105 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
-                          >
-                            <EyeIcon className="h-3 w-3" /> View
-                          </Button>
-                          {hasUserDeleteAccess && (
-                            <Button
-                              onClick={() =>
-                                router.push(
-                                  `/admin/patients/edit-patient-details?id=${patient._id}`,
-                                )
-                              }
-                              size="xs"
-                              variant="outline"
-                              className="flex items-center gap-1 border-green-400 p-1 text-green-600 shadow-sm transition-transform hover:scale-105 hover:bg-green-100/60 dark:hover:bg-green-900/40"
-                            >
-                              <PencilIcon className="h-3 w-3" /> Edit
-                            </Button>
-                          )}
-                          {hasUserDeleteAccess && (
-                            <Button
-                              onClick={() => {
-                                setPatientToDelete(patient);
-                                setShowDeleteModal(true);
-                              }}
-                              size="xs"
-                              variant="outline"
-                              className="flex items-center gap-1 border-red-400 p-1 text-red-600 shadow-sm transition-transform hover:scale-105 hover:bg-red-100/60 dark:hover:bg-red-900/40"
-                            >
-                              <TrashBinIcon className="h-3 w-3" /> Delete
-                            </Button>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </>
-            )}
-          </Table>
+          <PatientsSummaryTable
+            patients={patients}
+            onView={handleOpenSummary}
+          />
         </div>
       )}
 
@@ -1304,6 +1043,109 @@ export default function ViewPatientRecords() {
           </div>
         </div>
       )}
+
+      <PatientSummaryModal
+        patient={summaryPatient}
+        onClose={handleCloseSummary}
+        onViewAllComments={() => handleOpenViewCommentsModal(summaryPatient)}
+      >
+        {summaryPatient && (
+          <>
+            <PatientSummaryActionGroup label="Case Details">
+              <Button
+                onClick={() =>
+                  router.push(
+                    `/admin/patients/view-patient-details?id=${summaryPatient._id}`,
+                  )
+                }
+                size="sm"
+                variant="outline"
+                className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
+              >
+                <EyeIcon className="h-5 w-5" /> View
+              </Button>
+              {hasUserDeleteAccess && (
+                <Button
+                  onClick={() =>
+                    router.push(
+                      `/admin/patients/edit-patient-details?id=${summaryPatient._id}`,
+                    )
+                  }
+                  size="sm"
+                  variant="outline"
+                  className="border-green-400 text-green-600 hover:bg-green-100/60 dark:hover:bg-green-900/40"
+                >
+                  <PencilIcon className="h-5 w-5" /> Edit
+                </Button>
+              )}
+              {hasUserDeleteAccess && (
+                <Button
+                  onClick={() => {
+                    setPatientToDelete(summaryPatient);
+                    setShowDeleteModal(true);
+                  }}
+                  size="sm"
+                  variant="outline"
+                  className="border-red-400 text-red-600 hover:bg-red-100/60 dark:hover:bg-red-900/40"
+                >
+                  <TrashBinIcon className="h-5 w-5" /> Delete
+                </Button>
+              )}
+            </PatientSummaryActionGroup>
+            <PatientSummaryActionGroup label="Comments">
+              <Button
+                onClick={() => handleOpenUploadModal(summaryPatient)}
+                size="sm"
+                variant="outline"
+                className="border-purple-400 text-purple-600 hover:bg-purple-100/60 dark:hover:bg-purple-900/40"
+              >
+                Add
+              </Button>
+              <Button
+                onClick={() => handleOpenViewCommentsModal(summaryPatient)}
+                size="sm"
+                variant="outline"
+                className="border-blue-400 text-blue-600 hover:bg-blue-100/60 dark:hover:bg-blue-900/40"
+              >
+                See
+              </Button>
+            </PatientSummaryActionGroup>
+            <PatientSummaryActionGroup label="STL Upload">
+              {summaryPatient.stlFile?.uploaded ? (
+                <Button
+                  onClick={() => handleOpenSTLDetailsModal(summaryPatient)}
+                  size="sm"
+                  variant="outline"
+                  className="border-green-400 text-green-600 hover:bg-green-100/60 dark:hover:bg-green-900/40"
+                >
+                  ✓ View STL
+                </Button>
+              ) : (
+                <span className="inline-flex items-center rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                  Pending
+                </span>
+              )}
+            </PatientSummaryActionGroup>
+            {hasPlannerAccess && (
+              <PatientSummaryActionGroup label="Planner">
+                <Select
+                  value={summaryPatient.plannerId?._id || ""}
+                  onChange={(e) =>
+                    handleAssignPlanner(summaryPatient._id, e.target.value)
+                  }
+                  options={[
+                    ...planners.map((planner) => ({
+                      label: planner.name,
+                      value: planner._id,
+                    })),
+                  ]}
+                  className="w-full sm:w-64"
+                />
+              </PatientSummaryActionGroup>
+            )}
+          </>
+        )}
+      </PatientSummaryModal>
 
       <ConfirmationModal
         isOpen={showDeleteModal && !!patientToDelete}
